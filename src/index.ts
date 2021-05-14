@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { run } from './action';
+import {run} from './action';
 
 const NOTION_TOKEN_KEY = 'notion-token';
 const NOTION_DB_KEY = 'notion-db';

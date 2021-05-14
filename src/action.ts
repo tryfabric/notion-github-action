@@ -1,8 +1,8 @@
-import { Client, LogLevel } from '@notionhq/client/build/src';
+import {Client, LogLevel} from '@notionhq/client/build/src';
 import * as core from '@actions/core';
 import * as uuid from 'uuid';
-import { GitHub } from '@actions/github/lib/utils';
-import { RichTextText } from '@notionhq/client/build/src/api-types';
+import {GitHub} from '@actions/github/lib/utils';
+import {RichTextText} from '@notionhq/client/build/src/api-types';
 
 interface Options {
   notion: {
@@ -18,7 +18,7 @@ interface Options {
 }
 
 export async function run(options: Options) {
-  const { notion, github } = options;
+  const {notion, github} = options;
 
   const notionClient = new Client({
     auth: notion.token,
