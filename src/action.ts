@@ -25,11 +25,15 @@ export async function run(options: Options) {
     logLevel: core.isDebug() ? LogLevel.DEBUG : LogLevel.WARN,
   });
 
+  core.info('Retrieving issue...');
+
   const issue = await github.octokit.issues.get({
     owner: github.owner,
     repo: github.repo,
     issue_number: github.issueNumber,
   });
+
+  core.info('Creating page...');
 
   await notionClient.pages.create({
     parent: {
@@ -55,4 +59,6 @@ export async function run(options: Options) {
       },
     },
   });
+
+  core.info('Done.');
 }

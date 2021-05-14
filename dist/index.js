@@ -15012,11 +15012,13 @@ function run(options) {
             auth: notion.token,
             logLevel: core.isDebug() ? src/* LogLevel.DEBUG */.in.DEBUG : src/* LogLevel.WARN */.in.WARN,
         });
+        core.info('Retrieving issue...');
         const issue = yield github.octokit.issues.get({
             owner: github.owner,
             repo: github.repo,
             issue_number: github.issueNumber,
         });
+        core.info('Creating page...');
         yield notionClient.pages.create({
             parent: {
                 database_id: notion.databaseId,
@@ -15041,6 +15043,7 @@ function run(options) {
                 },
             },
         });
+        core.info('Done.');
     });
 }
 
