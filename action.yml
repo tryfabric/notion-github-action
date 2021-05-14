@@ -1,0 +1,10 @@
+name: 'Notion x GitHub Action'
+description: ''
+inputs:
+  notion-token:
+    description: 'Your Notion API Token'
+    required: true
+    default: '',
+runs:
+  using: 'node12'
+  main: 'index.ts'

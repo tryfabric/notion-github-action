@@ -1,0 +1,24 @@
+{
+  "name": "notion-github-action",
+  "version": "0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "lint": "tslint --project '.'"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.23.0",
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
+  },
+  "author": "Richard Robinson",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.2.7",
+    "@actions/github": "^4.0.0",
+    "@notionhq/client": "^0.1.3"
+  }
+}
