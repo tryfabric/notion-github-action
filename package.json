@@ -8,8 +8,8 @@
     "format:check": "prettier --check src",
     "format:write": "prettier --write src",
     "lint": "eslint src/*",
-    "style:check": "run-p --continue-on-error --aggregate-output format:check lint",
-    "style:write": "run-p --continue-on-error --aggregate-output format:write lint"
+    "style:check": "format:check lint",
+    "style:write": "format:write lint"
   },
   "keywords": [],
   "devDependencies": {
