@@ -6,15 +6,15 @@ import { RichTextText } from '@notionhq/client/build/src/api-types';
 
 interface Options {
   notion: {
-    token: string
-    databaseId: string
-  },
+    token: string;
+    databaseId: string;
+  };
   github: {
-    octokit: InstanceType<typeof GitHub>
-    owner: string
-    repo: string
-    issueNumber: number
-  }
+    octokit: InstanceType<typeof GitHub>;
+    owner: string;
+    repo: string;
+    issueNumber: number;
+  };
 }
 
 export async function run(options: Options) {

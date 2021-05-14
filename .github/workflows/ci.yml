@@ -1,19 +1,27 @@
-name: Lint
+name: CI
 
 on:
   push:
     branches:
       - master
   pull_request:
+    branches:
+      - master
 
 jobs:
-  lint:
-    name: Lint
+  ci:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
+        with:
+          # Custom token to allow commits trigger other workflows.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2.1.5
+        with:
+          node-version: 12
 
       - name: Cache node modules
         uses: actions/cache@v2
@@ -27,9 +35,5 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Lint
-        run: npm run lint
+      - run: npm ci
+      - run: npm run style:check
