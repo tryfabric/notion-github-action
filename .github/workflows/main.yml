@@ -1,0 +1,17 @@
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  notion_job:
+    runs-on: ubuntu-latest
+    name: Test Action
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Add to Notion
+        uses: ./ # Uses an action in the root directory
+        id: notion
+        with:
+          notion-token: ${{ secrets.NOTION_TOKEN }}
+          notion-db: ${{ secrets.NOTION_DATABASE }}
