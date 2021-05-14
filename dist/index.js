@@ -6564,7 +6564,7 @@ const is_1 = __nccwpck_require__(210);
 const get_body_size_1 = __nccwpck_require__(5616);
 const is_form_data_1 = __nccwpck_require__(8005);
 const proxy_events_1 = __nccwpck_require__(9491);
-const timed_out_1 = __nccwpck_require__(2431);
+const timed_out_1 = __nccwpck_require__(9812);
 const url_to_options_1 = __nccwpck_require__(5720);
 const options_to_url_1 = __nccwpck_require__(917);
 const weakable_map_1 = __nccwpck_require__(3884);
@@ -8241,7 +8241,7 @@ exports.default = default_1;
 
 /***/ }),
 
-/***/ 2431:
+/***/ 9812:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -11589,7 +11589,7 @@ FetchError.prototype.name = 'FetchError';
 
 let convert;
 try {
-	convert = __nccwpck_require__(3387).convert;
+	convert = __nccwpck_require__(2431).convert;
 } catch (e) {}
 
 const INTERNALS = Symbol('Body internals');
@@ -14774,7 +14774,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 3387:
+/***/ 2431:
 /***/ ((module) => {
 
 module.exports = eval("require")("encoding");
@@ -14974,10 +14974,10 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(5127);
-// EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
-var src = __nccwpck_require__(4882);
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(3134);
+// EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
+var src = __nccwpck_require__(4882);
 // EXTERNAL MODULE: ./node_modules/uuid/dist/index.js
 var dist = __nccwpck_require__(9267);
 ;// CONCATENATED MODULE: ./node_modules/uuid/wrapper.mjs
@@ -15005,22 +15005,38 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-
-function run(notionToken, notionDatabaseId) {
+function run(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const notion = new src/* Client */.KU({
-            auth: notionToken,
+        const { notion, github } = options;
+        const notionClient = new src/* Client */.KU({
+            auth: notion.token,
             logLevel: core.isDebug() ? src/* LogLevel.DEBUG */.in.DEBUG : src/* LogLevel.WARN */.in.WARN,
         });
-        const issueNumber = github.context.issue.number;
-        yield notion.pages.create({
+        const issue = yield github.octokit.issues.get({
+            owner: github.owner,
+            repo: github.repo,
+            issue_number: github.issueNumber,
+        });
+        yield notionClient.pages.create({
             parent: {
-                database_id: notionDatabaseId,
+                database_id: notion.databaseId,
             },
             properties: {
+                Name: {
+                    type: 'title',
+                    title: [
+                        {
+                            type: 'text',
+                            text: {
+                                content: issue.data.title,
+                            },
+                        },
+                    ],
+                    id: v4(),
+                },
                 Number: {
                     type: 'number',
-                    number: issueNumber,
+                    number: issue.data.number,
                     id: v4(),
                 },
             },
@@ -15040,18 +15056,38 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 };
 
 
+
 const NOTION_TOKEN_KEY = 'notion-token';
 const NOTION_DB_KEY = 'notion-db';
-try {
-    (() => src_awaiter(void 0, void 0, void 0, function* () {
-        const notionToken = core.getInput(NOTION_TOKEN_KEY);
-        const databaseId = core.getInput(NOTION_DB_KEY);
-        yield run(notionToken, databaseId);
-    }))();
+const GITHUB_TOKEN_KEY = 'github-token';
+function start() {
+    return src_awaiter(this, void 0, void 0, function* () {
+        try {
+            const notionToken = core.getInput(NOTION_TOKEN_KEY);
+            const notionDb = core.getInput(NOTION_DB_KEY);
+            const githubToken = core.getInput(GITHUB_TOKEN_KEY);
+            const options = {
+                notion: {
+                    token: notionToken,
+                    databaseId: notionDb,
+                },
+                github: {
+                    owner: github.context.issue.owner,
+                    repo: github.context.issue.repo,
+                    issueNumber: github.context.issue.number,
+                    octokit: github.getOctokit(githubToken),
+                },
+            };
+            yield run(options);
+        }
+        catch (e) {
+            core.setFailed(e.message);
+        }
+    });
 }
-catch (e) {
-    core.setFailed(e.message);
-}
+(() => src_awaiter(void 0, void 0, void 0, function* () {
+    yield start();
+}))();
 
 })();
 
