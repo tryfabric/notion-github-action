@@ -7,9 +7,7 @@
     "build": "ncc build src/index.ts",
     "format:check": "prettier --check src",
     "format:write": "prettier --write src",
-    "lint": "eslint src/*",
-    "style:check": "format:check lint",
-    "style:write": "format:write lint"
+    "lint": "eslint src/*"
   },
   "keywords": [],
   "devDependencies": {
