@@ -1,11 +1,4 @@
 root: true
 parser: '@typescript-eslint/parser'
 plugins: ['@typescript-eslint']
-extends: ['airbnb']
-rules:
-  'import/no-unresolved':
-    - 0
-  'import/extensions':
-    - off
-  'import/prefer-default-export':
-    - off
+extends: ['./node_modules/gts']
