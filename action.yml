@@ -4,7 +4,9 @@ inputs:
   notion-token:
     description: 'Your Notion API Token'
     required: true
-    default: '',
+  notion-db:
+    description: 'The Notion database id'
+    required: true
 runs:
   using: 'node12'
-  main: 'index.ts'
+  main: 'dist/index.js'

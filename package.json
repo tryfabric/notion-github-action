@@ -4,10 +4,13 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "lint": "tslint --project '.'"
+    "lint": "eslint src/*.ts",
+    "build": "ncc build src/index.ts --license licenses.txt",
+    "pre-checkin": "npm run lint && npm run build"
   },
   "keywords": [],
   "devDependencies": {
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.23.0",
     "eslint": "^7.26.0",
     "eslint-config-airbnb": "^18.2.1",
@@ -19,6 +22,7 @@
   "dependencies": {
     "@actions/core": "^1.2.7",
     "@actions/github": "^4.0.0",
-    "@notionhq/client": "^0.1.3"
+    "@notionhq/client": "^0.1.3",
+    "uuid": "^8.3.2"
   }
 }
