@@ -39,7 +39,7 @@ jobs:
         run: npm install
 
       - name: Build dist
-        run: npm build
+        run: npm run build
 
       - name: Commit dist
         uses: EndBug/add-and-commit@v7
