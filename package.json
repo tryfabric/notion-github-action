@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "lint": "eslint src/*.ts",
+    "lint": "eslint . --ext .ts",
     "build": "ncc build src/index.ts --license licenses.txt",
     "pre-checkin": "npm run lint && npm run build"
   },
