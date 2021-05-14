@@ -1,24 +1,56 @@
 import { Client, LogLevel } from '@notionhq/client/build/src';
 import * as core from '@actions/core';
-import * as github from '@actions/github';
 import * as uuid from 'uuid';
+import { GitHub } from '@actions/github/lib/utils';
+import { RichTextText } from '@notionhq/client/build/src/api-types';
 
-export async function run(notionToken: string, notionDatabaseId: string) {
-  const notion = new Client({
-    auth: notionToken,
+interface Options {
+  notion: {
+    token: string
+    databaseId: string
+  },
+  github: {
+    octokit: InstanceType<typeof GitHub>
+    owner: string
+    repo: string
+    issueNumber: number
+  }
+}
+
+export async function run(options: Options) {
+  const { notion, github } = options;
+
+  const notionClient = new Client({
+    auth: notion.token,
     logLevel: core.isDebug() ? LogLevel.DEBUG : LogLevel.WARN,
   });
 
-  const issueNumber = github.context.issue.number;
+  const issue = await github.octokit.issues.get({
+    owner: github.owner,
+    repo: github.repo,
+    issue_number: github.issueNumber,
+  });
 
-  await notion.pages.create({
+  await notionClient.pages.create({
     parent: {
-      database_id: notionDatabaseId,
+      database_id: notion.databaseId,
     },
     properties: {
+      Name: {
+        type: 'title',
+        title: [
+          {
+            type: 'text',
+            text: {
+              content: issue.data.title,
+            },
+          } as RichTextText,
+        ],
+        id: uuid.v4(),
+      },
       Number: {
         type: 'number',
-        number: issueNumber,
+        number: issue.data.number,
         id: uuid.v4(),
       },
     },

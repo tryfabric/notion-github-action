@@ -15,3 +15,4 @@ jobs:
         with:
           notion-token: ${{ secrets.NOTION_TOKEN }}
           notion-db: ${{ secrets.NOTION_DATABASE }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
