@@ -1,3 +1,4 @@
+# The GitHub labels to be used by this repo
 - name: bug
   description: If this is a bug
   color: 800000
