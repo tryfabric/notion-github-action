@@ -1,0 +1,33 @@
+- name: bug
+  description: If this is a bug
+  color: 800000
+- name: security/privacy
+  description: If it involves securing user information
+  color: 000000
+- name: accounts
+  description: If it has to do with user auth or profiles
+  color: 4363d8
+- name: billing
+  description: If it has to do with billing
+  color: 3cb44b
+- name: design
+  description: If it needs a large amount of design
+  color: f032e6
+- name: optimization
+  description: If it's related to performance
+  color: ffe119
+- name: copy
+  description: If it's only a copy change, or needs a large amount of copy
+  color: 469990
+- name: onboarding
+  description: If it has to do with educating users on using the product
+  color: aaffc3
+- name: notifications
+  description: If it has to do with sending information to users based on triggers
+  color: fabebe
+- name: feature request
+  description: If it's a feature request from a user
+  color: e6beff
+- name: internal
+  description: If it has to do with non-user-facing admin actions or analytics
+  color: a9a9a9
