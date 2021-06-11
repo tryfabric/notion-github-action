@@ -27,7 +27,7 @@ export async function run(options: Options) {
 
   core.info('Retrieving issue...');
 
-  const issue = await github.octokit.issues.get({
+  const issue = await github.octokit.rest.issues.get({
     owner: github.owner,
     repo: github.repo,
     issue_number: github.issueNumber,
