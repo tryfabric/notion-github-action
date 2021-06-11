@@ -14583,27 +14583,23 @@ function run(options) {
             auth: notion.token,
             logLevel: core.isDebug() ? src/* LogLevel.DEBUG */.in.DEBUG : src/* LogLevel.WARN */.in.WARN,
         });
-        switch (github.payload.action) {
-            case 'opened':
-                yield handleIssueOpened({
-                    notion: {
-                        client: notionClient,
-                        databaseId: notion.databaseId,
-                    },
-                    payload: github.payload,
-                });
-                break;
-            case 'edited':
-                yield handleIssueEdited({
-                    notion: {
-                        client: notionClient,
-                        databaseId: notion.databaseId,
-                    },
-                    payload: github.payload,
-                });
-                break;
-            default:
-                core.setFailed(`Action ${github.payload.action} not supported`);
+        if (github.payload.action === 'opened') {
+            yield handleIssueOpened({
+                notion: {
+                    client: notionClient,
+                    databaseId: notion.databaseId,
+                },
+                payload: github.payload,
+            });
+        }
+        else {
+            yield handleIssueEdited({
+                notion: {
+                    client: notionClient,
+                    databaseId: notion.databaseId,
+                },
+                payload: github.payload,
+            });
         }
         core.info('Complete!');
     });
