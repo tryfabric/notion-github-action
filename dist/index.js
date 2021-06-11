@@ -14543,7 +14543,7 @@ function run(options) {
             auth: notion.token,
             logLevel: core.isDebug() ? src/* LogLevel.DEBUG */.in.DEBUG : src/* LogLevel.WARN */.in.WARN,
         });
-        switch (github.action) {
+        switch (github.payload.action) {
             case 'opened':
                 yield handleIssueOpened({
                     notion: {
@@ -14563,7 +14563,7 @@ function run(options) {
                 });
                 break;
             default:
-                core.error(`Action ${github.action} not supported`);
+                core.error(`Action ${github.payload.action} not supported`);
         }
         core.info('Complete!');
     });
@@ -14597,7 +14597,6 @@ function start() {
                     databaseId: notionDb,
                 },
                 github: {
-                    action: github.context.action,
                     payload: github.context.payload,
                 },
             };
