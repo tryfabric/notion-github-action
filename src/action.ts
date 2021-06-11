@@ -33,6 +33,7 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
       database_id: notion.databaseId,
     },
     properties: {
+      Name: properties.title(payload.issue.title),
       Organization: properties.title(payload.organization?.login ?? ''),
       Repository: properties.title(payload.repository.name),
       Number: properties.number(payload.issue.number),
