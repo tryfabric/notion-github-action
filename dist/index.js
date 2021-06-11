@@ -14459,6 +14459,20 @@ var src = __nccwpck_require__(324);
 // eslint-disable-next-line @typescript-eslint/no-namespace
 var properties;
 (function (properties) {
+    function richText(text) {
+        return {
+            type: 'rich_text',
+            rich_text: [
+                {
+                    type: 'text',
+                    text: {
+                        content: text,
+                    },
+                },
+            ],
+        };
+    }
+    properties.richText = richText;
     function title(text) {
         return {
             type: 'title',
@@ -14515,17 +14529,17 @@ function handleIssueOpened(options) {
             },
             properties: {
                 Name: properties.title(payload.issue.title),
-                Organization: properties.title((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
-                Repository: properties.title(payload.repository.name),
+                Organization: properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
+                Repository: properties.richText(payload.repository.name),
                 Number: properties.number(payload.issue.number),
-                Body: properties.title(payload.issue.body),
-                Assignees: properties.title(payload.issue.assignees.map(user => user.login).join(', ')),
-                Milestone: properties.title((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
-                Labels: properties.title((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
-                Author: properties.title(payload.issue.user.login),
+                Body: properties.richText(payload.issue.body),
+                Assignees: properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
+                Milestone: properties.richText((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
+                Labels: properties.richText((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
+                Author: properties.richText(payload.issue.user.login),
                 Created: properties.date(payload.issue.created_at),
                 Updated: properties.date(payload.issue.updated_at),
-                Status: properties.title(payload.issue.state),
+                Status: properties.richText(payload.issue.state),
             },
         });
     });
