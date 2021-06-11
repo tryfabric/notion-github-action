@@ -92,7 +92,7 @@ export async function run(options: Options) {
       break;
 
     default:
-      core.error(`Action ${github.payload.action} not supported`);
+      core.setFailed(`Action ${github.payload.action} not supported`);
   }
 
   core.info('Complete!');
