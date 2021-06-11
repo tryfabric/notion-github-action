@@ -14503,6 +14503,17 @@ var properties;
         };
     }
     properties.date = date;
+    function select(id, name, color) {
+        return {
+            type: 'select',
+            select: {
+                id: id,
+                name: name,
+                color: color,
+            },
+        };
+    }
+    properties.select = select;
 })(properties || (properties = {}));
 
 ;// CONCATENATED MODULE: ./src/action.ts
@@ -14518,9 +14529,9 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-function parsePropertiesFromPayload(payload) {
-    var _a, _b, _c, _d, _e, _f, _g;
-    return {
+function parsePropertiesFromPayload(payload, statusOptions) {
+    var _a, _b, _c, _d, _e, _f;
+    const result = {
         Name: properties.title(payload.issue.title),
         Organization: properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
         Repository: properties.richText(payload.repository.name),
@@ -14532,19 +14543,42 @@ function parsePropertiesFromPayload(payload) {
         Author: properties.richText(payload.issue.user.login),
         Created: properties.date(payload.issue.created_at),
         Updated: properties.date(payload.issue.updated_at),
-        Status: properties.richText((_g = payload.issue.state) !== null && _g !== void 0 ? _g : ''),
         ID: properties.number(payload.issue.id),
     };
+    const status = statusOptions.find(option => {
+        switch (payload.issue.state) {
+            case 'open':
+                return option.name === 'Opened';
+            case 'closed':
+                return option.name === 'Closed';
+        }
+        return false;
+    });
+    if (status) {
+        result['Status'] = properties.select(status.id, status.name, status.color);
+    }
+    return result;
+}
+function getStatusOptions(client, databaseId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const db = yield client.databases.retrieve({ database_id: databaseId });
+        const statusProperty = db.properties['Status'];
+        if (statusProperty.type !== 'select') {
+            throw new Error('`Status` property must be a select property.');
+        }
+        return statusProperty.select.options;
+    });
 }
 function handleIssueOpened(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { notion, payload } = options;
         core.info(`Creating page for issue #${payload.issue.number}`);
+        const statusOptions = yield getStatusOptions(notion.client, notion.databaseId);
         yield notion.client.pages.create({
             parent: {
                 database_id: notion.databaseId,
             },
-            properties: parsePropertiesFromPayload(payload),
+            properties: parsePropertiesFromPayload(payload, statusOptions),
         });
     });
 }
@@ -14569,9 +14603,10 @@ function handleIssueEdited(options) {
         const pageId = query.results[0].id;
         core.info(`Query successful: Page ${pageId}`);
         core.info(`Updating page for issue #${payload.issue.number}`);
+        const statusOptions = yield getStatusOptions(notion.client, notion.databaseId);
         yield notion.client.pages.update({
             page_id: pageId,
-            properties: parsePropertiesFromPayload(payload),
+            properties: parsePropertiesFromPayload(payload, statusOptions),
         });
     });
 }
