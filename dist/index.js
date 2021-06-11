@@ -6,14 +6,27 @@
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.issue = exports.issueCommand = void 0;
 const os = __importStar(__nccwpck_require__(2087));
 const utils_1 = __nccwpck_require__(5278);
 /**
@@ -92,6 +105,25 @@ function escapeProperty(s) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -101,14 +133,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
 const command_1 = __nccwpck_require__(7351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(5278);
@@ -175,7 +201,9 @@ function addPath(inputPath) {
 }
 exports.addPath = addPath;
 /**
- * Gets the value of an input.  The value is also trimmed.
+ * Gets the value of an input.
+ * Unless trimWhitespace is set to false in InputOptions, the value is also trimmed.
+ * Returns an empty string if the value is not defined.
  *
  * @param     name     name of the input to get
  * @param     options  optional. See InputOptions.
@@ -186,9 +214,49 @@ function getInput(name, options) {
     if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
     }
+    if (options && options.trimWhitespace === false) {
+        return val;
+    }
     return val.trim();
 }
 exports.getInput = getInput;
+/**
+ * Gets the values of an multiline input.  Each value is also trimmed.
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   string[]
+ *
+ */
+function getMultilineInput(name, options) {
+    const inputs = getInput(name, options)
+        .split('\n')
+        .filter(x => x !== '');
+    return inputs;
+}
+exports.getMultilineInput = getMultilineInput;
+/**
+ * Gets the input value of the boolean type in the YAML 1.2 "core schema" specification.
+ * Support boolean input list: `true | True | TRUE | false | False | FALSE` .
+ * The return value is also in boolean type.
+ * ref: https://yaml.org/spec/1.2/spec.html#id2804923
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   boolean
+ */
+function getBooleanInput(name, options) {
+    const trueValue = ['true', 'True', 'TRUE'];
+    const falseValue = ['false', 'False', 'FALSE'];
+    const val = getInput(name, options);
+    if (trueValue.includes(val))
+        return true;
+    if (falseValue.includes(val))
+        return false;
+    throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}\n` +
+        `Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
+}
+exports.getBooleanInput = getBooleanInput;
 /**
  * Sets the value of an output.
  *
@@ -339,14 +407,27 @@ exports.getState = getState;
 "use strict";
 
 // For internal use, subject to change.
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const fs = __importStar(__nccwpck_require__(5747));
@@ -377,6 +458,7 @@ exports.issueCommand = issueCommand;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.toCommandValue = void 0;
 /**
  * Sanitizes an input into a string so it can be passed into issueCommand safely
  * @param input input to sanitize into a string
@@ -409,6 +491,7 @@ class Context {
      * Hydrate the context from the environment
      */
     constructor() {
+        var _a, _b, _c;
         this.payload = {};
         if (process.env.GITHUB_EVENT_PATH) {
             if (fs_1.existsSync(process.env.GITHUB_EVENT_PATH)) {
@@ -428,6 +511,9 @@ class Context {
         this.job = process.env.GITHUB_JOB;
         this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
         this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
+        this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
+        this.serverUrl = (_b = process.env.GITHUB_SERVER_URL) !== null && _b !== void 0 ? _b : `https://github.com`;
+        this.graphqlUrl = (_c = process.env.GITHUB_GRAPHQL_URL) !== null && _c !== void 0 ? _c : `https://api.github.com/graphql`;
     }
     get issue() {
         const payload = this.payload;
@@ -472,7 +558,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -515,7 +601,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -565,7 +651,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -1221,20 +1307,18 @@ exports.checkBypass = checkBypass;
 
 "use strict";
 
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to set private field on non-instance");
-    }
-    privateMap.set(receiver, value);
-    return value;
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to get private field on non-instance");
-    }
-    return privateMap.get(receiver);
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _auth, _logLevel, _logger, _got;
+var _Client_auth, _Client_logLevel, _Client_logger, _Client_got;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const url_1 = __nccwpck_require__(8835);
 const logging_1 = __nccwpck_require__(2096);
@@ -1245,10 +1329,10 @@ const got_1 = __nccwpck_require__(3061);
 class Client {
     constructor(options) {
         var _a, _b, _c, _d, _e;
-        _auth.set(this, void 0);
-        _logLevel.set(this, void 0);
-        _logger.set(this, void 0);
-        _got.set(this, void 0);
+        _Client_auth.set(this, void 0);
+        _Client_logLevel.set(this, void 0);
+        _Client_logger.set(this, void 0);
+        _Client_got.set(this, void 0);
         /*
          * Notion API endpoints
          */
@@ -1278,13 +1362,15 @@ class Client {
                         auth: args === null || args === void 0 ? void 0 : args.auth,
                     });
                 },
-            }
+            },
         };
         this.databases = {
             /**
              * List databases
+             *
+             * @deprecated Please use `search`
              */
-            list: (args) => {
+            list: (args = {}) => {
                 return this.request({
                     path: api_endpoints_1.databasesList.path(),
                     method: api_endpoints_1.databasesList.method,
@@ -1372,7 +1458,7 @@ class Client {
             /**
              * List all users
              */
-            list: (args) => {
+            list: (args = {}) => {
                 return this.request({
                     path: api_endpoints_1.usersList.path(),
                     method: api_endpoints_1.usersList.method,
@@ -1382,23 +1468,23 @@ class Client {
                 });
             },
         };
-        __classPrivateFieldSet(this, _auth, options === null || options === void 0 ? void 0 : options.auth);
-        __classPrivateFieldSet(this, _logLevel, (_a = options === null || options === void 0 ? void 0 : options.logLevel) !== null && _a !== void 0 ? _a : logging_1.LogLevel.WARN);
-        __classPrivateFieldSet(this, _logger, (_b = options === null || options === void 0 ? void 0 : options.logger) !== null && _b !== void 0 ? _b : logging_1.makeConsoleLogger(this.constructor.name));
-        const prefixUrl = ((_c = options === null || options === void 0 ? void 0 : options.baseUrl) !== null && _c !== void 0 ? _c : 'https://api.notion.com') + '/v1/';
+        __classPrivateFieldSet(this, _Client_auth, options === null || options === void 0 ? void 0 : options.auth, "f");
+        __classPrivateFieldSet(this, _Client_logLevel, (_a = options === null || options === void 0 ? void 0 : options.logLevel) !== null && _a !== void 0 ? _a : logging_1.LogLevel.WARN, "f");
+        __classPrivateFieldSet(this, _Client_logger, (_b = options === null || options === void 0 ? void 0 : options.logger) !== null && _b !== void 0 ? _b : logging_1.makeConsoleLogger(this.constructor.name), "f");
+        const prefixUrl = ((_c = options === null || options === void 0 ? void 0 : options.baseUrl) !== null && _c !== void 0 ? _c : "https://api.notion.com") + "/v1/";
         const timeout = (_d = options === null || options === void 0 ? void 0 : options.timeoutMs) !== null && _d !== void 0 ? _d : 60000;
         const notionVersion = (_e = options === null || options === void 0 ? void 0 : options.notionVersion) !== null && _e !== void 0 ? _e : Client.defaultNotionVersion;
-        __classPrivateFieldSet(this, _got, got_1.default.extend({
+        __classPrivateFieldSet(this, _Client_got, got_1.default.extend({
             prefixUrl,
             timeout,
             headers: {
-                'Notion-Version': notionVersion,
+                "Notion-Version": notionVersion,
                 // TODO: update with format appropriate for telemetry, use version from package.json
-                'user-agent': 'notionhq-client/0.1.0',
+                "user-agent": "notionhq-client/0.1.0",
             },
             retry: 0,
             agent: makeAgentOption(prefixUrl, options === null || options === void 0 ? void 0 : options.agent),
-        }));
+        }), "f");
     }
     /**
      * Sends a request.
@@ -1409,12 +1495,12 @@ class Client {
      * @param body
      * @returns
      */
-    async request({ path, method, query, body, auth }) {
-        this.log(logging_1.LogLevel.INFO, 'request start', { method, path });
+    async request({ path, method, query, body, auth, }) {
+        this.log(logging_1.LogLevel.INFO, "request start", { method, path });
         // If the body is empty, don't send the body in the HTTP request
-        const json = (body !== undefined && Object.entries(body).length === 0) ? undefined : body;
+        const json = body !== undefined && Object.entries(body).length === 0 ? undefined : body;
         try {
-            const response = await __classPrivateFieldGet(this, _got).call(this, path, {
+            const response = await __classPrivateFieldGet(this, _Client_got, "f").call(this, path, {
                 method,
                 searchParams: query,
                 json,
@@ -1429,10 +1515,15 @@ class Client {
             if (requestError === undefined) {
                 throw error;
             }
-            this.log(logging_1.LogLevel.WARN, `request fail`, { code: requestError.code, message: requestError.message });
+            this.log(logging_1.LogLevel.WARN, `request fail`, {
+                code: requestError.code,
+                message: requestError.message,
+            });
             if (errors_1.HTTPResponseError.isHTTPResponseError(requestError)) {
                 // The response body may contain sensitive information so it is logged separately at the DEBUG level
-                this.log(logging_1.LogLevel.DEBUG, `failed response body`, { body: requestError.body });
+                this.log(logging_1.LogLevel.DEBUG, `failed response body`, {
+                    body: requestError.body,
+                });
             }
             // Throw as a known error type
             throw requestError;
@@ -1457,8 +1548,8 @@ class Client {
      * @param args Arguments to send to the console
      */
     log(level, message, extraInfo) {
-        if (logging_1.logLevelSeverity(level) >= logging_1.logLevelSeverity(__classPrivateFieldGet(this, _logLevel))) {
-            __classPrivateFieldGet(this, _logger).call(this, level, message, extraInfo);
+        if (logging_1.logLevelSeverity(level) >= logging_1.logLevelSeverity(__classPrivateFieldGet(this, _Client_logLevel, "f"))) {
+            __classPrivateFieldGet(this, _Client_logger, "f").call(this, level, message, extraInfo);
         }
     }
     /**
@@ -1472,16 +1563,16 @@ class Client {
      */
     authAsHeaders(auth) {
         const headers = {};
-        const authHeaderValue = auth !== null && auth !== void 0 ? auth : __classPrivateFieldGet(this, _auth);
+        const authHeaderValue = auth !== null && auth !== void 0 ? auth : __classPrivateFieldGet(this, _Client_auth, "f");
         if (authHeaderValue !== undefined) {
-            headers['authorization'] = `Bearer ${authHeaderValue}`;
+            headers["authorization"] = `Bearer ${authHeaderValue}`;
         }
         return headers;
     }
 }
 exports.default = Client;
-_auth = new WeakMap(), _logLevel = new WeakMap(), _logger = new WeakMap(), _got = new WeakMap();
-Client.defaultNotionVersion = '2021-05-13';
+_Client_auth = new WeakMap(), _Client_logLevel = new WeakMap(), _Client_logger = new WeakMap(), _Client_got = new WeakMap();
+Client.defaultNotionVersion = "2021-05-13";
 /*
  * Helper functions
  */
@@ -1495,11 +1586,11 @@ function makeAgentOption(prefixUrl, agent) {
 }
 function selectProtocol(prefixUrl) {
     const url = new url_1.URL(prefixUrl);
-    if (url.protocol === 'https:') {
-        return 'https';
+    if (url.protocol === "https:") {
+        return "https";
     }
-    else if (url.protocol === 'http:') {
-        return 'http';
+    else if (url.protocol === "http:") {
+        return "http";
     }
     throw new TypeError(`baseUrl option must begin with "https://" or "http://"`);
 }
@@ -1522,80 +1613,80 @@ function selectProtocol(prefixUrl) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.search = exports.usersList = exports.usersRetrieve = exports.pagesUpdate = exports.pagesRetrieve = exports.pagesCreate = exports.databasesRetrieve = exports.databasesQuery = exports.databasesList = exports.blocksChildrenList = exports.blocksChildrenAppend = void 0;
 exports.blocksChildrenAppend = {
-    method: 'patch',
-    pathParams: ['block_id'],
+    method: "patch",
+    pathParams: ["block_id"],
     queryParams: [],
-    bodyParams: ['children'],
+    bodyParams: ["children"],
     path: (p) => `blocks/${p.block_id}/children`,
 };
 exports.blocksChildrenList = {
-    method: 'get',
-    pathParams: ['block_id'],
-    queryParams: ['start_cursor', 'page_size'],
+    method: "get",
+    pathParams: ["block_id"],
+    queryParams: ["start_cursor", "page_size"],
     bodyParams: [],
     path: (p) => `blocks/${p.block_id}/children`,
 };
 exports.databasesList = {
-    method: 'get',
+    method: "get",
     pathParams: [],
-    queryParams: ['start_cursor', 'page_size'],
+    queryParams: ["start_cursor", "page_size"],
     bodyParams: [],
     path: () => `databases`,
 };
 exports.databasesQuery = {
-    method: 'post',
-    pathParams: ['database_id'],
+    method: "post",
+    pathParams: ["database_id"],
     queryParams: [],
-    bodyParams: ['filter', 'sorts', 'start_cursor', 'page_size'],
+    bodyParams: ["filter", "sorts", "start_cursor", "page_size"],
     path: (p) => `databases/${p.database_id}/query`,
 };
 exports.databasesRetrieve = {
-    method: 'get',
-    pathParams: ['database_id'],
+    method: "get",
+    pathParams: ["database_id"],
     queryParams: [],
     bodyParams: [],
     path: (p) => `databases/${p.database_id}`,
 };
 exports.pagesCreate = {
-    method: 'post',
+    method: "post",
     pathParams: [],
     queryParams: [],
-    bodyParams: ['parent', 'properties', 'children'],
+    bodyParams: ["parent", "properties", "children"],
     path: () => `pages`,
 };
 exports.pagesRetrieve = {
-    method: 'get',
-    pathParams: ['page_id'],
+    method: "get",
+    pathParams: ["page_id"],
     queryParams: [],
     bodyParams: [],
     path: (p) => `pages/${p.page_id}`,
 };
 exports.pagesUpdate = {
-    method: 'patch',
-    pathParams: ['page_id'],
+    method: "patch",
+    pathParams: ["page_id"],
     queryParams: [],
-    bodyParams: ['properties'],
+    bodyParams: ["properties"],
     path: (p) => `pages/${p.page_id}`,
 };
 exports.usersRetrieve = {
-    method: 'get',
-    pathParams: ['user_id'],
+    method: "get",
+    pathParams: ["user_id"],
     queryParams: [],
     bodyParams: [],
     path: (p) => `users/${p.user_id}`,
 };
 exports.usersList = {
-    method: 'get',
+    method: "get",
     pathParams: [],
-    queryParams: ['start_cursor', 'page_size'],
+    queryParams: ["start_cursor", "page_size"],
     bodyParams: [],
     path: () => `users`,
 };
 exports.search = {
-    method: 'post',
+    method: "post",
     pathParams: [],
     queryParams: [],
-    bodyParams: ['query', 'sort', 'filter', 'start_cursor', 'page_size'],
+    bodyParams: ["query", "sort", "filter", "start_cursor", "page_size"],
     path: () => `search`,
 };
 //# sourceMappingURL=api-endpoints.js.map
@@ -1611,31 +1702,33 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.buildRequestError = exports.APIResponseError = exports.APIErrorCode = exports.HTTPResponseError = exports.RequestTimeoutError = void 0;
 const helpers_1 = __nccwpck_require__(5682);
 class RequestTimeoutError extends Error {
-    constructor(message = 'Request to Notion API has timed out') {
+    constructor(message = "Request to Notion API has timed out") {
         super(message);
-        this.code = 'notionhq_client_request_timeout';
-        this.name = 'RequestTimeoutError';
+        this.code = "notionhq_client_request_timeout";
+        this.name = "RequestTimeoutError";
     }
     static isRequestTimeoutError(error) {
         return (error instanceof Error &&
-            error.name === 'RequestTimeoutError' &&
-            'code' in error && error['code'] === RequestTimeoutError.prototype.code);
+            error.name === "RequestTimeoutError" &&
+            "code" in error &&
+            error["code"] === RequestTimeoutError.prototype.code);
     }
 }
 exports.RequestTimeoutError = RequestTimeoutError;
 class HTTPResponseError extends Error {
     constructor(response, message) {
         super(message !== null && message !== void 0 ? message : `Request to Notion API failed with status: ${response.statusCode}`);
-        this.code = 'notionhq_client_response_error';
-        this.name = 'HTTPResponseError';
+        this.code = "notionhq_client_response_error";
+        this.name = "HTTPResponseError";
         this.status = response.statusCode;
         this.headers = response.headers;
         this.body = response.rawBody.toString();
     }
     static isHTTPResponseError(error) {
         return (error instanceof Error &&
-            error.name === 'HTTPResponseError' &&
-            'code' in error && error['code'] === HTTPResponseError.prototype.code);
+            error.name === "HTTPResponseError" &&
+            "code" in error &&
+            error["code"] === HTTPResponseError.prototype.code);
     }
 }
 exports.HTTPResponseError = HTTPResponseError;
@@ -1663,15 +1756,15 @@ var APIErrorCode;
  */
 class APIResponseError extends HTTPResponseError {
     constructor(response, body) {
-        console.log('building the error');
         super(response, body.message);
-        this.name = 'APIResponseError';
+        this.name = "APIResponseError";
         this.code = body.code;
     }
     static isAPIResponseError(error) {
         return (error instanceof Error &&
-            error.name === 'APIResponseError' &&
-            'code' in error && isAPIErrorCode(error['code']));
+            error.name === "APIResponseError" &&
+            "code" in error &&
+            isAPIErrorCode(error["code"]));
     }
 }
 exports.APIResponseError = APIResponseError;
@@ -1690,7 +1783,7 @@ function buildRequestError(error) {
 }
 exports.buildRequestError = buildRequestError;
 function parseAPIErrorResponseBody(body) {
-    if (typeof body !== 'string') {
+    if (typeof body !== "string") {
         return;
     }
     let parsed;
@@ -1700,34 +1793,41 @@ function parseAPIErrorResponseBody(body) {
     catch (parseError) {
         return;
     }
-    if (!helpers_1.isObject(parsed) || typeof parsed['message'] !== 'string' || !isAPIErrorCode(parsed['code'])) {
+    if (!helpers_1.isObject(parsed) ||
+        typeof parsed["message"] !== "string" ||
+        !isAPIErrorCode(parsed["code"])) {
         return;
     }
     return {
         ...parsed,
-        code: parsed['code'],
-        message: parsed['message'],
+        code: parsed["code"],
+        message: parsed["message"],
     };
 }
 /*
  * Type guards
  */
 function isAPIErrorCode(code) {
-    return typeof code === 'string' && Object.values(APIErrorCode).includes(code);
+    return (typeof code === "string" &&
+        Object.values(APIErrorCode).includes(code));
 }
 function isGotTimeoutError(error) {
     return (error instanceof Error &&
-        error.name === 'TimeoutError' &&
-        'event' in error && typeof error['event'] === 'string' &&
-        helpers_1.isObject(error['request']) &&
-        helpers_1.isObject(error['timings']));
+        error.name === "TimeoutError" &&
+        "event" in error &&
+        typeof error["event"] === "string" &&
+        helpers_1.isObject(error["request"]) &&
+        helpers_1.isObject(error["timings"]));
 }
 function isGotHTTPError(error) {
     return (error instanceof Error &&
-        error.name === 'HTTPError' &&
-        'request' in error && helpers_1.isObject(error['request']) &&
-        'response' in error && helpers_1.isObject(error['response']) &&
-        'timings' in error && helpers_1.isObject(error['timings']));
+        error.name === "HTTPError" &&
+        "request" in error &&
+        helpers_1.isObject(error["request"]) &&
+        "response" in error &&
+        helpers_1.isObject(error["response"]) &&
+        "timings" in error &&
+        helpers_1.isObject(error["timings"]));
 }
 //# sourceMappingURL=errors.js.map
 
@@ -1748,16 +1848,16 @@ exports.isObject = exports.pick = exports.assertNever = void 0;
  * @param _x The variable with no remaining values
  */
 function assertNever(_x) {
-    throw new Error('Unexpected value. Should have been never.');
+    throw new Error("Unexpected value. Should have been never.");
 }
 exports.assertNever = assertNever;
 function pick(base, keys) {
-    const entries = keys.map(key => ([key, base === null || base === void 0 ? void 0 : base[key]]));
+    const entries = keys.map(key => [key, base === null || base === void 0 ? void 0 : base[key]]);
     return Object.fromEntries(entries);
 }
 exports.pick = pick;
 function isObject(o) {
-    return typeof o === 'object' && o !== null;
+    return typeof o === "object" && o !== null;
 }
 exports.isObject = isObject;
 //# sourceMappingURL=helpers.js.map
@@ -1811,11 +1911,16 @@ exports.makeConsoleLogger = makeConsoleLogger;
  */
 function logLevelSeverity(level) {
     switch (level) {
-        case LogLevel.DEBUG: return 20;
-        case LogLevel.INFO: return 40;
-        case LogLevel.WARN: return 60;
-        case LogLevel.ERROR: return 80;
-        default: return helpers_1.assertNever(level);
+        case LogLevel.DEBUG:
+            return 20;
+        case LogLevel.INFO:
+            return 40;
+        case LogLevel.WARN:
+            return 60;
+        case LogLevel.ERROR:
+            return 80;
+        default:
+            return helpers_1.assertNever(level);
     }
 }
 exports.logLevelSeverity = logLevelSeverity;
@@ -2472,7 +2577,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 var request = __nccwpck_require__(6234);
 var universalUserAgent = __nccwpck_require__(5030);
 
-const VERSION = "4.6.1";
+const VERSION = "4.6.2";
 
 class GraphqlError extends Error {
   constructor(request, response) {
@@ -2745,29 +2850,18 @@ exports.paginatingEndpoints = paginatingEndpoints;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
 
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
     keys.push.apply(keys, symbols);
   }
 
@@ -2794,9 +2888,25 @@ function _objectSpread2(target) {
   return target;
 }
 
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
 const Endpoints = {
   actions: {
     addSelectedRepoToOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"],
+    approveWorkflowRun: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/approve"],
     cancelWorkflowRun: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel"],
     createOrUpdateEnvironmentSecret: ["PUT /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"],
     createOrUpdateOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}"],
@@ -2910,6 +3020,11 @@ const Endpoints = {
         previews: ["corsair"]
       }
     }],
+    createContentAttachmentForRepo: ["POST /repos/{owner}/{repo}/content_references/{content_reference_id}/attachments", {
+      mediaType: {
+        previews: ["corsair"]
+      }
+    }],
     createFromManifest: ["POST /app-manifests/{code}/conversions"],
     createInstallationAccessToken: ["POST /app/installations/{installation_id}/access_tokens"],
     deleteAuthorization: ["DELETE /applications/{client_id}/grant"],
@@ -2972,8 +3087,11 @@ const Endpoints = {
     }],
     getAnalysis: ["GET /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}"],
     getSarif: ["GET /repos/{owner}/{repo}/code-scanning/sarifs/{sarif_id}"],
+    listAlertInstances: ["GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances"],
     listAlertsForRepo: ["GET /repos/{owner}/{repo}/code-scanning/alerts"],
-    listAlertsInstances: ["GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances"],
+    listAlertsInstances: ["GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances", {}, {
+      renamed: ["codeScanning", "listAlertInstances"]
+    }],
     listRecentAnalyses: ["GET /repos/{owner}/{repo}/code-scanning/analyses"],
     updateAlert: ["PATCH /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}"],
     uploadSarif: ["POST /repos/{owner}/{repo}/code-scanning/sarifs"]
@@ -3455,6 +3573,11 @@ const Endpoints = {
         previews: ["squirrel-girl"]
       }
     }],
+    createForRelease: ["POST /repos/{owner}/{repo}/releases/{release_id}/reactions", {
+      mediaType: {
+        previews: ["squirrel-girl"]
+      }
+    }],
     createForTeamDiscussionCommentInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", {
       mediaType: {
         previews: ["squirrel-girl"]
@@ -3555,6 +3678,7 @@ const Endpoints = {
       }
     }],
     compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
+    compareCommitsWithBasehead: ["GET /repos/{owner}/{repo}/compare/{basehead}"],
     createCommitComment: ["POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"],
     createCommitSignatureProtection: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
       mediaType: {
@@ -3669,6 +3793,7 @@ const Endpoints = {
     getLatestRelease: ["GET /repos/{owner}/{repo}/releases/latest"],
     getPages: ["GET /repos/{owner}/{repo}/pages"],
     getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+    getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
     getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
     getPullRequestReviewProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"],
     getPunchCardStats: ["GET /repos/{owner}/{repo}/stats/punch_card"],
@@ -3877,7 +4002,7 @@ const Endpoints = {
   }
 };
 
-const VERSION = "4.15.1";
+const VERSION = "5.3.1";
 
 function endpointsToMethods(octokit, endpointsMap) {
   const newMethods = {};
@@ -3962,12 +4087,20 @@ function decorate(octokit, scope, methodName, defaults, decorations) {
 
 function restEndpointMethods(octokit) {
   const api = endpointsToMethods(octokit, Endpoints);
+  return {
+    rest: api
+  };
+}
+restEndpointMethods.VERSION = VERSION;
+function legacyRestEndpointMethods(octokit) {
+  const api = endpointsToMethods(octokit, Endpoints);
   return _objectSpread2(_objectSpread2({}, api), {}, {
     rest: api
   });
 }
-restEndpointMethods.VERSION = VERSION;
+legacyRestEndpointMethods.VERSION = VERSION;
 
+exports.legacyRestEndpointMethods = legacyRestEndpointMethods;
 exports.restEndpointMethods = restEndpointMethods;
 //# sourceMappingURL=index.js.map
 
@@ -4053,13 +4186,15 @@ var isPlainObject = __nccwpck_require__(3287);
 var nodeFetch = _interopDefault(__nccwpck_require__(467));
 var requestError = __nccwpck_require__(537);
 
-const VERSION = "5.4.15";
+const VERSION = "5.5.0";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
 }
 
 function fetchWrapper(requestOptions) {
+  const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
+
   if (isPlainObject.isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
     requestOptions.body = JSON.stringify(requestOptions.body);
   }
@@ -4081,6 +4216,12 @@ function fetchWrapper(requestOptions) {
 
     for (const keyAndValue of response.headers) {
       headers[keyAndValue[0]] = keyAndValue[1];
+    }
+
+    if ("deprecation" in headers) {
+      const matches = headers.link && headers.link.match(/<([^>]+)>; rel="deprecation"/);
+      const deprecationLink = matches && matches.pop();
+      log.warn(`[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${headers.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`);
     }
 
     if (status === 204 || status === 205) {
@@ -13082,12 +13223,10 @@ exports.FetchError = FetchError;
 /***/ }),
 
 /***/ 7952:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((module) => {
 
 "use strict";
 
-// TODO: Use the `URL` global when targeting Node.js 10
-const URLParser = typeof URL === 'undefined' ? __nccwpck_require__(8835).URL : URL;
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
 const DATA_URL_DEFAULT_MIME_TYPE = 'text/plain';
@@ -13098,21 +13237,20 @@ const testParameter = (name, filters) => {
 };
 
 const normalizeDataURL = (urlString, {stripHash}) => {
-	const parts = urlString.match(/^data:(.*?),(.*?)(?:#(.*))?$/);
+	const match = /^data:(?<type>[^,]*?),(?<data>[^#]*?)(?:#(?<hash>.*))?$/.exec(urlString);
 
-	if (!parts) {
+	if (!match) {
 		throw new Error(`Invalid URL: ${urlString}`);
 	}
 
-	const mediaType = parts[1].split(';');
-	const body = parts[2];
-	const hash = stripHash ? '' : parts[3];
+	let {type, data, hash} = match.groups;
+	const mediaType = type.split(';');
+	hash = stripHash ? '' : hash;
 
-	let base64 = false;
-
+	let isBase64 = false;
 	if (mediaType[mediaType.length - 1] === 'base64') {
 		mediaType.pop();
-		base64 = true;
+		isBase64 = true;
 	}
 
 	// Lowercase MIME type
@@ -13138,7 +13276,7 @@ const normalizeDataURL = (urlString, {stripHash}) => {
 		...attributes
 	];
 
-	if (base64) {
+	if (isBase64) {
 		normalizedMediaType.push('base64');
 	}
 
@@ -13146,7 +13284,7 @@ const normalizeDataURL = (urlString, {stripHash}) => {
 		normalizedMediaType.unshift(mimeType);
 	}
 
-	return `data:${normalizedMediaType.join(';')},${base64 ? body.trim() : body}${hash ? `#${hash}` : ''}`;
+	return `data:${normalizedMediaType.join(';')},${isBase64 ? data.trim() : data}${hash ? `#${hash}` : ''}`;
 };
 
 const normalizeUrl = (urlString, options) => {
@@ -13157,32 +13295,25 @@ const normalizeUrl = (urlString, options) => {
 		forceHttps: false,
 		stripAuthentication: true,
 		stripHash: false,
+		stripTextFragment: true,
 		stripWWW: true,
 		removeQueryParameters: [/^utm_\w+/i],
 		removeTrailingSlash: true,
+		removeSingleSlash: true,
 		removeDirectoryIndex: false,
 		sortQueryParameters: true,
 		...options
 	};
-
-	// TODO: Remove this at some point in the future
-	if (Reflect.has(options, 'normalizeHttps')) {
-		throw new Error('options.normalizeHttps is renamed to options.forceHttp');
-	}
-
-	if (Reflect.has(options, 'normalizeHttp')) {
-		throw new Error('options.normalizeHttp is renamed to options.forceHttps');
-	}
-
-	if (Reflect.has(options, 'stripFragment')) {
-		throw new Error('options.stripFragment is renamed to options.stripHash');
-	}
 
 	urlString = urlString.trim();
 
 	// Data URL
 	if (/^data:/i.test(urlString)) {
 		return normalizeDataURL(urlString, options);
+	}
+
+	if (/^view-source:/i.test(urlString)) {
+		throw new Error('`view-source:` is not supported as it is a non-standard protocol');
 	}
 
 	const hasRelativeProtocol = urlString.startsWith('//');
@@ -13193,7 +13324,7 @@ const normalizeUrl = (urlString, options) => {
 		urlString = urlString.replace(/^(?!(?:\w+:)?\/\/)|^\/\//, options.defaultProtocol);
 	}
 
-	const urlObj = new URLParser(urlString);
+	const urlObj = new URL(urlString);
 
 	if (options.forceHttp && options.forceHttps) {
 		throw new Error('The `forceHttp` and `forceHttps` options cannot be used together');
@@ -13216,24 +13347,20 @@ const normalizeUrl = (urlString, options) => {
 	// Remove hash
 	if (options.stripHash) {
 		urlObj.hash = '';
+	} else if (options.stripTextFragment) {
+		urlObj.hash = urlObj.hash.replace(/#?:~:text.*?$/i, '');
 	}
 
 	// Remove duplicate slashes if not preceded by a protocol
 	if (urlObj.pathname) {
-		// TODO: Use the following instead when targeting Node.js 10
-		// `urlObj.pathname = urlObj.pathname.replace(/(?<!https?:)\/{2,}/g, '/');`
-		urlObj.pathname = urlObj.pathname.replace(/((?!:).|^)\/{2,}/g, (_, p1) => {
-			if (/^(?!\/)/g.test(p1)) {
-				return `${p1}/`;
-			}
-
-			return '/';
-		});
+		urlObj.pathname = urlObj.pathname.replace(/(?<!\b(?:[a-z][a-z\d+\-.]{1,50}:))\/{2,}/g, '/');
 	}
 
 	// Decode URI octets
 	if (urlObj.pathname) {
-		urlObj.pathname = decodeURI(urlObj.pathname);
+		try {
+			urlObj.pathname = decodeURI(urlObj.pathname);
+		} catch (_) {}
 	}
 
 	// Remove directory index
@@ -13256,10 +13383,11 @@ const normalizeUrl = (urlString, options) => {
 		urlObj.hostname = urlObj.hostname.replace(/\.$/, '');
 
 		// Remove `www.`
-		if (options.stripWWW && /^www\.([a-z\-\d]{2,63})\.([a-z.]{2,5})$/.test(urlObj.hostname)) {
-			// Each label should be max 63 at length (min: 2).
-			// The extension should be max 5 at length (min: 2).
+		if (options.stripWWW && /^www\.(?!www\.)(?:[a-z\-\d]{1,63})\.(?:[a-z.\-\d]{2,63})$/.test(urlObj.hostname)) {
+			// Each label should be max 63 at length (min: 1).
 			// Source: https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
+			// Each TLD should be up to 63 characters long (min: 2).
+			// It is technically possible to have a single character TLD, but none currently exist.
 			urlObj.hostname = urlObj.hostname.replace(/^www\./, '');
 		}
 	}
@@ -13282,11 +13410,17 @@ const normalizeUrl = (urlString, options) => {
 		urlObj.pathname = urlObj.pathname.replace(/\/$/, '');
 	}
 
+	const oldUrlString = urlString;
+
 	// Take advantage of many of the Node `url` normalizations
 	urlString = urlObj.toString();
 
-	// Remove ending `/`
-	if ((options.removeTrailingSlash || urlObj.pathname === '/') && urlObj.hash === '') {
+	if (!options.removeSingleSlash && urlObj.pathname === '/' && !oldUrlString.endsWith('/') && urlObj.hash === '') {
+		urlString = urlString.replace(/\/$/, '');
+	}
+
+	// Remove ending `/` unless removeSingleSlash is false
+	if ((options.removeTrailingSlash || urlObj.pathname === '/') && urlObj.hash === '' && options.removeSingleSlash) {
 		urlString = urlString.replace(/\/$/, '');
 	}
 
@@ -13304,8 +13438,6 @@ const normalizeUrl = (urlString, options) => {
 };
 
 module.exports = normalizeUrl;
-// TODO: Remove this for the next major release
-module.exports.default = normalizeUrl;
 
 
 /***/ }),
@@ -15013,7 +15145,7 @@ function run(options) {
             logLevel: core.isDebug() ? src/* LogLevel.DEBUG */.in.DEBUG : src/* LogLevel.WARN */.in.WARN,
         });
         core.info('Retrieving issue...');
-        const issue = yield github.octokit.issues.get({
+        const issue = yield github.octokit.rest.issues.get({
             owner: github.owner,
             repo: github.repo,
             issue_number: github.issueNumber,
