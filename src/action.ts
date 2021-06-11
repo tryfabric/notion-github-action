@@ -5,6 +5,7 @@ import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectOption} from '@notionhq/client/build/src/api-types';
+import {blocks} from './blocks';
 
 function parsePropertiesFromPayload(
   payload: IssuesEvent,
@@ -15,7 +16,6 @@ function parsePropertiesFromPayload(
     Organization: properties.richText(payload.organization?.login ?? ''),
     Repository: properties.richText(payload.repository.name),
     Number: properties.number(payload.issue.number),
-    Body: properties.richText(payload.issue.body),
     Assignees: properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
     Milestone: properties.richText(payload.issue.milestone?.title ?? ''),
     Labels: properties.richText(payload.issue.labels?.map(label => label.name).join(', ') ?? ''),
@@ -61,11 +61,18 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
 
   const statusOptions = await getStatusOptions(notion.client, notion.databaseId);
 
-  await notion.client.pages.create({
+  const createdPage = await notion.client.pages.create({
     parent: {
       database_id: notion.databaseId,
     },
     properties: parsePropertiesFromPayload(payload, statusOptions),
+  });
+
+  const pageId = createdPage.id;
+
+  await notion.client.blocks.children.append({
+    block_id: pageId,
+    children: [blocks.paragraph(payload.issue.body)],
   });
 }
 
