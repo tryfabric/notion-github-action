@@ -10,7 +10,7 @@ interface Options {
     databaseId: string;
   };
   github: {
-    eventName: string;
+    action: string;
     payload: WebhookPayload;
   };
 }
@@ -71,7 +71,7 @@ export async function run(options: Options) {
     logLevel: core.isDebug() ? LogLevel.DEBUG : LogLevel.WARN,
   });
 
-  switch (github.eventName) {
+  switch (github.action) {
     case 'opened':
       await handleIssueOpened({
         notion: {
@@ -93,7 +93,7 @@ export async function run(options: Options) {
       break;
 
     default:
-      core.error(`Event ${github.eventName} not supported`);
+      core.error(`Action ${github.action} not supported`);
   }
 
   core.info('Complete!');
