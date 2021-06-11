@@ -91,6 +91,9 @@ export async function run(options: Options) {
         payload: github.payload as IssuesEditedEvent,
       });
       break;
+
+    default:
+      core.error(`Event ${github.eventName} not supported`);
   }
 
   core.info('Complete!');
