@@ -14514,6 +14514,7 @@ function handleIssueOpened(options) {
                 database_id: notion.databaseId,
             },
             properties: {
+                Name: properties.title(payload.issue.title),
                 Organization: properties.title((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
                 Repository: properties.title(payload.repository.name),
                 Number: properties.number(payload.issue.number),
