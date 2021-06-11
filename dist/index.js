@@ -14516,6 +14516,29 @@ var properties;
     properties.select = select;
 })(properties || (properties = {}));
 
+;// CONCATENATED MODULE: ./src/blocks.ts
+// eslint-disable-next-line @typescript-eslint/no-namespace
+var blocks;
+(function (blocks) {
+    function paragraph(text) {
+        return {
+            object: 'block',
+            type: 'paragraph',
+            paragraph: {
+                text: [
+                    {
+                        type: 'text',
+                        text: {
+                            content: text,
+                        },
+                    },
+                ],
+            },
+        };
+    }
+    blocks.paragraph = paragraph;
+})(blocks || (blocks = {}));
+
 ;// CONCATENATED MODULE: ./src/action.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -14529,6 +14552,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 function parsePropertiesFromPayload(payload, statusOptions) {
     var _a, _b, _c, _d, _e, _f;
     const result = {
@@ -14536,7 +14560,6 @@ function parsePropertiesFromPayload(payload, statusOptions) {
         Organization: properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
         Repository: properties.richText(payload.repository.name),
         Number: properties.number(payload.issue.number),
-        Body: properties.richText(payload.issue.body),
         Assignees: properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
         Milestone: properties.richText((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
         Labels: properties.richText((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
@@ -14566,11 +14589,16 @@ function handleIssueOpened(options) {
         const { notion, payload } = options;
         core.info(`Creating page for issue #${payload.issue.number}`);
         const statusOptions = yield getStatusOptions(notion.client, notion.databaseId);
-        yield notion.client.pages.create({
+        const createdPage = yield notion.client.pages.create({
             parent: {
                 database_id: notion.databaseId,
             },
             properties: parsePropertiesFromPayload(payload, statusOptions),
+        });
+        const pageId = createdPage.id;
+        yield notion.client.blocks.children.append({
+            block_id: pageId,
+            children: [blocks.paragraph(payload.issue.body)],
         });
     });
 }
