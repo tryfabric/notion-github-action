@@ -57,6 +57,7 @@ interface IssueEditedOptions {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-expect-error implement
 async function handleIssueEdited(options: IssueEditedOptions) {}
 
 export async function run(options: Options) {
