@@ -25,17 +25,9 @@ function parsePropertiesFromPayload(
     ID: properties.number(payload.issue.id),
   };
 
-  const status = statusOptions.find(option => {
-    switch (payload.issue.state) {
-      case 'open':
-        return option.name === 'Opened';
-
-      case 'closed':
-        return option.name === 'Closed';
-    }
-
-    return false;
-  });
+  const status = statusOptions.find(
+    option => option.name.toLowerCase() === payload.issue.state?.toLowerCase()
+  );
 
   if (status) {
     result['Status'] = properties.select(status.id, status.name, status.color);
