@@ -14563,7 +14563,7 @@ function run(options) {
                 });
                 break;
             default:
-                core.error(`Action ${github.payload.action} not supported`);
+                core.setFailed(`Action ${github.payload.action} not supported`);
         }
         core.info('Complete!');
     });
@@ -14591,6 +14591,9 @@ function start() {
             const notionToken = core.getInput(NOTION_TOKEN_KEY);
             const notionDb = core.getInput(NOTION_DB_KEY);
             // const githubToken = core.getInput(GITHUB_TOKEN_KEY);
+            core.info(`context event: ${github.context.eventName}`);
+            core.info(`context action: ${github.context.action}`);
+            core.info(`payload action: ${github.context.payload.action}`);
             const options = {
                 notion: {
                     token: notionToken,
