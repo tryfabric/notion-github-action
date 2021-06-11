@@ -18,7 +18,6 @@ async function start() {
         databaseId: notionDb,
       },
       github: {
-        action: github.context.action,
         payload: github.context.payload,
       },
     };
