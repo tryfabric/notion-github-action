@@ -14518,8 +14518,25 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+function parsePropertiesFromPayload(payload) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    return {
+        Name: properties.title(payload.issue.title),
+        Organization: properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
+        Repository: properties.richText(payload.repository.name),
+        Number: properties.number(payload.issue.number),
+        Body: properties.richText(payload.issue.body),
+        Assignees: properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
+        Milestone: properties.richText((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
+        Labels: properties.richText((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
+        Author: properties.richText(payload.issue.user.login),
+        Created: properties.date(payload.issue.created_at),
+        Updated: properties.date(payload.issue.updated_at),
+        Status: properties.richText((_g = payload.issue.state) !== null && _g !== void 0 ? _g : ''),
+        ID: properties.number(payload.issue.id),
+    };
+}
 function handleIssueOpened(options) {
-    var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
         const { notion, payload } = options;
         core.info(`Creating page for issue #${payload.issue.number}`);
@@ -14527,27 +14544,36 @@ function handleIssueOpened(options) {
             parent: {
                 database_id: notion.databaseId,
             },
-            properties: {
-                Name: properties.title(payload.issue.title),
-                Organization: properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
-                Repository: properties.richText(payload.repository.name),
-                Number: properties.number(payload.issue.number),
-                Body: properties.richText(payload.issue.body),
-                Assignees: properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
-                Milestone: properties.richText((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
-                Labels: properties.richText((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
-                Author: properties.richText(payload.issue.user.login),
-                Created: properties.date(payload.issue.created_at),
-                Updated: properties.date(payload.issue.updated_at),
-                Status: properties.richText(payload.issue.state),
-            },
+            properties: parsePropertiesFromPayload(payload),
         });
     });
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// @ts-expect-error implement
 function handleIssueEdited(options) {
-    return __awaiter(this, void 0, void 0, function* () { });
+    return __awaiter(this, void 0, void 0, function* () {
+        const { notion, payload } = options;
+        core.info(`Querying database for page with github id ${payload.issue.id}`);
+        const query = yield notion.client.databases.query({
+            database_id: notion.databaseId,
+            filter: {
+                property: 'ID',
+                number: {
+                    equals: payload.issue.id,
+                },
+            },
+            page_size: 1,
+        });
+        if (query.results.length === 0) {
+            core.warning(`Could not find page with github id ${payload.issue.id}`);
+            return;
+        }
+        const pageId = query.results[0].id;
+        core.info(`Query successful: Page ${pageId}`);
+        core.info(`Updating page for issue #${payload.issue.number}`);
+        yield notion.client.pages.update({
+            page_id: pageId,
+            properties: parsePropertiesFromPayload(payload),
+        });
+    });
 }
 function run(options) {
     return __awaiter(this, void 0, void 0, function* () {
