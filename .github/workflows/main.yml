@@ -1,6 +1,6 @@
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, labeled, unlabeled, assigned, unassigned, milestoned, demilestoned]
 
 jobs:
   notion_job:

@@ -1,13 +1,11 @@
 import {Client, LogLevel} from '@notionhq/client/build/src';
 import * as core from '@actions/core';
-import type {IssuesEditedEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions/schema';
+import type {IssuesEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions/schema';
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
-import {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
+import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 
-function parsePropertiesFromPayload(
-  payload: IssuesOpenedEvent | IssuesEditedEvent
-): InputPropertyValueMap {
+function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap {
   return {
     Name: properties.title(payload.issue.title),
     Organization: properties.richText(payload.organization?.login ?? ''),
@@ -51,7 +49,7 @@ interface IssueEditedOptions {
     client: Client;
     databaseId: string;
   };
-  payload: IssuesEditedEvent;
+  payload: IssuesEvent;
 }
 
 async function handleIssueEdited(options: IssueEditedOptions) {
@@ -106,29 +104,22 @@ export async function run(options: Options) {
     logLevel: core.isDebug() ? LogLevel.DEBUG : LogLevel.WARN,
   });
 
-  switch (github.payload.action) {
-    case 'opened':
-      await handleIssueOpened({
-        notion: {
-          client: notionClient,
-          databaseId: notion.databaseId,
-        },
-        payload: github.payload as IssuesOpenedEvent,
-      });
-      break;
-
-    case 'edited':
-      await handleIssueEdited({
-        notion: {
-          client: notionClient,
-          databaseId: notion.databaseId,
-        },
-        payload: github.payload as IssuesEditedEvent,
-      });
-      break;
-
-    default:
-      core.setFailed(`Action ${github.payload.action} not supported`);
+  if (github.payload.action === 'opened') {
+    await handleIssueOpened({
+      notion: {
+        client: notionClient,
+        databaseId: notion.databaseId,
+      },
+      payload: github.payload as IssuesOpenedEvent,
+    });
+  } else {
+    await handleIssueEdited({
+      notion: {
+        client: notionClient,
+        databaseId: notion.databaseId,
+      },
+      payload: github.payload as IssuesEvent,
+    });
   }
 
   core.info('Complete!');
