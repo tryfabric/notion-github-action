@@ -14555,6 +14555,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 function parsePropertiesFromPayload(payload, statusOptions) {
     var _a, _b, _c, _d, _e, _f;
+    core.info(`payload.issue.body ${JSON.stringify(payload.issue.body, null, 2)}`);
     const result = {
         Name: properties.title(payload.issue.title),
         Organization: properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
