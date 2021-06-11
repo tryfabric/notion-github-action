@@ -3,6 +3,8 @@ import type {
   NumberPropertyValue,
   TitleInputPropertyValue,
   RichTextInputPropertyValue,
+  SelectPropertyValue,
+  Color,
 } from '@notionhq/client/build/src/api-types';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -47,6 +49,17 @@ export namespace properties {
       type: 'date',
       date: {
         start: time,
+      },
+    };
+  }
+
+  export function select(id: string, name: string, color: Color): Omit<SelectPropertyValue, 'id'> {
+    return {
+      type: 'select',
+      select: {
+        id: id,
+        name: name,
+        color: color,
       },
     };
   }

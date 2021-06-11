@@ -4,9 +4,13 @@ import type {IssuesEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
+import {SelectOption} from '@notionhq/client/build/src/api-types';
 
-function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap {
-  return {
+function parsePropertiesFromPayload(
+  payload: IssuesEvent,
+  statusOptions: SelectOption[]
+): InputPropertyValueMap {
+  const result: InputPropertyValueMap = {
     Name: properties.title(payload.issue.title),
     Organization: properties.richText(payload.organization?.login ?? ''),
     Repository: properties.richText(payload.repository.name),
@@ -18,9 +22,26 @@ function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap
     Author: properties.richText(payload.issue.user.login),
     Created: properties.date(payload.issue.created_at),
     Updated: properties.date(payload.issue.updated_at),
-    Status: properties.richText(payload.issue.state ?? ''),
     ID: properties.number(payload.issue.id),
   };
+
+  const status = statusOptions.find(option => {
+    switch (payload.issue.state) {
+      case 'open':
+        return option.name === 'Opened';
+
+      case 'closed':
+        return option.name === 'Closed';
+    }
+
+    return false;
+  });
+
+  if (status) {
+    result['Status'] = properties.select(status.id, status.name, status.color);
+  }
+
+  return result;
 }
 
 interface IssueOpenedOptions {
@@ -31,16 +52,28 @@ interface IssueOpenedOptions {
   payload: IssuesOpenedEvent;
 }
 
+async function getStatusOptions(client: Client, databaseId: string): Promise<SelectOption[]> {
+  const db = await client.databases.retrieve({database_id: databaseId});
+  const statusProperty = db.properties['Status'];
+  if (statusProperty.type !== 'select') {
+    throw new Error('`Status` property must be a select property.');
+  }
+
+  return statusProperty.select.options;
+}
+
 async function handleIssueOpened(options: IssueOpenedOptions) {
   const {notion, payload} = options;
 
   core.info(`Creating page for issue #${payload.issue.number}`);
 
+  const statusOptions = await getStatusOptions(notion.client, notion.databaseId);
+
   await notion.client.pages.create({
     parent: {
       database_id: notion.databaseId,
     },
-    properties: parsePropertiesFromPayload(payload),
+    properties: parsePropertiesFromPayload(payload, statusOptions),
   });
 }
 
@@ -78,9 +111,11 @@ async function handleIssueEdited(options: IssueEditedOptions) {
   core.info(`Query successful: Page ${pageId}`);
   core.info(`Updating page for issue #${payload.issue.number}`);
 
+  const statusOptions = await getStatusOptions(notion.client, notion.databaseId);
+
   await notion.client.pages.update({
     page_id: pageId,
-    properties: parsePropertiesFromPayload(payload),
+    properties: parsePropertiesFromPayload(payload, statusOptions),
   });
 }
 
