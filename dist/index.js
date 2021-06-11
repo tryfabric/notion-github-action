@@ -14562,6 +14562,8 @@ function run(options) {
                     payload: github.payload,
                 });
                 break;
+            default:
+                core.error(`Event ${github.eventName} not supported`);
         }
         core.info('Complete!');
     });
