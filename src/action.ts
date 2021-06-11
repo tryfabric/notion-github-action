@@ -11,6 +11,8 @@ function parsePropertiesFromPayload(
   payload: IssuesEvent,
   statusOptions: SelectOption[]
 ): InputPropertyValueMap {
+  core.info(`payload.issue.body ${JSON.stringify(payload.issue.body, null, 2)}`);
+
   const result: InputPropertyValueMap = {
     Name: properties.title(payload.issue.title),
     Organization: properties.richText(payload.organization?.login ?? ''),
