@@ -1,53 +1,83 @@
-interface BaseNode<T extends string> {
-  type: T;
-  children: (Node | Leaf)[];
+export interface ThematicBreakLeafNode {
+  type: 'thematicBreak';
 }
 
-export interface HeadingNode extends BaseNode<'heading'> {
-  depth: 1 | 2 | 3;
+export interface HeadingLeafNode {
+  type: 'heading';
+  depth: 1 | 2 | 3 | 4 | 5 | 6;
+  children: Inline[];
 }
 
-export type ParagraphNode = BaseNode<'paragraph'>;
-
-type EmphasisNode = BaseNode<'emphasis'>;
-
-interface LinkNode extends BaseNode<'link'> {
-  title: string | null;
-  url: string;
+export interface ParagraphLeafNode {
+  type: 'paragraph';
+  children: Inline[];
 }
 
-type StrongNode = BaseNode<'strong'>;
-
-export interface ListNode extends BaseNode<'list'> {
-  start: number | null;
-  children: ListItemNode[];
-}
-
-export type ListItemNode = BaseNode<'listitem'>;
-
-type BlockQuoteNode = BaseNode<'blockquote'>;
-
-export type Node =
-  | HeadingNode
-  | ParagraphNode
-  | EmphasisNode
-  | StrongNode
-  | ListNode
-  | ListItemNode
-  | BlockQuoteNode
-  | LinkNode;
-
-interface BaseLeaf<T extends string> {
-  type: T;
+export interface CodeLeafNode {
+  type: 'code';
+  lang: string;
   value: string;
 }
 
-type TextLeaf = BaseLeaf<'text'>;
-
-export interface CodeLeaf extends BaseLeaf<'code'> {
-  lang: string;
+export interface InlineText {
+  type: 'text';
+  value: string;
 }
 
-type InlineCodeLeaf = BaseLeaf<'inlineCode'>;
+export interface InlineEmphasis {
+  type: 'emphasis';
+  children: Inline[];
+}
 
-export type Leaf = TextLeaf | CodeLeaf | InlineCodeLeaf;
+export interface InlineStrong {
+  type: 'strong';
+  children: Inline[];
+}
+
+export interface InlineCode {
+  type: 'inlineCode';
+  value: string;
+}
+
+export interface InlineLink {
+  type: 'link';
+  url: string;
+  children: Inline[];
+}
+
+export interface InlineHtml {
+  type: 'html';
+  value: string;
+  children: Inline[];
+}
+
+export interface NodeQuoteContainerNode {
+  type: 'blockquote';
+  children: LeafNode[];
+}
+
+export interface ListContainerNode {
+  type: 'list';
+  start: number | null;
+  children: {
+    type: 'listitem';
+    children: LeafNode[];
+  }[];
+}
+
+export interface RootNode {
+  type: 'root';
+  children: (ContainerNode | LeafNode)[];
+}
+
+export type Inline =
+  | InlineText
+  | InlineEmphasis
+  | InlineStrong
+  | InlineCode
+  | InlineLink
+  | InlineHtml;
+
+export type LeafNode = ThematicBreakLeafNode | HeadingLeafNode | ParagraphLeafNode | CodeLeafNode;
+
+export type ContainerNode = NodeQuoteContainerNode | ListContainerNode;

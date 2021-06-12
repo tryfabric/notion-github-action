@@ -11,11 +11,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
+    "noImplicitThis": true,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "esModuleInterop" : true
   },
   "exclude": [
     "node_modules"
-  ]
+  ],
 }

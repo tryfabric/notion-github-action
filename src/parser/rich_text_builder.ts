@@ -1,4 +1,5 @@
 import type {Annotations, RichText} from '@notionhq/client/build/src/api-types';
+import {common} from '../common';
 
 export class RichTextBuilder {
   public annotations: Annotations;
@@ -18,18 +19,20 @@ export class RichTextBuilder {
   }
 
   public build(text: string): RichText {
-    return {
-      type: 'text',
+    return common.richText(text, {
       annotations: this.annotations,
-      text: {
-        content: text,
-        link: this.href
-          ? {
-              type: 'url',
-              url: this.href,
-            }
-          : undefined,
-      },
-    } as RichText;
+      url: this.href,
+    });
+  }
+
+  /**
+   * Returns a deep copy of `this`
+   */
+  public copy(): RichTextBuilder {
+    const copy = new RichTextBuilder();
+    copy.annotations = {...this.annotations};
+    copy.href = this.href;
+
+    return copy;
   }
 }

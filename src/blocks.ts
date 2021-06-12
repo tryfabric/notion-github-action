@@ -8,16 +8,7 @@ import type {
   RichText,
 } from '@notionhq/client/build/src/api-types';
 
-type Heading<T extends 'heading_1' | 'heading_2' | 'heading_3'> = Extract<
-  HeadingOneBlock | HeadingTwoBlock | HeadingThreeBlock,
-  {type: T}
->;
-
-type ListItem<T extends 'bulleted_list_item' | 'numbered_list_item'> = Extract<
-  BulletedListItemBlock | NumberedListItemBlock,
-  {type: T}
->;
-
+// A block object represents content within Notion. Blocks can be text, lists, media, and more. A page is a type of block, too!
 export namespace blocks {
   export function paragraph(text: RichText[]): ParagraphBlock {
     return {
@@ -29,29 +20,53 @@ export namespace blocks {
     } as ParagraphBlock;
   }
 
-  export function heading<T extends 'heading_1' | 'heading_2' | 'heading_3'>(
-    type: T,
-    text: RichText[]
-  ): Heading<T> {
+  export function headingOne(text: RichText[]): HeadingOneBlock {
     return {
       object: 'block',
-      type: type,
-      [type]: {
+      type: 'heading_1',
+      heading_1: {
         text: text,
       },
-    } as unknown as Heading<T>;
+    } as HeadingOneBlock;
   }
 
-  export function listItem<T extends 'bulleted_list_item' | 'numbered_list_item'>(
-    type: T,
-    text: RichText[]
-  ): ListItem<T> {
+  export function headingTwo(text: RichText[]): HeadingTwoBlock {
     return {
       object: 'block',
-      type: type,
-      [type]: {
+      type: 'heading_2',
+      heading_2: {
         text: text,
       },
-    } as unknown as ListItem<T>;
+    } as HeadingTwoBlock;
+  }
+
+  export function headingThree(text: RichText[]): HeadingThreeBlock {
+    return {
+      object: 'block',
+      type: 'heading_3',
+      heading_3: {
+        text: text,
+      },
+    } as HeadingThreeBlock;
+  }
+
+  export function bulletedListItem(text: RichText[]): BulletedListItemBlock {
+    return {
+      object: 'block',
+      type: 'bulleted_list_item',
+      bulleted_list_item: {
+        text: text,
+      },
+    } as BulletedListItemBlock;
+  }
+
+  export function numberedListItem(text: RichText[]): NumberedListItemBlock {
+    return {
+      object: 'block',
+      type: 'numbered_list_item',
+      numbered_list_item: {
+        text: text,
+      },
+    } as NumberedListItemBlock;
   }
 }
