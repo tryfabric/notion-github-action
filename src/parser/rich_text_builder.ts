@@ -21,9 +21,14 @@ export class RichTextBuilder {
     return {
       type: 'text',
       annotations: this.annotations,
-      href: this.href,
       text: {
         content: text,
+        link: this.href
+          ? {
+              type: 'url',
+              url: this.href,
+            }
+          : undefined,
       },
     } as RichText;
   }

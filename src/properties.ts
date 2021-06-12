@@ -7,7 +7,6 @@ import type {
   Color,
 } from '@notionhq/client/build/src/api-types';
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace properties {
   export function richText(text: string): Omit<RichTextInputPropertyValue, 'id'> {
     return {

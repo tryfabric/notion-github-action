@@ -3,11 +3,11 @@ interface BaseNode<T extends string> {
   children: (Node | Leaf)[];
 }
 
-interface HeadingNode extends BaseNode<'heading'> {
+export interface HeadingNode extends BaseNode<'heading'> {
   depth: 1 | 2 | 3;
 }
 
-type ParagraphNode = BaseNode<'paragraph'>;
+export type ParagraphNode = BaseNode<'paragraph'>;
 
 type EmphasisNode = BaseNode<'emphasis'>;
 
@@ -18,16 +18,16 @@ interface LinkNode extends BaseNode<'link'> {
 
 type StrongNode = BaseNode<'strong'>;
 
-interface ListNode extends BaseNode<'list'> {
+export interface ListNode extends BaseNode<'list'> {
   start: number | null;
   children: ListItemNode[];
 }
 
-type ListItemNode = BaseNode<'listitem'>;
+export type ListItemNode = BaseNode<'listitem'>;
 
 type BlockQuoteNode = BaseNode<'blockquote'>;
 
-type Node =
+export type Node =
   | HeadingNode
   | ParagraphNode
   | EmphasisNode
@@ -44,10 +44,10 @@ interface BaseLeaf<T extends string> {
 
 type TextLeaf = BaseLeaf<'text'>;
 
-interface CodeLeaf extends BaseLeaf<'code'> {
+export interface CodeLeaf extends BaseLeaf<'code'> {
   lang: string;
 }
 
 type InlineCodeLeaf = BaseLeaf<'inlineCode'>;
 
-type Leaf = TextLeaf | CodeLeaf | InlineCodeLeaf;
+export type Leaf = TextLeaf | CodeLeaf | InlineCodeLeaf;

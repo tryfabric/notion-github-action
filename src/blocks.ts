@@ -18,7 +18,6 @@ type ListItem<T extends 'bulleted_list_item' | 'numbered_list_item'> = Extract<
   {type: T}
 >;
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace blocks {
   export function paragraph(text: RichText[]): ParagraphBlock {
     return {
