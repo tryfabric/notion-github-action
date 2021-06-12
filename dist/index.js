@@ -22491,7 +22491,6 @@ var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
 var src = __nccwpck_require__(324);
 ;// CONCATENATED MODULE: ./src/properties.ts
-// eslint-disable-next-line @typescript-eslint/no-namespace
 var properties;
 (function (properties) {
     function richText(text) {
@@ -22574,16 +22573,20 @@ class RichTextBuilder {
         return {
             type: 'text',
             annotations: this.annotations,
-            href: this.href,
             text: {
                 content: text,
+                link: this.href
+                    ? {
+                        type: 'url',
+                        url: this.href,
+                    }
+                    : undefined,
             },
         };
     }
 }
 
 ;// CONCATENATED MODULE: ./src/blocks.ts
-// eslint-disable-next-line @typescript-eslint/no-namespace
 var blocks;
 (function (blocks) {
     function paragraph(text) {
@@ -22640,25 +22643,22 @@ function parseText(node, builder) {
             builder.href = node.url;
             break;
     }
-    return isLeaf(node) ? builder.build(node.value) : parseText(node.children[0], builder);
+    return isLeaf(node)
+        ? [builder.build(node.value)]
+        : node.children.flatMap(child => parseText(child, builder));
 }
 function parseListItem(node, type) {
-    if (node.children[0].type !== 'paragraph') {
-        throw new Error('invariant failure');
-    }
-    const builder = new RichTextBuilder();
-    return blocks.listItem(type, node.children.map(node => parseText(node, builder)));
+    const mapped = node.children.flatMap(node => parseText(node, new RichTextBuilder()));
+    return blocks.listItem(type, mapped);
 }
 function parseHeading(node) {
     const key = `heading_${node.depth}`;
-    const builder = new RichTextBuilder();
-    return [
-        blocks.heading(key, node.children.map(node => parseText(node, builder))),
-    ];
+    const mapped = node.children.flatMap(node => parseText(node, new RichTextBuilder()));
+    return [blocks.heading(key, mapped)];
 }
 function parseParagraph(node) {
-    const builder = new RichTextBuilder();
-    return [blocks.paragraph(node.children.map(node => parseText(node, builder)))];
+    const mapped = node.children.flatMap(node => parseText(node, new RichTextBuilder()));
+    return [blocks.paragraph(mapped)];
 }
 function parseList(node) {
     const type = node.start ? 'numbered_list_item' : 'bulleted_list_item';
@@ -22666,7 +22666,7 @@ function parseList(node) {
 }
 function parseCode(node) {
     const builder = new RichTextBuilder();
-    return [blocks.paragraph([parseText(node, builder)])];
+    return [blocks.paragraph(parseText(node, builder))];
 }
 function parseNode(root) {
     return root.children.flatMap((node) => {
