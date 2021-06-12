@@ -6,6 +6,7 @@ import type {
   NumberedListItemBlock,
   ParagraphBlock,
   RichText,
+  ToDoBlock,
 } from '@notionhq/client/build/src/api-types';
 
 // A block object represents content within Notion. Blocks can be text, lists, media, and more. A page is a type of block, too!
@@ -68,5 +69,16 @@ export namespace blocks {
         text: text,
       },
     } as NumberedListItemBlock;
+  }
+
+  export function toDo(checked: boolean, text: RichText[]): ToDoBlock {
+    return {
+      object: 'block',
+      type: 'to_do',
+      to_do: {
+        text: text,
+        checked: checked,
+      },
+    } as ToDoBlock;
   }
 }

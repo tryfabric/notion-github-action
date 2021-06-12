@@ -140,11 +140,34 @@ hello
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse html', () => {
-    const text = '<sub>hello</sub>';
+  it('should parse github extensions', () => {
+    const text = `
+https://example.com
+
+~~strikethrough content~~
+
+| a | b  |  c |  d  |
+| - | :- | -: | :-: |
+
+* [ ] to do
+* [x] done
+    `;
     const actual = parseBody(text);
 
-    const expected = [blocks.paragraph([])];
+    const expected = [
+      blocks.paragraph([
+        common.richText('https://example.com', {
+          url: 'https://example.com',
+        }),
+      ]),
+      blocks.paragraph([
+        common.richText('strikethrough content', {
+          annotations: {strikethrough: true},
+        }),
+      ]),
+      blocks.toDo(false, [common.richText('to do')]),
+      blocks.toDo(true, [common.richText('done')]),
+    ];
 
     expect(actual).toStrictEqual(expected);
   });

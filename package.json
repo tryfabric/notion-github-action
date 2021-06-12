@@ -28,6 +28,7 @@
     "@actions/github": "^5.0.0",
     "@notionhq/client": "^0.1.9",
     "@octokit/webhooks-definitions": "^3.67.3",
+    "remark-gfm": "^1.0.0",
     "remark-parse": "^9.0.0",
     "unified": "^9.2.1",
     "uuid": "^8.3.2"

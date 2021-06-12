@@ -7,25 +7,25 @@ import type {
   ParagraphBlock,
   RichText,
   Block,
+  ToDoBlock,
 } from '@notionhq/client/build/src/api-types';
-import type {
-  CodeLeafNode,
-  ContainerNode,
-  HeadingLeafNode,
-  Inline,
-  LeafNode,
-  ListContainerNode,
-  ParagraphLeafNode,
-  RootNode,
-} from './types';
+import type {Code, FlowContent, Heading, List, Paragraph, PhrasingContent, Root} from './types';
 import {RichTextBuilder} from './rich_text_builder';
 import {blocks} from '../blocks';
 
-function parseInline(element: Inline, builder: RichTextBuilder): RichText[] {
+function parseInline(element: PhrasingContent, builder: RichTextBuilder): RichText[] {
   const copy = builder.copy();
   switch (element.type) {
+    case 'image':
+      copy.href = element.url;
+      return [copy.build(element.title ?? element.url)];
+
     case 'text':
       return [copy.build(element.value)];
+
+    case 'delete':
+      copy.annotations.strikethrough = true;
+      return element.children.flatMap(child => parseInline(child, copy));
 
     case 'emphasis':
       copy.annotations.italic = true;
@@ -43,20 +43,18 @@ function parseInline(element: Inline, builder: RichTextBuilder): RichText[] {
       copy.annotations.code = true;
       return [copy.build(element.value)];
 
-    case 'html':
+    default:
       return [];
   }
 }
 
-function parseParagraph(element: ParagraphLeafNode): ParagraphBlock[] {
+function parseParagraph(element: Paragraph): ParagraphBlock[] {
   const builder = new RichTextBuilder();
   const text = element.children.flatMap(child => parseInline(child, builder));
   return [blocks.paragraph(text)];
 }
 
-function parseHeading(
-  element: HeadingLeafNode
-): (HeadingOneBlock | HeadingTwoBlock | HeadingThreeBlock)[] {
+function parseHeading(element: Heading): (HeadingOneBlock | HeadingTwoBlock | HeadingThreeBlock)[] {
   const builder = new RichTextBuilder();
   const text = element.children.flatMap(child => parseInline(child, builder));
 
@@ -72,7 +70,7 @@ function parseHeading(
   }
 }
 
-function parseCode(element: CodeLeafNode): ParagraphBlock[] {
+function parseCode(element: Code): ParagraphBlock[] {
   const builder = new RichTextBuilder();
   builder.annotations.code = true;
   const text = [builder.build(element.value)];
@@ -80,26 +78,29 @@ function parseCode(element: CodeLeafNode): ParagraphBlock[] {
   return [blocks.paragraph(text)];
 }
 
-function parseList(element: ListContainerNode): (BulletedListItemBlock | NumberedListItemBlock)[] {
+function parseList(element: List): (BulletedListItemBlock | NumberedListItemBlock | ToDoBlock)[] {
   return element.children.flatMap(item => {
     const builder = new RichTextBuilder();
 
     const paragraph = item.children[0];
     if (paragraph.type !== 'paragraph') {
-      return [] as (BulletedListItemBlock | NumberedListItemBlock)[];
+      return [] as (BulletedListItemBlock | NumberedListItemBlock | ToDoBlock)[];
     }
 
     const text = paragraph.children.flatMap(child => parseInline(child, builder));
 
-    return element.start ? [blocks.numberedListItem(text)] : [blocks.bulletedListItem(text)];
+    if (element.start) {
+      return [blocks.numberedListItem(text)];
+    } else if (item.checked === true || item.checked === false) {
+      return [blocks.toDo(item.checked, text)];
+    } else {
+      return [blocks.bulletedListItem(text)];
+    }
   });
 }
 
-function parseNode(node: LeafNode | ContainerNode): Block[] {
+function parseNode(node: FlowContent): Block[] {
   switch (node.type) {
-    case 'thematicBreak':
-      return [];
-
     case 'heading':
       return parseHeading(node);
 
@@ -114,9 +115,12 @@ function parseNode(node: LeafNode | ContainerNode): Block[] {
 
     case 'list':
       return parseList(node);
+
+    default:
+      return [];
   }
 }
 
-export function parseRoot(root: RootNode): Block[] {
+export function parseRoot(root: Root): Block[] {
   return root.children.flatMap(parseNode);
 }

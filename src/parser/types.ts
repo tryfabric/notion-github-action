@@ -1,83 +1,164 @@
-export interface ThematicBreakLeafNode {
+// From https://github.com/syntax-tree/mdast
+
+import type {Node} from 'unist';
+
+interface Parent {
+  children: MdastContent[];
+}
+
+interface Literal {
+  value: string;
+}
+
+export interface Root extends Parent {
+  type: 'root';
+  children: FlowContent[];
+}
+
+export interface Paragraph extends Parent {
+  type: 'paragraph';
+  children: PhrasingContent[];
+}
+
+export interface Heading extends Parent {
+  type: 'heading';
+  depth: 1 | 2 | 3 | 4 | 5 | 6;
+  children: PhrasingContent[];
+}
+
+export interface ThematicBreak extends Node {
   type: 'thematicBreak';
 }
 
-export interface HeadingLeafNode {
-  type: 'heading';
-  depth: 1 | 2 | 3 | 4 | 5 | 6;
-  children: Inline[];
-}
-
-export interface ParagraphLeafNode {
-  type: 'paragraph';
-  children: Inline[];
-}
-
-export interface CodeLeafNode {
-  type: 'code';
-  lang: string;
-  value: string;
-}
-
-export interface InlineText {
-  type: 'text';
-  value: string;
-}
-
-export interface InlineEmphasis {
-  type: 'emphasis';
-  children: Inline[];
-}
-
-export interface InlineStrong {
-  type: 'strong';
-  children: Inline[];
-}
-
-export interface InlineCode {
-  type: 'inlineCode';
-  value: string;
-}
-
-export interface InlineLink {
-  type: 'link';
-  url: string;
-  children: Inline[];
-}
-
-export interface InlineHtml {
-  type: 'html';
-  value: string;
-  children: Inline[];
-}
-
-export interface NodeQuoteContainerNode {
+export interface Blockquote extends Parent {
   type: 'blockquote';
-  children: LeafNode[];
+  children: FlowContent[];
 }
 
-export interface ListContainerNode {
+export interface List extends Parent {
   type: 'list';
-  start: number | null;
-  children: {
-    type: 'listitem';
-    children: LeafNode[];
-  }[];
+  ordered?: boolean;
+  start?: number;
+  spread?: boolean;
+  children: ListContent[];
 }
 
-export interface RootNode {
-  type: 'root';
-  children: (ContainerNode | LeafNode)[];
+export interface ListItem extends Parent {
+  type: 'listitem';
+  checked?: boolean | undefined | null;
+  spread?: boolean;
+  children: FlowContent[];
 }
 
-export type Inline =
-  | InlineText
-  | InlineEmphasis
-  | InlineStrong
+export interface HTML extends Literal {
+  type: 'html';
+}
+
+export interface Code extends Literal {
+  type: 'code';
+  lang?: string;
+  meta?: string;
+}
+
+export interface Definition extends Node {
+  type: 'definition';
+}
+
+export interface Text extends Literal {
+  type: 'text';
+}
+
+export interface Emphasis extends Parent {
+  type: 'emphasis';
+  children: PhrasingContent[];
+}
+
+export interface Strong extends Parent {
+  type: 'strong';
+  children: PhrasingContent[];
+}
+
+export interface Delete extends Parent {
+  type: 'delete';
+  children: PhrasingContent[];
+}
+
+export interface InlineCode extends Literal {
+  type: 'inlineCode';
+}
+
+export interface Break extends Node {
+  type: 'break';
+}
+
+export interface Link extends Parent, Resource {
+  type: 'link';
+  children: StaticPhrasingContent[];
+}
+
+export interface Image extends Node, Resource {
+  type: 'image';
+}
+
+export interface LinkReference extends Parent {
+  type: 'linkReference';
+  children: StaticPhrasingContent[];
+}
+
+export interface ImageReference extends Node {
+  type: 'imageReference';
+}
+
+interface Resource {
+  url: string;
+  title?: string;
+}
+
+interface Table extends Parent {
+  type: 'table';
+  align?: ('left' | 'right' | 'center')[];
+  children: TableContent[];
+}
+
+interface TableRow extends Parent {
+  type: 'tableRow';
+  children: RowContent[];
+}
+
+interface TableCell extends Parent {
+  type: 'tableCell';
+  children: PhrasingContent[];
+}
+
+type MdastContent = FlowContent | ListContent | PhrasingContent | TableContent | RowContent;
+
+export type FlowContent =
+  | Blockquote
+  | Code
+  | Heading
+  | HTML
+  | List
+  | ThematicBreak
+  | Content
+  | Table;
+
+type Content = Definition | Paragraph;
+
+type ListContent = ListItem;
+
+export type PhrasingContent = Link | LinkReference | StaticPhrasingContent;
+
+type StaticPhrasingContent =
+  | Break
+  | Emphasis
+  | HTML
+  | Image
+  | ImageReference
   | InlineCode
-  | InlineLink
-  | InlineHtml;
+  | Strong
+  | Text
+  | Delete;
 
-export type LeafNode = ThematicBreakLeafNode | HeadingLeafNode | ParagraphLeafNode | CodeLeafNode;
+type TableContent = TableRow;
 
-export type ContainerNode = NodeQuoteContainerNode | ListContainerNode;
+type RowContent = TableCell;
