@@ -49,7 +49,9 @@ export namespace blocks {
     return {
       object: 'block',
       type: type,
-      [type]: text,
+      [type]: {
+        text: text,
+      },
     } as unknown as ListItem<T>;
   }
 }
