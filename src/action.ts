@@ -5,7 +5,7 @@ import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectOption} from '@notionhq/client/build/src/api-types';
-import {parseBody} from './parser';
+import {parseBodyToBlocks} from './parser';
 
 function parsePropertiesFromPayload(
   payload: IssuesEvent,
@@ -74,7 +74,7 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
 
   await notion.client.blocks.children.append({
     block_id: pageId,
-    children: parseBody(payload.issue.body),
+    children: parseBodyToBlocks(payload.issue.body),
   });
 }
 

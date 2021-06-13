@@ -1,11 +1,11 @@
-import {parseBody} from './index';
+import {parseBodyToBlocks} from './index';
 import {blocks} from '../blocks';
 import {common} from '../common';
 
 describe('gfm parser', () => {
   it('should parse paragraph with nested annotations', () => {
     const text = 'Hello _world **foo**_! `code`';
-    const actual = parseBody(text);
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -28,7 +28,7 @@ describe('gfm parser', () => {
 
   it('should parse text with hrefs and annotations', () => {
     const text = 'hello world [this is a _url_](https://example.com) end';
-    const actual = parseBody(text);
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -49,7 +49,7 @@ describe('gfm parser', () => {
 
   it('should parse thematic breaks', () => {
     const text = 'hello\n***\nworld';
-    const actual = parseBody(text);
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -67,7 +67,7 @@ describe('gfm parser', () => {
 #### heading4
     `;
 
-    const actual = parseBody(text);
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.headingOne([common.richText('heading1')]),
@@ -87,7 +87,7 @@ public class Foo {}
 \`\`\`
     `;
 
-    const actual = parseBody(text);
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -106,7 +106,7 @@ public class Foo {}
 > # hello _world_
     `;
 
-    const actual = parseBody(text);
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.headingOne([
@@ -128,7 +128,7 @@ hello
 * **c**
     `;
 
-    const actual = parseBody(text);
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -152,7 +152,8 @@ https://example.com
 * [ ] to do
 * [x] done
     `;
-    const actual = parseBody(text);
+
+    const actual = parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -168,6 +169,19 @@ https://example.com
       blocks.toDo(false, [common.richText('to do')]),
       blocks.toDo(true, [common.richText('done')]),
     ];
+
+    expect(actual).toStrictEqual(expected);
+  });
+
+  it('should remove html', () => {
+    const text = `
+<sub>a</sub>
+b
+    `;
+
+    const actual = parseBodyToBlocks(text);
+
+    const expected = [blocks.paragraph([common.richText('b')])];
 
     expect(actual).toStrictEqual(expected);
   });
