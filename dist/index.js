@@ -22613,7 +22613,9 @@ var blocks;
         return {
             object: 'block',
             type: type,
-            [type]: text,
+            [type]: {
+                text: text,
+            },
         };
     }
     blocks.listItem = listItem;
