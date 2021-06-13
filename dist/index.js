@@ -5784,6 +5784,36 @@ module.exports = CacheableRequest;
 
 /***/ }),
 
+/***/ 1291:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = ccount
+
+function ccount(source, character) {
+  var value = String(source)
+  var count = 0
+  var index
+
+  if (typeof character !== 'string') {
+    throw new Error('Expected character')
+  }
+
+  index = value.indexOf(character)
+
+  while (index !== -1) {
+    count++
+    index = value.indexOf(character, index + character.length)
+  }
+
+  return count
+}
+
+
+/***/ }),
+
 /***/ 1312:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -6140,6 +6170,27 @@ var eos = function(stream, opts, callback) {
 };
 
 module.exports = eos;
+
+
+/***/ }),
+
+/***/ 8691:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = string => {
+	if (typeof string !== 'string') {
+		throw new TypeError('Expected a string');
+	}
+
+	// Escape characters with special meaning either inside or outside character sets.
+	// Use a simple backslash escape when it’s always valid, and a \unnnn escape when the simpler form would be disallowed by Unicode patterns’ stricter grammar.
+	return string
+		.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
+		.replace(/-/g, '\\x2d');
+};
 
 
 /***/ }),
@@ -11685,6 +11736,451 @@ module.exports = object => {
 
 /***/ }),
 
+/***/ 1062:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var repeat = __nccwpck_require__(6976)
+
+module.exports = markdownTable
+
+var trailingWhitespace = / +$/
+
+// Characters.
+var space = ' '
+var lineFeed = '\n'
+var dash = '-'
+var colon = ':'
+var verticalBar = '|'
+
+var x = 0
+var C = 67
+var L = 76
+var R = 82
+var c = 99
+var l = 108
+var r = 114
+
+// Create a table from a matrix of strings.
+function markdownTable(table, options) {
+  var settings = options || {}
+  var padding = settings.padding !== false
+  var start = settings.delimiterStart !== false
+  var end = settings.delimiterEnd !== false
+  var align = (settings.align || []).concat()
+  var alignDelimiters = settings.alignDelimiters !== false
+  var alignments = []
+  var stringLength = settings.stringLength || defaultStringLength
+  var rowIndex = -1
+  var rowLength = table.length
+  var cellMatrix = []
+  var sizeMatrix = []
+  var row = []
+  var sizes = []
+  var longestCellByColumn = []
+  var mostCellsPerRow = 0
+  var cells
+  var columnIndex
+  var columnLength
+  var largest
+  var size
+  var cell
+  var lines
+  var line
+  var before
+  var after
+  var code
+
+  // This is a superfluous loop if we don’t align delimiters, but otherwise we’d
+  // do superfluous work when aligning, so optimize for aligning.
+  while (++rowIndex < rowLength) {
+    cells = table[rowIndex]
+    columnIndex = -1
+    columnLength = cells.length
+    row = []
+    sizes = []
+
+    if (columnLength > mostCellsPerRow) {
+      mostCellsPerRow = columnLength
+    }
+
+    while (++columnIndex < columnLength) {
+      cell = serialize(cells[columnIndex])
+
+      if (alignDelimiters === true) {
+        size = stringLength(cell)
+        sizes[columnIndex] = size
+
+        largest = longestCellByColumn[columnIndex]
+
+        if (largest === undefined || size > largest) {
+          longestCellByColumn[columnIndex] = size
+        }
+      }
+
+      row.push(cell)
+    }
+
+    cellMatrix[rowIndex] = row
+    sizeMatrix[rowIndex] = sizes
+  }
+
+  // Figure out which alignments to use.
+  columnIndex = -1
+  columnLength = mostCellsPerRow
+
+  if (typeof align === 'object' && 'length' in align) {
+    while (++columnIndex < columnLength) {
+      alignments[columnIndex] = toAlignment(align[columnIndex])
+    }
+  } else {
+    code = toAlignment(align)
+
+    while (++columnIndex < columnLength) {
+      alignments[columnIndex] = code
+    }
+  }
+
+  // Inject the alignment row.
+  columnIndex = -1
+  columnLength = mostCellsPerRow
+  row = []
+  sizes = []
+
+  while (++columnIndex < columnLength) {
+    code = alignments[columnIndex]
+    before = ''
+    after = ''
+
+    if (code === l) {
+      before = colon
+    } else if (code === r) {
+      after = colon
+    } else if (code === c) {
+      before = colon
+      after = colon
+    }
+
+    // There *must* be at least one hyphen-minus in each alignment cell.
+    size = alignDelimiters
+      ? Math.max(
+          1,
+          longestCellByColumn[columnIndex] - before.length - after.length
+        )
+      : 1
+
+    cell = before + repeat(dash, size) + after
+
+    if (alignDelimiters === true) {
+      size = before.length + size + after.length
+
+      if (size > longestCellByColumn[columnIndex]) {
+        longestCellByColumn[columnIndex] = size
+      }
+
+      sizes[columnIndex] = size
+    }
+
+    row[columnIndex] = cell
+  }
+
+  // Inject the alignment row.
+  cellMatrix.splice(1, 0, row)
+  sizeMatrix.splice(1, 0, sizes)
+
+  rowIndex = -1
+  rowLength = cellMatrix.length
+  lines = []
+
+  while (++rowIndex < rowLength) {
+    row = cellMatrix[rowIndex]
+    sizes = sizeMatrix[rowIndex]
+    columnIndex = -1
+    columnLength = mostCellsPerRow
+    line = []
+
+    while (++columnIndex < columnLength) {
+      cell = row[columnIndex] || ''
+      before = ''
+      after = ''
+
+      if (alignDelimiters === true) {
+        size = longestCellByColumn[columnIndex] - (sizes[columnIndex] || 0)
+        code = alignments[columnIndex]
+
+        if (code === r) {
+          before = repeat(space, size)
+        } else if (code === c) {
+          if (size % 2 === 0) {
+            before = repeat(space, size / 2)
+            after = before
+          } else {
+            before = repeat(space, size / 2 + 0.5)
+            after = repeat(space, size / 2 - 0.5)
+          }
+        } else {
+          after = repeat(space, size)
+        }
+      }
+
+      if (start === true && columnIndex === 0) {
+        line.push(verticalBar)
+      }
+
+      if (
+        padding === true &&
+        // Don’t add the opening space if we’re not aligning and the cell is
+        // empty: there will be a closing space.
+        !(alignDelimiters === false && cell === '') &&
+        (start === true || columnIndex !== 0)
+      ) {
+        line.push(space)
+      }
+
+      if (alignDelimiters === true) {
+        line.push(before)
+      }
+
+      line.push(cell)
+
+      if (alignDelimiters === true) {
+        line.push(after)
+      }
+
+      if (padding === true) {
+        line.push(space)
+      }
+
+      if (end === true || columnIndex !== columnLength - 1) {
+        line.push(verticalBar)
+      }
+    }
+
+    line = line.join('')
+
+    if (end === false) {
+      line = line.replace(trailingWhitespace, '')
+    }
+
+    lines.push(line)
+  }
+
+  return lines.join(lineFeed)
+}
+
+function serialize(value) {
+  return value === null || value === undefined ? '' : String(value)
+}
+
+function defaultStringLength(value) {
+  return value.length
+}
+
+function toAlignment(value) {
+  var code = typeof value === 'string' ? value.charCodeAt(0) : x
+
+  return code === L || code === l
+    ? l
+    : code === R || code === r
+    ? r
+    : code === C || code === c
+    ? c
+    : x
+}
+
+
+/***/ }),
+
+/***/ 6855:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+module.exports = findAndReplace
+
+var visit = __nccwpck_require__(3246)
+var convert = __nccwpck_require__(4070)
+var escape = __nccwpck_require__(8691)
+
+var splice = [].splice
+
+function findAndReplace(tree, find, replace, options) {
+  var settings
+  var schema
+
+  if (typeof find === 'string' || (find && typeof find.exec === 'function')) {
+    schema = [[find, replace]]
+  } else {
+    schema = find
+    options = replace
+  }
+
+  settings = options || {}
+
+  search(tree, settings, handlerFactory(toPairs(schema)))
+
+  return tree
+
+  function handlerFactory(pairs) {
+    var pair = pairs[0]
+
+    return handler
+
+    function handler(node, parent) {
+      var find = pair[0]
+      var replace = pair[1]
+      var nodes = []
+      var start = 0
+      var index = parent.children.indexOf(node)
+      var position
+      var match
+      var subhandler
+      var value
+
+      find.lastIndex = 0
+
+      match = find.exec(node.value)
+
+      while (match) {
+        position = match.index
+        value = replace.apply(
+          null,
+          [].concat(match, {index: match.index, input: match.input})
+        )
+
+        if (value !== false) {
+          if (start !== position) {
+            nodes.push({type: 'text', value: node.value.slice(start, position)})
+          }
+
+          if (typeof value === 'string' && value.length > 0) {
+            value = {type: 'text', value: value}
+          }
+
+          if (value) {
+            nodes = [].concat(nodes, value)
+          }
+
+          start = position + match[0].length
+        }
+
+        if (!find.global) {
+          break
+        }
+
+        match = find.exec(node.value)
+      }
+
+      if (position === undefined) {
+        nodes = [node]
+        index--
+      } else {
+        if (start < node.value.length) {
+          nodes.push({type: 'text', value: node.value.slice(start)})
+        }
+
+        nodes.unshift(index, 1)
+        splice.apply(parent.children, nodes)
+      }
+
+      if (pairs.length > 1) {
+        subhandler = handlerFactory(pairs.slice(1))
+        position = -1
+
+        while (++position < nodes.length) {
+          node = nodes[position]
+
+          if (node.type === 'text') {
+            subhandler(node, parent)
+          } else {
+            search(node, settings, subhandler)
+          }
+        }
+      }
+
+      return index + nodes.length + 1
+    }
+  }
+}
+
+function search(tree, settings, handler) {
+  var ignored = convert(settings.ignore || [])
+  var result = []
+
+  visit(tree, 'text', visitor)
+
+  return result
+
+  function visitor(node, parents) {
+    var index = -1
+    var parent
+    var grandparent
+
+    while (++index < parents.length) {
+      parent = parents[index]
+
+      if (
+        ignored(
+          parent,
+          grandparent ? grandparent.children.indexOf(parent) : undefined,
+          grandparent
+        )
+      ) {
+        return
+      }
+
+      grandparent = parent
+    }
+
+    return handler(node, grandparent)
+  }
+}
+
+function toPairs(schema) {
+  var result = []
+  var key
+  var index
+
+  if (typeof schema !== 'object') {
+    throw new Error('Expected array or object as schema')
+  }
+
+  if ('length' in schema) {
+    index = -1
+
+    while (++index < schema.length) {
+      result.push([
+        toExpression(schema[index][0]),
+        toFunction(schema[index][1])
+      ])
+    }
+  } else {
+    for (key in schema) {
+      result.push([toExpression(key), toFunction(schema[key])])
+    }
+  }
+
+  return result
+}
+
+function toExpression(find) {
+  return typeof find === 'string' ? new RegExp(escape(find), 'g') : find
+}
+
+function toFunction(replace) {
+  return typeof replace === 'function' ? replace : returner
+
+  function returner() {
+    return replace
+  }
+}
+
+
+/***/ }),
+
 /***/ 6869:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -12527,6 +13023,982 @@ module.exports = __nccwpck_require__(6869)
 
 /***/ }),
 
+/***/ 4857:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var ccount = __nccwpck_require__(1291)
+var findAndReplace = __nccwpck_require__(6855)
+var unicodePunctuation = __nccwpck_require__(9372)
+var unicodeWhitespace = __nccwpck_require__(9968)
+
+exports.transforms = [transformGfmAutolinkLiterals]
+exports.enter = {
+  literalAutolink: enterLiteralAutolink,
+  literalAutolinkEmail: enterLiteralAutolinkValue,
+  literalAutolinkHttp: enterLiteralAutolinkValue,
+  literalAutolinkWww: enterLiteralAutolinkValue
+}
+exports.exit = {
+  literalAutolink: exitLiteralAutolink,
+  literalAutolinkEmail: exitLiteralAutolinkEmail,
+  literalAutolinkHttp: exitLiteralAutolinkHttp,
+  literalAutolinkWww: exitLiteralAutolinkWww
+}
+
+function enterLiteralAutolink(token) {
+  this.enter({type: 'link', title: null, url: '', children: []}, token)
+}
+
+function enterLiteralAutolinkValue(token) {
+  this.config.enter.autolinkProtocol.call(this, token)
+}
+
+function exitLiteralAutolinkHttp(token) {
+  this.config.exit.autolinkProtocol.call(this, token)
+}
+
+function exitLiteralAutolinkWww(token) {
+  this.config.exit.data.call(this, token)
+  this.stack[this.stack.length - 1].url = 'http://' + this.sliceSerialize(token)
+}
+
+function exitLiteralAutolinkEmail(token) {
+  this.config.exit.autolinkEmail.call(this, token)
+}
+
+function exitLiteralAutolink(token) {
+  this.exit(token)
+}
+
+function transformGfmAutolinkLiterals(tree) {
+  findAndReplace(
+    tree,
+    [
+      [/(https?:\/\/|www(?=\.))([-.\w]+)([^ \t\r\n]*)/i, findUrl],
+      [/([-.\w+]+)@([-\w]+(?:\.[-\w]+)+)/, findEmail]
+    ],
+    {ignore: ['link', 'linkReference']}
+  )
+}
+
+function findUrl($0, protocol, domain, path, match) {
+  var prefix = ''
+  var parts
+  var result
+
+  // Not an expected previous character.
+  if (!previous(match)) {
+    return false
+  }
+
+  // Treat `www` as part of the domain.
+  if (/^w/i.test(protocol)) {
+    domain = protocol + domain
+    protocol = ''
+    prefix = 'http://'
+  }
+
+  if (!isCorrectDomain(domain)) {
+    return false
+  }
+
+  parts = splitUrl(domain + path)
+
+  if (!parts[0]) return false
+
+  result = {
+    type: 'link',
+    title: null,
+    url: prefix + protocol + parts[0],
+    children: [{type: 'text', value: protocol + parts[0]}]
+  }
+
+  if (parts[1]) {
+    result = [result, {type: 'text', value: parts[1]}]
+  }
+
+  return result
+}
+
+function findEmail($0, atext, label, match) {
+  // Not an expected previous character.
+  if (!previous(match, true) || /[_-]$/.test(label)) {
+    return false
+  }
+
+  return {
+    type: 'link',
+    title: null,
+    url: 'mailto:' + atext + '@' + label,
+    children: [{type: 'text', value: atext + '@' + label}]
+  }
+}
+
+function isCorrectDomain(domain) {
+  var parts = domain.split('.')
+
+  if (
+    parts.length < 2 ||
+    (parts[parts.length - 1] &&
+      (/_/.test(parts[parts.length - 1]) ||
+        !/[a-zA-Z\d]/.test(parts[parts.length - 1]))) ||
+    (parts[parts.length - 2] &&
+      (/_/.test(parts[parts.length - 2]) ||
+        !/[a-zA-Z\d]/.test(parts[parts.length - 2])))
+  ) {
+    return false
+  }
+
+  return true
+}
+
+function splitUrl(url) {
+  var trail = /[!"&'),.:;<>?\]}]+$/.exec(url)
+  var closingParenIndex
+  var openingParens
+  var closingParens
+
+  if (trail) {
+    url = url.slice(0, trail.index)
+    trail = trail[0]
+    closingParenIndex = trail.indexOf(')')
+    openingParens = ccount(url, '(')
+    closingParens = ccount(url, ')')
+
+    while (closingParenIndex !== -1 && openingParens > closingParens) {
+      url += trail.slice(0, closingParenIndex + 1)
+      trail = trail.slice(closingParenIndex + 1)
+      closingParenIndex = trail.indexOf(')')
+      closingParens++
+    }
+  }
+
+  return [url, trail]
+}
+
+function previous(match, email) {
+  var code = match.input.charCodeAt(match.index - 1)
+  return (
+    (code !== code || unicodeWhitespace(code) || unicodePunctuation(code)) &&
+    (!email || code !== 47)
+  )
+}
+
+
+/***/ }),
+
+/***/ 7339:
+/***/ ((__unused_webpack_module, exports) => {
+
+var inConstruct = 'phrasing'
+var notInConstruct = ['autolink', 'link', 'image', 'label']
+
+exports.unsafe = [
+  {
+    character: '@',
+    before: '[+\\-.\\w]',
+    after: '[\\-.\\w]',
+    inConstruct: inConstruct,
+    notInConstruct: notInConstruct
+  },
+  {
+    character: '.',
+    before: '[Ww]',
+    after: '[\\-.\\w]',
+    inConstruct: inConstruct,
+    notInConstruct: notInConstruct
+  },
+  {
+    character: ':',
+    before: '[ps]',
+    after: '\\/',
+    inConstruct: inConstruct,
+    notInConstruct: notInConstruct
+  }
+]
+
+
+/***/ }),
+
+/***/ 6247:
+/***/ ((__unused_webpack_module, exports) => {
+
+exports.canContainEols = ['delete']
+exports.enter = {strikethrough: enterStrikethrough}
+exports.exit = {strikethrough: exitStrikethrough}
+
+function enterStrikethrough(token) {
+  this.enter({type: 'delete', children: []}, token)
+}
+
+function exitStrikethrough(token) {
+  this.exit(token)
+}
+
+
+/***/ }),
+
+/***/ 6474:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var phrasing = __nccwpck_require__(7489)
+
+exports.unsafe = [{character: '~', inConstruct: 'phrasing'}]
+exports.handlers = {delete: handleDelete}
+
+handleDelete.peek = peekDelete
+
+function handleDelete(node, _, context) {
+  var exit = context.enter('emphasis')
+  var value = phrasing(node, context, {before: '~', after: '~'})
+  exit()
+  return '~~' + value + '~~'
+}
+
+function peekDelete() {
+  return '~'
+}
+
+
+/***/ }),
+
+/***/ 1464:
+/***/ ((__unused_webpack_module, exports) => {
+
+exports.enter = {
+  table: enterTable,
+  tableData: enterCell,
+  tableHeader: enterCell,
+  tableRow: enterRow
+}
+exports.exit = {
+  codeText: exitCodeText,
+  table: exitTable,
+  tableData: exit,
+  tableHeader: exit,
+  tableRow: exit
+}
+
+function enterTable(token) {
+  this.enter({type: 'table', align: token._align, children: []}, token)
+  this.setData('inTable', true)
+}
+
+function exitTable(token) {
+  this.exit(token)
+  this.setData('inTable')
+}
+
+function enterRow(token) {
+  this.enter({type: 'tableRow', children: []}, token)
+}
+
+function exit(token) {
+  this.exit(token)
+}
+
+function enterCell(token) {
+  this.enter({type: 'tableCell', children: []}, token)
+}
+
+// Overwrite the default code text data handler to unescape escaped pipes when
+// they are in tables.
+function exitCodeText(token) {
+  var value = this.resume()
+
+  if (this.getData('inTable')) {
+    value = value.replace(/\\([\\|])/g, replace)
+  }
+
+  this.stack[this.stack.length - 1].value = value
+  this.exit(token)
+}
+
+function replace($0, $1) {
+  // Pipes work, backslashes don’t (but can’t escape pipes).
+  return $1 === '|' ? $1 : $0
+}
+
+
+/***/ }),
+
+/***/ 2689:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var phrasing = __nccwpck_require__(7489)
+var defaultInlineCode = __nccwpck_require__(5645)
+var markdownTable = __nccwpck_require__(1062)
+
+module.exports = toMarkdown
+
+function toMarkdown(options) {
+  var settings = options || {}
+  var padding = settings.tableCellPadding
+  var alignDelimiters = settings.tablePipeAlign
+  var stringLength = settings.stringLength
+  var around = padding ? ' ' : '|'
+
+  return {
+    unsafe: [
+      {character: '\r', inConstruct: 'tableCell'},
+      {character: '\n', inConstruct: 'tableCell'},
+      // A pipe, when followed by a tab or space (padding), or a dash or colon
+      // (unpadded delimiter row), could result in a table.
+      {atBreak: true, character: '|', after: '[\t :-]'},
+      // A pipe in a cell must be encoded.
+      {character: '|', inConstruct: 'tableCell'},
+      // A colon must be followed by a dash, in which case it could start a
+      // delimiter row.
+      {atBreak: true, character: ':', after: '-'},
+      // A delimiter row can also start with a dash, when followed by more
+      // dashes, a colon, or a pipe.
+      // This is a stricter version than the built in check for lists, thematic
+      // breaks, and setex heading underlines though:
+      // <https://github.com/syntax-tree/mdast-util-to-markdown/blob/51a2038/lib/unsafe.js#L57>
+      {atBreak: true, character: '-', after: '[:|-]'}
+    ],
+    handlers: {
+      table: handleTable,
+      tableRow: handleTableRow,
+      tableCell: handleTableCell,
+      inlineCode: inlineCodeWithTable
+    }
+  }
+
+  function handleTable(node, _, context) {
+    return serializeData(handleTableAsData(node, context), node.align)
+  }
+
+  // This function isn’t really used normally, because we handle rows at the
+  // table level.
+  // But, if someone passes in a table row, this ensures we make somewhat sense.
+  function handleTableRow(node, _, context) {
+    var row = handleTableRowAsData(node, context)
+    // `markdown-table` will always add an align row
+    var value = serializeData([row])
+    return value.slice(0, value.indexOf('\n'))
+  }
+
+  function handleTableCell(node, _, context) {
+    var exit = context.enter('tableCell')
+    var value = phrasing(node, context, {before: around, after: around})
+    exit()
+    return value
+  }
+
+  function serializeData(matrix, align) {
+    return markdownTable(matrix, {
+      align: align,
+      alignDelimiters: alignDelimiters,
+      padding: padding,
+      stringLength: stringLength
+    })
+  }
+
+  function handleTableAsData(node, context) {
+    var children = node.children
+    var index = -1
+    var length = children.length
+    var result = []
+    var subexit = context.enter('table')
+
+    while (++index < length) {
+      result[index] = handleTableRowAsData(children[index], context)
+    }
+
+    subexit()
+
+    return result
+  }
+
+  function handleTableRowAsData(node, context) {
+    var children = node.children
+    var index = -1
+    var length = children.length
+    var result = []
+    var subexit = context.enter('tableRow')
+
+    while (++index < length) {
+      result[index] = handleTableCell(children[index], node, context)
+    }
+
+    subexit()
+
+    return result
+  }
+
+  function inlineCodeWithTable(node, parent, context) {
+    var value = defaultInlineCode(node, parent, context)
+
+    if (context.stack.indexOf('tableCell') !== -1) {
+      value = value.replace(/\|/g, '\\$&')
+    }
+
+    return value
+  }
+}
+
+
+/***/ }),
+
+/***/ 8442:
+/***/ ((__unused_webpack_module, exports) => {
+
+exports.exit = {
+  taskListCheckValueChecked: exitCheck,
+  taskListCheckValueUnchecked: exitCheck,
+  paragraph: exitParagraphWithTaskListItem
+}
+
+function exitCheck(token) {
+  // We’re always in a paragraph, in a list item.
+  this.stack[this.stack.length - 2].checked =
+    token.type === 'taskListCheckValueChecked'
+}
+
+function exitParagraphWithTaskListItem(token) {
+  var parent = this.stack[this.stack.length - 2]
+  var node = this.stack[this.stack.length - 1]
+  var siblings = parent.children
+  var head = node.children[0]
+  var index = -1
+  var firstParaghraph
+
+  if (
+    parent &&
+    parent.type === 'listItem' &&
+    typeof parent.checked === 'boolean' &&
+    head &&
+    head.type === 'text'
+  ) {
+    while (++index < siblings.length) {
+      if (siblings[index].type === 'paragraph') {
+        firstParaghraph = siblings[index]
+        break
+      }
+    }
+
+    if (firstParaghraph === node) {
+      // Must start with a space or a tab.
+      head.value = head.value.slice(1)
+
+      if (head.value.length === 0) {
+        node.children.shift()
+      } else {
+        head.position.start.column++
+        head.position.start.offset++
+        node.position.start = Object.assign({}, head.position.start)
+      }
+    }
+  }
+
+  this.exit(token)
+}
+
+
+/***/ }),
+
+/***/ 7319:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var defaultListItem = __nccwpck_require__(7016)
+
+exports.unsafe = [{atBreak: true, character: '-', after: '[:|-]'}]
+
+exports.handlers = {
+  listItem: listItemWithTaskListItem
+}
+
+function listItemWithTaskListItem(node, parent, context) {
+  var value = defaultListItem(node, parent, context)
+  var head = node.children[0]
+
+  if (typeof node.checked === 'boolean' && head && head.type === 'paragraph') {
+    value = value.replace(/^(?:[*+-]|\d+\.)([\r\n]| {1,3})/, check)
+  }
+
+  return value
+
+  function check($0) {
+    return $0 + '[' + (node.checked ? 'x' : ' ') + '] '
+  }
+}
+
+
+/***/ }),
+
+/***/ 7831:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var autolinkLiteral = __nccwpck_require__(4857)
+var strikethrough = __nccwpck_require__(6247)
+var table = __nccwpck_require__(1464)
+var taskListItem = __nccwpck_require__(8442)
+
+var own = {}.hasOwnProperty
+
+module.exports = configure([
+  autolinkLiteral,
+  strikethrough,
+  table,
+  taskListItem
+])
+
+function configure(extensions) {
+  var config = {transforms: [], canContainEols: []}
+  var length = extensions.length
+  var index = -1
+
+  while (++index < length) {
+    extension(config, extensions[index])
+  }
+
+  return config
+}
+
+function extension(config, extension) {
+  var key
+  var left
+  var right
+
+  for (key in extension) {
+    left = own.call(config, key) ? config[key] : (config[key] = {})
+    right = extension[key]
+
+    if (key === 'canContainEols' || key === 'transforms') {
+      config[key] = [].concat(left, right)
+    } else {
+      Object.assign(left, right)
+    }
+  }
+}
+
+
+/***/ }),
+
+/***/ 9129:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var autolinkLiteral = __nccwpck_require__(7339)
+var strikethrough = __nccwpck_require__(6474)
+var table = __nccwpck_require__(2689)
+var taskListItem = __nccwpck_require__(7319)
+var configure = __nccwpck_require__(9363)
+
+module.exports = toMarkdown
+
+function toMarkdown(options) {
+  var config = configure(
+    {handlers: {}, join: [], unsafe: [], options: {}},
+    {
+      extensions: [autolinkLiteral, strikethrough, table(options), taskListItem]
+    }
+  )
+
+  return Object.assign(config.options, {
+    handlers: config.handlers,
+    join: config.join,
+    unsafe: config.unsafe
+  })
+}
+
+
+/***/ }),
+
+/***/ 9363:
+/***/ ((module) => {
+
+module.exports = configure
+
+function configure(base, extension) {
+  var index = -1
+  var key
+
+  // First do subextensions.
+  if (extension.extensions) {
+    while (++index < extension.extensions.length) {
+      configure(base, extension.extensions[index])
+    }
+  }
+
+  for (key in extension) {
+    if (key === 'extensions') {
+      // Empty.
+    } else if (key === 'unsafe' || key === 'join') {
+      base[key] = base[key].concat(extension[key] || [])
+    } else if (key === 'handlers') {
+      base[key] = Object.assign(base[key], extension[key] || {})
+    } else {
+      base.options[key] = extension[key]
+    }
+  }
+
+  return base
+}
+
+
+/***/ }),
+
+/***/ 5645:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = inlineCode
+inlineCode.peek = inlineCodePeek
+
+var patternCompile = __nccwpck_require__(4810)
+
+function inlineCode(node, parent, context) {
+  var value = node.value || ''
+  var sequence = '`'
+  var index = -1
+  var pattern
+  var expression
+  var match
+  var position
+
+  // If there is a single grave accent on its own in the code, use a fence of
+  // two.
+  // If there are two in a row, use one.
+  while (new RegExp('(^|[^`])' + sequence + '([^`]|$)').test(value)) {
+    sequence += '`'
+  }
+
+  // If this is not just spaces or eols (tabs don’t count), and either the
+  // first or last character are a space, eol, or tick, then pad with spaces.
+  if (
+    /[^ \r\n]/.test(value) &&
+    (/[ \r\n`]/.test(value.charAt(0)) ||
+      /[ \r\n`]/.test(value.charAt(value.length - 1)))
+  ) {
+    value = ' ' + value + ' '
+  }
+
+  // We have a potential problem: certain characters after eols could result in
+  // blocks being seen.
+  // For example, if someone injected the string `'\n# b'`, then that would
+  // result in an ATX heading.
+  // We can’t escape characters in `inlineCode`, but because eols are
+  // transformed to spaces when going from markdown to HTML anyway, we can swap
+  // them out.
+  while (++index < context.unsafe.length) {
+    pattern = context.unsafe[index]
+
+    // Only look for `atBreak`s.
+    // Btw: note that `atBreak` patterns will always start the regex at LF or
+    // CR.
+    if (!pattern.atBreak) continue
+
+    expression = patternCompile(pattern)
+
+    while ((match = expression.exec(value))) {
+      position = match.index
+
+      // Support CRLF (patterns only look for one of the characters).
+      if (
+        value.charCodeAt(position) === 10 /* `\n` */ &&
+        value.charCodeAt(position - 1) === 13 /* `\r` */
+      ) {
+        position--
+      }
+
+      value = value.slice(0, position) + ' ' + value.slice(match.index + 1)
+    }
+  }
+
+  return sequence + value + sequence
+}
+
+function inlineCodePeek() {
+  return '`'
+}
+
+
+/***/ }),
+
+/***/ 7016:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = listItem
+
+var repeat = __nccwpck_require__(6976)
+var checkBullet = __nccwpck_require__(8599)
+var checkListItemIndent = __nccwpck_require__(9009)
+var flow = __nccwpck_require__(7530)
+var indentLines = __nccwpck_require__(6887)
+
+function listItem(node, parent, context) {
+  var bullet = checkBullet(context)
+  var listItemIndent = checkListItemIndent(context)
+  var size
+  var value
+  var exit
+
+  if (parent && parent.ordered) {
+    bullet =
+      (parent.start > -1 ? parent.start : 1) +
+      (context.options.incrementListMarker === false
+        ? 0
+        : parent.children.indexOf(node)) +
+      '.'
+  }
+
+  size = bullet.length + 1
+
+  if (
+    listItemIndent === 'tab' ||
+    (listItemIndent === 'mixed' && ((parent && parent.spread) || node.spread))
+  ) {
+    size = Math.ceil(size / 4) * 4
+  }
+
+  exit = context.enter('listItem')
+  value = indentLines(flow(node, context), map)
+  exit()
+
+  return value
+
+  function map(line, index, blank) {
+    if (index) {
+      return (blank ? '' : repeat(' ', size)) + line
+    }
+
+    return (blank ? bullet : bullet + repeat(' ', size - bullet.length)) + line
+  }
+}
+
+
+/***/ }),
+
+/***/ 8599:
+/***/ ((module) => {
+
+module.exports = checkBullet
+
+function checkBullet(context) {
+  var marker = context.options.bullet || '*'
+
+  if (marker !== '*' && marker !== '+' && marker !== '-') {
+    throw new Error(
+      'Cannot serialize items with `' +
+        marker +
+        '` for `options.bullet`, expected `*`, `+`, or `-`'
+    )
+  }
+
+  return marker
+}
+
+
+/***/ }),
+
+/***/ 9009:
+/***/ ((module) => {
+
+module.exports = checkListItemIndent
+
+function checkListItemIndent(context) {
+  var style = context.options.listItemIndent || 'tab'
+
+  if (style === 1 || style === '1') {
+    return 'one'
+  }
+
+  if (style !== 'tab' && style !== 'one' && style !== 'mixed') {
+    throw new Error(
+      'Cannot serialize items with `' +
+        style +
+        '` for `options.listItemIndent`, expected `tab`, `one`, or `mixed`'
+    )
+  }
+
+  return style
+}
+
+
+/***/ }),
+
+/***/ 7530:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = flow
+
+var repeat = __nccwpck_require__(6976)
+
+function flow(parent, context) {
+  var children = parent.children || []
+  var results = []
+  var index = -1
+  var child
+
+  while (++index < children.length) {
+    child = children[index]
+
+    results.push(
+      context.handle(child, parent, context, {before: '\n', after: '\n'})
+    )
+
+    if (index + 1 < children.length) {
+      results.push(between(child, children[index + 1]))
+    }
+  }
+
+  return results.join('')
+
+  function between(left, right) {
+    var index = -1
+    var result
+
+    while (++index < context.join.length) {
+      result = context.join[index](left, right, parent, context)
+
+      if (result === true || result === 1) {
+        break
+      }
+
+      if (typeof result === 'number') {
+        return repeat('\n', 1 + Number(result))
+      }
+
+      if (result === false) {
+        return '\n\n<!---->\n\n'
+      }
+    }
+
+    return '\n\n'
+  }
+}
+
+
+/***/ }),
+
+/***/ 7489:
+/***/ ((module) => {
+
+module.exports = phrasing
+
+function phrasing(parent, context, safeOptions) {
+  var children = parent.children || []
+  var results = []
+  var index = -1
+  var before = safeOptions.before
+  var after
+  var handle
+  var child
+
+  while (++index < children.length) {
+    child = children[index]
+
+    if (index + 1 < children.length) {
+      handle = context.handle.handlers[children[index + 1].type]
+      if (handle && handle.peek) handle = handle.peek
+      after = handle
+        ? handle(children[index + 1], parent, context, {
+            before: '',
+            after: ''
+          }).charAt(0)
+        : ''
+    } else {
+      after = safeOptions.after
+    }
+
+    // In some cases, html (text) can be found in phrasing right after an eol.
+    // When we’d serialize that, in most cases that would be seen as html
+    // (flow).
+    // As we can’t escape or so to prevent it from happening, we take a somewhat
+    // reasonable approach: replace that eol with a space.
+    // See: <https://github.com/syntax-tree/mdast-util-to-markdown/issues/15>
+    if (
+      results.length > 0 &&
+      (before === '\r' || before === '\n') &&
+      child.type === 'html'
+    ) {
+      results[results.length - 1] = results[results.length - 1].replace(
+        /(\r?\n|\r)$/,
+        ' '
+      )
+      before = ' '
+    }
+
+    results.push(
+      context.handle(child, parent, context, {
+        before: before,
+        after: after
+      })
+    )
+
+    before = results[results.length - 1].slice(-1)
+  }
+
+  return results.join('')
+}
+
+
+/***/ }),
+
+/***/ 6887:
+/***/ ((module) => {
+
+module.exports = indentLines
+
+var eol = /\r?\n|\r/g
+
+function indentLines(value, map) {
+  var result = []
+  var start = 0
+  var line = 0
+  var match
+
+  while ((match = eol.exec(value))) {
+    one(value.slice(start, match.index))
+    result.push(match[0])
+    start = match.index + match[0].length
+    line++
+  }
+
+  one(value.slice(start))
+
+  return result.join('')
+
+  function one(value) {
+    result.push(map(value, line, !value))
+  }
+}
+
+
+/***/ }),
+
+/***/ 4810:
+/***/ ((module) => {
+
+module.exports = patternCompile
+
+function patternCompile(pattern) {
+  var before
+  var after
+
+  if (!pattern._compiled) {
+    before = pattern.before ? '(?:' + pattern.before + ')' : ''
+    after = pattern.after ? '(?:' + pattern.after + ')' : ''
+
+    if (pattern.atBreak) {
+      before = '[\\r\\n][\\t ]*' + before
+    }
+
+    pattern._compiled = new RegExp(
+      (before ? '(' + before + ')' : '') +
+        (/[|\\{}()[\]^$+*?.-]/.test(pattern.character) ? '\\' : '') +
+        pattern.character +
+        (after || ''),
+      'g'
+    )
+  }
+
+  return pattern._compiled
+}
+
+
+/***/ }),
+
 /***/ 5789:
 /***/ ((module) => {
 
@@ -12559,6 +14031,1481 @@ function all(values) {
   }
 
   return result.join('')
+}
+
+
+/***/ }),
+
+/***/ 7321:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(2007)
+
+
+/***/ }),
+
+/***/ 2007:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var asciiAlpha = __nccwpck_require__(3847)
+var asciiAlphanumeric = __nccwpck_require__(598)
+var asciiControl = __nccwpck_require__(1336)
+var markdownLineEnding = __nccwpck_require__(7506)
+var unicodePunctuation = __nccwpck_require__(9372)
+var unicodeWhitespace = __nccwpck_require__(9968)
+
+var www = {tokenize: tokenizeWww, partial: true}
+var domain = {tokenize: tokenizeDomain, partial: true}
+var path = {tokenize: tokenizePath, partial: true}
+var punctuation = {tokenize: tokenizePunctuation, partial: true}
+var namedCharacterReference = {
+  tokenize: tokenizeNamedCharacterReference,
+  partial: true
+}
+
+var wwwAutolink = {tokenize: tokenizeWwwAutolink, previous: previousWww}
+var httpAutolink = {tokenize: tokenizeHttpAutolink, previous: previousHttp}
+var emailAutolink = {tokenize: tokenizeEmailAutolink, previous: previousEmail}
+
+var text = {}
+
+// Export hooked constructs.
+exports.text = text
+
+// `0`
+var code = 48
+
+// While the code is smaller than `{`.
+while (code < 123) {
+  text[code] = emailAutolink
+  code++
+  // Jump from `:` -> `A`
+  if (code === 58) code = 65
+  // Jump from `[` -> `a`
+  else if (code === 91) code = 97
+}
+
+// `+`
+text[43] = emailAutolink
+// `-`
+text[45] = emailAutolink
+// `.`
+text[46] = emailAutolink
+// `_`
+text[95] = emailAutolink
+// `h`.
+text[72] = [emailAutolink, httpAutolink]
+text[104] = [emailAutolink, httpAutolink]
+// `w`.
+text[87] = [emailAutolink, wwwAutolink]
+text[119] = [emailAutolink, wwwAutolink]
+
+function tokenizeEmailAutolink(effects, ok, nok) {
+  var self = this
+  var hasDot
+
+  return start
+
+  function start(code) {
+    /* istanbul ignore next - hooks. */
+    if (
+      !gfmAtext(code) ||
+      !previousEmail(self.previous) ||
+      previous(self.events)
+    ) {
+      return nok(code)
+    }
+
+    effects.enter('literalAutolink')
+    effects.enter('literalAutolinkEmail')
+    return atext(code)
+  }
+
+  function atext(code) {
+    if (gfmAtext(code)) {
+      effects.consume(code)
+      return atext
+    }
+
+    // `@`
+    if (code === 64) {
+      effects.consume(code)
+      return label
+    }
+
+    return nok(code)
+  }
+
+  function label(code) {
+    // `.`
+    if (code === 46) {
+      return effects.check(punctuation, done, dotContinuation)(code)
+    }
+
+    if (
+      // `-`
+      code === 45 ||
+      // `_`
+      code === 95
+    ) {
+      return effects.check(punctuation, nok, dashOrUnderscoreContinuation)(code)
+    }
+
+    if (asciiAlphanumeric(code)) {
+      effects.consume(code)
+      return label
+    }
+
+    return done(code)
+  }
+
+  function dotContinuation(code) {
+    effects.consume(code)
+    hasDot = true
+    return label
+  }
+
+  function dashOrUnderscoreContinuation(code) {
+    effects.consume(code)
+    return afterDashOrUnderscore
+  }
+
+  function afterDashOrUnderscore(code) {
+    // `.`
+    if (code === 46) {
+      return effects.check(punctuation, nok, dotContinuation)(code)
+    }
+
+    return label(code)
+  }
+
+  function done(code) {
+    if (hasDot) {
+      effects.exit('literalAutolinkEmail')
+      effects.exit('literalAutolink')
+      return ok(code)
+    }
+
+    return nok(code)
+  }
+}
+
+function tokenizeWwwAutolink(effects, ok, nok) {
+  var self = this
+
+  return start
+
+  function start(code) {
+    /* istanbul ignore next - hooks. */
+    if (
+      (code !== 87 && code - 32 !== 87) ||
+      !previousWww(self.previous) ||
+      previous(self.events)
+    ) {
+      return nok(code)
+    }
+
+    effects.enter('literalAutolink')
+    effects.enter('literalAutolinkWww')
+    // For `www.` we check instead of attempt, because when it matches, GH
+    // treats it as part of a domain (yes, it says a valid domain must come
+    // after `www.`, but that’s not how it’s implemented by them).
+    return effects.check(
+      www,
+      effects.attempt(domain, effects.attempt(path, done), nok),
+      nok
+    )(code)
+  }
+
+  function done(code) {
+    effects.exit('literalAutolinkWww')
+    effects.exit('literalAutolink')
+    return ok(code)
+  }
+}
+
+function tokenizeHttpAutolink(effects, ok, nok) {
+  var self = this
+
+  return start
+
+  function start(code) {
+    /* istanbul ignore next - hooks. */
+    if (
+      (code !== 72 && code - 32 !== 72) ||
+      !previousHttp(self.previous) ||
+      previous(self.events)
+    ) {
+      return nok(code)
+    }
+
+    effects.enter('literalAutolink')
+    effects.enter('literalAutolinkHttp')
+    effects.consume(code)
+    return t1
+  }
+
+  function t1(code) {
+    // `t`
+    if (code === 84 || code - 32 === 84) {
+      effects.consume(code)
+      return t2
+    }
+
+    return nok(code)
+  }
+
+  function t2(code) {
+    // `t`
+    if (code === 84 || code - 32 === 84) {
+      effects.consume(code)
+      return p
+    }
+
+    return nok(code)
+  }
+
+  function p(code) {
+    // `p`
+    if (code === 80 || code - 32 === 80) {
+      effects.consume(code)
+      return s
+    }
+
+    return nok(code)
+  }
+
+  function s(code) {
+    // `s`
+    if (code === 83 || code - 32 === 83) {
+      effects.consume(code)
+      return colon
+    }
+
+    return colon(code)
+  }
+
+  function colon(code) {
+    // `:`
+    if (code === 58) {
+      effects.consume(code)
+      return slash1
+    }
+
+    return nok(code)
+  }
+
+  function slash1(code) {
+    // `/`
+    if (code === 47) {
+      effects.consume(code)
+      return slash2
+    }
+
+    return nok(code)
+  }
+
+  function slash2(code) {
+    // `/`
+    if (code === 47) {
+      effects.consume(code)
+      return after
+    }
+
+    return nok(code)
+  }
+
+  function after(code) {
+    return asciiControl(code) ||
+      unicodeWhitespace(code) ||
+      unicodePunctuation(code)
+      ? nok(code)
+      : effects.attempt(domain, effects.attempt(path, done), nok)(code)
+  }
+
+  function done(code) {
+    effects.exit('literalAutolinkHttp')
+    effects.exit('literalAutolink')
+    return ok(code)
+  }
+}
+
+function tokenizeWww(effects, ok, nok) {
+  return start
+
+  function start(code) {
+    // Assume a `w`.
+    effects.consume(code)
+    return w2
+  }
+
+  function w2(code) {
+    // `w`
+    if (code === 87 || code - 32 === 87) {
+      effects.consume(code)
+      return w3
+    }
+
+    return nok(code)
+  }
+
+  function w3(code) {
+    // `w`
+    if (code === 87 || code - 32 === 87) {
+      effects.consume(code)
+      return dot
+    }
+
+    return nok(code)
+  }
+
+  function dot(code) {
+    // `.`
+    if (code === 46) {
+      effects.consume(code)
+      return after
+    }
+
+    return nok(code)
+  }
+
+  function after(code) {
+    return code === null || markdownLineEnding(code) ? nok(code) : ok(code)
+  }
+}
+
+function tokenizeDomain(effects, ok, nok) {
+  var hasUnderscoreInLastSegment
+  var hasUnderscoreInLastLastSegment
+
+  return domain
+
+  function domain(code) {
+    // `&`
+    if (code === 38) {
+      return effects.check(
+        namedCharacterReference,
+        done,
+        punctuationContinuation
+      )(code)
+    }
+
+    if (code === 46 /* `.` */ || code === 95 /* `_` */) {
+      return effects.check(punctuation, done, punctuationContinuation)(code)
+    }
+
+    // GH documents that only alphanumerics (other than `-`, `.`, and `_`) can
+    // occur, which sounds like ASCII only, but they also support `www.點看.com`,
+    // so that’s Unicode.
+    // Instead of some new production for Unicode alphanumerics, markdown
+    // already has that for Unicode punctuation and whitespace, so use those.
+    if (
+      asciiControl(code) ||
+      unicodeWhitespace(code) ||
+      (code !== 45 /* `-` */ && unicodePunctuation(code))
+    ) {
+      return done(code)
+    }
+
+    effects.consume(code)
+    return domain
+  }
+
+  function punctuationContinuation(code) {
+    // `.`
+    if (code === 46) {
+      hasUnderscoreInLastLastSegment = hasUnderscoreInLastSegment
+      hasUnderscoreInLastSegment = undefined
+      effects.consume(code)
+      return domain
+    }
+
+    // `_`
+    if (code === 95) hasUnderscoreInLastSegment = true
+
+    effects.consume(code)
+    return domain
+  }
+
+  function done(code) {
+    if (!hasUnderscoreInLastLastSegment && !hasUnderscoreInLastSegment) {
+      return ok(code)
+    }
+
+    return nok(code)
+  }
+}
+
+function tokenizePath(effects, ok) {
+  var balance = 0
+
+  return inPath
+
+  function inPath(code) {
+    // `&`
+    if (code === 38) {
+      return effects.check(
+        namedCharacterReference,
+        ok,
+        continuedPunctuation
+      )(code)
+    }
+
+    // `(`
+    if (code === 40) {
+      balance++
+    }
+
+    // `)`
+    if (code === 41) {
+      return effects.check(
+        punctuation,
+        parenAtPathEnd,
+        continuedPunctuation
+      )(code)
+    }
+
+    if (pathEnd(code)) {
+      return ok(code)
+    }
+
+    if (trailingPunctuation(code)) {
+      return effects.check(punctuation, ok, continuedPunctuation)(code)
+    }
+
+    effects.consume(code)
+    return inPath
+  }
+
+  function continuedPunctuation(code) {
+    effects.consume(code)
+    return inPath
+  }
+
+  function parenAtPathEnd(code) {
+    balance--
+    return balance < 0 ? ok(code) : continuedPunctuation(code)
+  }
+}
+
+function tokenizeNamedCharacterReference(effects, ok, nok) {
+  return start
+
+  function start(code) {
+    // Assume an ampersand.
+    effects.consume(code)
+    return inside
+  }
+
+  function inside(code) {
+    if (asciiAlpha(code)) {
+      effects.consume(code)
+      return inside
+    }
+
+    // `;`
+    if (code === 59) {
+      effects.consume(code)
+      return after
+    }
+
+    return nok(code)
+  }
+
+  function after(code) {
+    // If the named character reference is followed by the end of the path, it’s
+    // not continued punctuation.
+    return pathEnd(code) ? ok(code) : nok(code)
+  }
+}
+
+function tokenizePunctuation(effects, ok, nok) {
+  return start
+
+  function start(code) {
+    // Always a valid trailing punctuation marker.
+    effects.consume(code)
+    return after
+  }
+
+  function after(code) {
+    // Check the next.
+    if (trailingPunctuation(code)) {
+      effects.consume(code)
+      return after
+    }
+
+    // If the punctuation marker is followed by the end of the path, it’s not
+    // continued punctuation.
+    return pathEnd(code) ? ok(code) : nok(code)
+  }
+}
+
+function trailingPunctuation(code) {
+  return (
+    // `!`
+    code === 33 ||
+    // `"`
+    code === 34 ||
+    // `'`
+    code === 39 ||
+    // `)`
+    code === 41 ||
+    // `*`
+    code === 42 ||
+    // `,`
+    code === 44 ||
+    // `.`
+    code === 46 ||
+    // `:`
+    code === 58 ||
+    // `;`
+    code === 59 ||
+    // `<`
+    code === 60 ||
+    // `?`
+    code === 63 ||
+    // `_`.
+    code === 95 ||
+    // `~`
+    code === 126
+  )
+}
+
+function pathEnd(code) {
+  return (
+    // EOF.
+    code === null ||
+    // CR, LF, CRLF, HT, VS.
+    code < 0 ||
+    // Space.
+    code === 32 ||
+    // `<`
+    code === 60
+  )
+}
+
+function gfmAtext(code) {
+  return (
+    code === 43 /* `+` */ ||
+    code === 45 /* `-` */ ||
+    code === 46 /* `.` */ ||
+    code === 95 /* `_` */ ||
+    asciiAlphanumeric(code)
+  )
+}
+
+function previousWww(code) {
+  return (
+    code === null ||
+    code < 0 ||
+    code === 32 /* ` ` */ ||
+    code === 40 /* `(` */ ||
+    code === 42 /* `*` */ ||
+    code === 95 /* `_` */ ||
+    code === 126 /* `~` */
+  )
+}
+
+function previousHttp(code) {
+  return code === null || !asciiAlpha(code)
+}
+
+function previousEmail(code) {
+  return code !== 47 /* `/` */ && previousHttp(code)
+}
+
+function previous(events) {
+  var index = events.length
+
+  while (index--) {
+    if (
+      (events[index][1].type === 'labelLink' ||
+        events[index][1].type === 'labelImage') &&
+      !events[index][1]._balanced
+    ) {
+      return true
+    }
+  }
+}
+
+
+/***/ }),
+
+/***/ 7119:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = create
+
+var classifyCharacter = __nccwpck_require__(1324)
+var chunkedSplice = __nccwpck_require__(778)
+var resolveAll = __nccwpck_require__(2004)
+var shallow = __nccwpck_require__(1479)
+
+function create(options) {
+  var settings = options || {}
+  var single = settings.singleTilde
+  var tokenizer = {
+    tokenize: tokenizeStrikethrough,
+    resolveAll: resolveAllStrikethrough
+  }
+
+  if (single === null || single === undefined) {
+    single = true
+  }
+
+  return {text: {126: tokenizer}, insideSpan: {null: tokenizer}}
+
+  // Take events and resolve strikethrough.
+  function resolveAllStrikethrough(events, context) {
+    var index = -1
+    var strikethrough
+    var text
+    var open
+    var nextEvents
+
+    // Walk through all events.
+    while (++index < events.length) {
+      // Find a token that can close.
+      if (
+        events[index][0] === 'enter' &&
+        events[index][1].type === 'strikethroughSequenceTemporary' &&
+        events[index][1]._close
+      ) {
+        open = index
+
+        // Now walk back to find an opener.
+        while (open--) {
+          // Find a token that can open the closer.
+          if (
+            events[open][0] === 'exit' &&
+            events[open][1].type === 'strikethroughSequenceTemporary' &&
+            events[open][1]._open &&
+            // If the sizes are the same:
+            events[index][1].end.offset - events[index][1].start.offset ===
+              events[open][1].end.offset - events[open][1].start.offset
+          ) {
+            events[index][1].type = 'strikethroughSequence'
+            events[open][1].type = 'strikethroughSequence'
+
+            strikethrough = {
+              type: 'strikethrough',
+              start: shallow(events[open][1].start),
+              end: shallow(events[index][1].end)
+            }
+
+            text = {
+              type: 'strikethroughText',
+              start: shallow(events[open][1].end),
+              end: shallow(events[index][1].start)
+            }
+
+            // Opening.
+            nextEvents = [
+              ['enter', strikethrough, context],
+              ['enter', events[open][1], context],
+              ['exit', events[open][1], context],
+              ['enter', text, context]
+            ]
+
+            // Between.
+            chunkedSplice(
+              nextEvents,
+              nextEvents.length,
+              0,
+              resolveAll(
+                context.parser.constructs.insideSpan.null,
+                events.slice(open + 1, index),
+                context
+              )
+            )
+
+            // Closing.
+            chunkedSplice(nextEvents, nextEvents.length, 0, [
+              ['exit', text, context],
+              ['enter', events[index][1], context],
+              ['exit', events[index][1], context],
+              ['exit', strikethrough, context]
+            ])
+
+            chunkedSplice(events, open - 1, index - open + 3, nextEvents)
+
+            index = open + nextEvents.length - 2
+            break
+          }
+        }
+      }
+    }
+
+    return removeRemainingSequences(events)
+  }
+
+  function removeRemainingSequences(events) {
+    var index = -1
+    var length = events.length
+
+    while (++index < length) {
+      if (events[index][1].type === 'strikethroughSequenceTemporary') {
+        events[index][1].type = 'data'
+      }
+    }
+
+    return events
+  }
+
+  function tokenizeStrikethrough(effects, ok, nok) {
+    var previous = this.previous
+    var events = this.events
+    var size = 0
+
+    return start
+
+    function start(code) {
+      if (
+        code !== 126 ||
+        (previous === 126 &&
+          events[events.length - 1][1].type !== 'characterEscape')
+      ) {
+        return nok(code)
+      }
+
+      effects.enter('strikethroughSequenceTemporary')
+      return more(code)
+    }
+
+    function more(code) {
+      var before = classifyCharacter(previous)
+      var token
+      var after
+
+      if (code === 126) {
+        // If this is the third marker, exit.
+        if (size > 1) return nok(code)
+        effects.consume(code)
+        size++
+        return more
+      }
+
+      if (size < 2 && !single) return nok(code)
+      token = effects.exit('strikethroughSequenceTemporary')
+      after = classifyCharacter(code)
+      token._open = !after || (after === 2 && before)
+      token._close = !before || (before === 2 && after)
+      return ok(code)
+    }
+  }
+}
+
+
+/***/ }),
+
+/***/ 7200:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(2743)
+
+
+/***/ }),
+
+/***/ 2743:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+exports.flow = {
+  null: {tokenize: tokenizeTable, resolve: resolveTable, interruptible: true}
+}
+
+var createSpace = __nccwpck_require__(8200)
+
+var setextUnderlineMini = {tokenize: tokenizeSetextUnderlineMini, partial: true}
+var nextPrefixedOrBlank = {tokenize: tokenizeNextPrefixedOrBlank, partial: true}
+
+function resolveTable(events, context) {
+  var length = events.length
+  var index = -1
+  var token
+  var inHead
+  var inDelimiterRow
+  var inRow
+  var cell
+  var content
+  var text
+  var contentStart
+  var contentEnd
+  var cellStart
+
+  while (++index < length) {
+    token = events[index][1]
+
+    if (inRow) {
+      if (token.type === 'temporaryTableCellContent') {
+        contentStart = contentStart || index
+        contentEnd = index
+      }
+
+      if (
+        // Combine separate content parts into one.
+        (token.type === 'tableCellDivider' || token.type === 'tableRow') &&
+        contentEnd
+      ) {
+        content = {
+          type: 'tableContent',
+          start: events[contentStart][1].start,
+          end: events[contentEnd][1].end
+        }
+        text = {
+          type: 'chunkText',
+          start: content.start,
+          end: content.end,
+          contentType: 'text'
+        }
+
+        events.splice(
+          contentStart,
+          contentEnd - contentStart + 1,
+          ['enter', content, context],
+          ['enter', text, context],
+          ['exit', text, context],
+          ['exit', content, context]
+        )
+        index -= contentEnd - contentStart - 3
+        length = events.length
+        contentStart = undefined
+        contentEnd = undefined
+      }
+    }
+
+    if (
+      events[index][0] === 'exit' &&
+      cellStart &&
+      cellStart + 1 < index &&
+      (token.type === 'tableCellDivider' ||
+        (token.type === 'tableRow' &&
+          (cellStart + 3 < index ||
+            events[cellStart][1].type !== 'whitespace')))
+    ) {
+      cell = {
+        type: inDelimiterRow
+          ? 'tableDelimiter'
+          : inHead
+          ? 'tableHeader'
+          : 'tableData',
+        start: events[cellStart][1].start,
+        end: events[index][1].end
+      }
+      events.splice(index + (token.type === 'tableCellDivider' ? 1 : 0), 0, [
+        'exit',
+        cell,
+        context
+      ])
+      events.splice(cellStart, 0, ['enter', cell, context])
+      index += 2
+      length = events.length
+      cellStart = index + 1
+    }
+
+    if (token.type === 'tableRow') {
+      inRow = events[index][0] === 'enter'
+
+      if (inRow) {
+        cellStart = index + 1
+      }
+    }
+
+    if (token.type === 'tableDelimiterRow') {
+      inDelimiterRow = events[index][0] === 'enter'
+
+      if (inDelimiterRow) {
+        cellStart = index + 1
+      }
+    }
+
+    if (token.type === 'tableHead') {
+      inHead = events[index][0] === 'enter'
+    }
+  }
+
+  return events
+}
+
+function tokenizeTable(effects, ok, nok) {
+  var align = []
+  var tableHeaderCount = 0
+  var seenDelimiter
+  var hasDash
+
+  return start
+
+  function start(code) {
+    /* istanbul ignore if - used to be passed in beta micromark versions. */
+    if (code === null || code === -5 || code === -4 || code === -3) {
+      return nok(code)
+    }
+
+    effects.enter('table')._align = align
+    effects.enter('tableHead')
+    effects.enter('tableRow')
+
+    // If we start with a pipe, we open a cell marker.
+    if (code === 124) {
+      return cellDividerHead(code)
+    }
+
+    tableHeaderCount++
+    effects.enter('temporaryTableCellContent')
+    // Can’t be space or eols at the start of a construct, so we’re in a cell.
+    return inCellContentHead(code)
+  }
+
+  function cellDividerHead(code) {
+    // Always a pipe.
+    effects.enter('tableCellDivider')
+    effects.consume(code)
+    effects.exit('tableCellDivider')
+    seenDelimiter = true
+    return cellBreakHead
+  }
+
+  function cellBreakHead(code) {
+    // EOF, CR, LF, CRLF.
+    if (code === null || code === -5 || code === -4 || code === -3) {
+      return atRowEndHead(code)
+    }
+
+    // HT, VS, SP.
+    if (code === -2 || code === -1 || code === 32) {
+      effects.enter('whitespace')
+      effects.consume(code)
+      return inWhitespaceHead
+    }
+
+    if (seenDelimiter) {
+      seenDelimiter = undefined
+      tableHeaderCount++
+    }
+
+    // `|`
+    if (code === 124) {
+      return cellDividerHead(code)
+    }
+
+    // Anything else is cell content.
+    effects.enter('temporaryTableCellContent')
+    return inCellContentHead(code)
+  }
+
+  function inWhitespaceHead(code) {
+    // HT, VS, SP.
+    if (code === -2 || code === -1 || code === 32) {
+      effects.consume(code)
+      return inWhitespaceHead
+    }
+
+    effects.exit('whitespace')
+    return cellBreakHead(code)
+  }
+
+  function inCellContentHead(code) {
+    // EOF, whitespace, pipe
+    if (code === null || code < 0 || code === 32 || code === 124) {
+      effects.exit('temporaryTableCellContent')
+      return cellBreakHead(code)
+    }
+
+    effects.consume(code)
+    // `\`
+    return code === 92 ? inCellContentEscapeHead : inCellContentHead
+  }
+
+  function inCellContentEscapeHead(code) {
+    // `\` or `|`
+    if (code === 92 || code === 124) {
+      effects.consume(code)
+      return inCellContentHead
+    }
+
+    // Anything else.
+    return inCellContentHead(code)
+  }
+
+  function atRowEndHead(code) {
+    if (code === null) {
+      return nok(code)
+    }
+
+    effects.exit('tableRow')
+    effects.exit('tableHead')
+
+    // Always a line ending.
+    effects.enter('lineEnding')
+    effects.consume(code)
+    effects.exit('lineEnding')
+
+    // If a setext heading, exit.
+    return effects.check(
+      setextUnderlineMini,
+      nok,
+      // Support an indent before the delimiter row.
+      createSpace(effects, rowStartDelimiter, 'linePrefix', 4)
+    )
+  }
+
+  function rowStartDelimiter(code) {
+    // If there’s another space, or we’re at the EOL/EOF, exit.
+    if (code === null || code < 0 || code === 32) {
+      return nok(code)
+    }
+
+    effects.enter('tableDelimiterRow')
+    return atDelimiterRowBreak(code)
+  }
+
+  function atDelimiterRowBreak(code) {
+    // EOF, CR, LF, CRLF.
+    if (code === null || code === -5 || code === -4 || code === -3) {
+      return rowEndDelimiter(code)
+    }
+
+    // HT, VS, SP.
+    if (code === -2 || code === -1 || code === 32) {
+      effects.enter('whitespace')
+      effects.consume(code)
+      return inWhitespaceDelimiter
+    }
+
+    // `-`
+    if (code === 45) {
+      effects.enter('tableDelimiterFiller')
+      effects.consume(code)
+      hasDash = true
+      align.push(null)
+      return inFillerDelimiter
+    }
+
+    // `:`
+    if (code === 58) {
+      effects.enter('tableDelimiterAlignment')
+      effects.consume(code)
+      effects.exit('tableDelimiterAlignment')
+      align.push('left')
+      return afterLeftAlignment
+    }
+
+    // If we start with a pipe, we open a cell marker.
+    if (code === 124) {
+      effects.enter('tableCellDivider')
+      effects.consume(code)
+      effects.exit('tableCellDivider')
+      return atDelimiterRowBreak
+    }
+
+    return nok(code)
+  }
+
+  function inWhitespaceDelimiter(code) {
+    // HT, VS, SP.
+    if (code === -2 || code === -1 || code === 32) {
+      effects.consume(code)
+      return inWhitespaceDelimiter
+    }
+
+    effects.exit('whitespace')
+    return atDelimiterRowBreak(code)
+  }
+
+  function inFillerDelimiter(code) {
+    // `-`
+    if (code === 45) {
+      effects.consume(code)
+      return inFillerDelimiter
+    }
+
+    effects.exit('tableDelimiterFiller')
+
+    // `:`
+    if (code === 58) {
+      effects.enter('tableDelimiterAlignment')
+      effects.consume(code)
+      effects.exit('tableDelimiterAlignment')
+
+      align[align.length - 1] =
+        align[align.length - 1] === 'left' ? 'center' : 'right'
+
+      return afterRightAlignment
+    }
+
+    return atDelimiterRowBreak(code)
+  }
+
+  function afterLeftAlignment(code) {
+    // `-`
+    if (code === 45) {
+      effects.enter('tableDelimiterFiller')
+      effects.consume(code)
+      hasDash = true
+      return inFillerDelimiter
+    }
+
+    // Anything else is not ok.
+    return nok(code)
+  }
+
+  function afterRightAlignment(code) {
+    // EOF, CR, LF, CRLF.
+    if (code === null || code === -5 || code === -4 || code === -3) {
+      return rowEndDelimiter(code)
+    }
+
+    // HT, VS, SP.
+    if (code === -2 || code === -1 || code === 32) {
+      effects.enter('whitespace')
+      effects.consume(code)
+      return inWhitespaceDelimiter
+    }
+
+    // `|`
+    if (code === 124) {
+      effects.enter('tableCellDivider')
+      effects.consume(code)
+      effects.exit('tableCellDivider')
+      return atDelimiterRowBreak
+    }
+
+    return nok(code)
+  }
+
+  function rowEndDelimiter(code) {
+    effects.exit('tableDelimiterRow')
+
+    // Exit if there was no dash at all, or if the header cell count is not the
+    // delimiter cell count.
+    if (!hasDash || tableHeaderCount !== align.length) {
+      return nok(code)
+    }
+
+    if (code === null) {
+      return tableClose(code)
+    }
+
+    return effects.check(nextPrefixedOrBlank, tableClose, tableContinue)(code)
+  }
+
+  function tableClose(code) {
+    effects.exit('table')
+    return ok(code)
+  }
+
+  function tableContinue(code) {
+    // Always a line ending.
+    effects.enter('lineEnding')
+    effects.consume(code)
+    effects.exit('lineEnding')
+    // We checked that it’s not a prefixed or blank line, so we’re certain a
+    // body is coming, though it may be indented.
+    return createSpace(effects, bodyStart, 'linePrefix', 4)
+  }
+
+  function bodyStart(code) {
+    effects.enter('tableBody')
+    return rowStartBody(code)
+  }
+
+  function rowStartBody(code) {
+    effects.enter('tableRow')
+
+    // If we start with a pipe, we open a cell marker.
+    if (code === 124) {
+      return cellDividerBody(code)
+    }
+
+    effects.enter('temporaryTableCellContent')
+    // Can’t be space or eols at the start of a construct, so we’re in a cell.
+    return inCellContentBody(code)
+  }
+
+  function cellDividerBody(code) {
+    // Always a pipe.
+    effects.enter('tableCellDivider')
+    effects.consume(code)
+    effects.exit('tableCellDivider')
+    return cellBreakBody
+  }
+
+  function cellBreakBody(code) {
+    // EOF, CR, LF, CRLF.
+    if (code === null || code === -5 || code === -4 || code === -3) {
+      return atRowEndBody(code)
+    }
+
+    // HT, VS, SP.
+    if (code === -2 || code === -1 || code === 32) {
+      effects.enter('whitespace')
+      effects.consume(code)
+      return inWhitespaceBody
+    }
+
+    // `|`
+    if (code === 124) {
+      return cellDividerBody(code)
+    }
+
+    // Anything else is cell content.
+    effects.enter('temporaryTableCellContent')
+    return inCellContentBody(code)
+  }
+
+  function inWhitespaceBody(code) {
+    // HT, VS, SP.
+    if (code === -2 || code === -1 || code === 32) {
+      effects.consume(code)
+      return inWhitespaceBody
+    }
+
+    effects.exit('whitespace')
+    return cellBreakBody(code)
+  }
+
+  function inCellContentBody(code) {
+    // EOF, whitespace, pipe
+    if (code === null || code < 0 || code === 32 || code === 124) {
+      effects.exit('temporaryTableCellContent')
+      return cellBreakBody(code)
+    }
+
+    effects.consume(code)
+    // `\`
+    return code === 92 ? inCellContentEscapeBody : inCellContentBody
+  }
+
+  function inCellContentEscapeBody(code) {
+    // `\` or `|`
+    if (code === 92 || code === 124) {
+      effects.consume(code)
+      return inCellContentBody
+    }
+
+    // Anything else.
+    return inCellContentBody(code)
+  }
+
+  function atRowEndBody(code) {
+    effects.exit('tableRow')
+
+    if (code === null) {
+      return tableBodyClose(code)
+    }
+
+    return effects.check(
+      nextPrefixedOrBlank,
+      tableBodyClose,
+      tableBodyContinue
+    )(code)
+  }
+
+  function tableBodyClose(code) {
+    effects.exit('tableBody')
+    return tableClose(code)
+  }
+
+  function tableBodyContinue(code) {
+    // Always a line ending.
+    effects.enter('lineEnding')
+    effects.consume(code)
+    effects.exit('lineEnding')
+    // Support an optional prefix, then start a body row.
+    return createSpace(effects, rowStartBody, 'linePrefix', 4)
+  }
+}
+
+// Based on micromark, but that won’t work as we’re in a table, and that expects
+// content.
+// <https://github.com/micromark/micromark/blob/main/lib/tokenize/setext-underline.js>
+function tokenizeSetextUnderlineMini(effects, ok, nok) {
+  return start
+
+  function start(code) {
+    // `-`
+    if (code !== 45) {
+      return nok(code)
+    }
+
+    effects.enter('setextUnderline')
+    return sequence(code)
+  }
+
+  function sequence(code) {
+    if (code === 45) {
+      effects.consume(code)
+      return sequence
+    }
+
+    return whitespace(code)
+  }
+
+  function whitespace(code) {
+    if (code === -2 || code === -1 || code === 32) {
+      effects.consume(code)
+      return whitespace
+    }
+
+    if (code === null || code === -5 || code === -4 || code === -3) {
+      return ok(code)
+    }
+
+    return nok(code)
+  }
+}
+
+function tokenizeNextPrefixedOrBlank(effects, ok, nok) {
+  var size = 0
+
+  return start
+
+  function start(code) {
+    // This is a check, so we don’t care about tokens, but we open a bogus one
+    // so we’re valid.
+    effects.enter('check')
+    // EOL.
+    effects.consume(code)
+    return whitespace
+  }
+
+  function whitespace(code) {
+    // VS or SP.
+    if (code === -1 || code === 32) {
+      effects.consume(code)
+      size++
+      return size === 4 ? ok : whitespace
+    }
+
+    // EOF or whitespace
+    if (code === null || code < 0) {
+      return ok(code)
+    }
+
+    // Anything else.
+    return nok(code)
+  }
+}
+
+
+/***/ }),
+
+/***/ 2801:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(3867)
+
+
+/***/ }),
+
+/***/ 3867:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var markdownLineEndingOrSpace = __nccwpck_require__(9180)
+var spaceFactory = __nccwpck_require__(8200)
+var prefixSize = __nccwpck_require__(3722)
+
+var tasklistCheck = {tokenize: tokenizeTasklistCheck}
+
+exports.text = {91: tasklistCheck}
+
+function tokenizeTasklistCheck(effects, ok, nok) {
+  var self = this
+
+  return open
+
+  function open(code) {
+    if (
+      // Exit if not `[`.
+      code !== 91 ||
+      // Exit if there’s stuff before.
+      self.previous !== null ||
+      // Exit if not in the first content that is the first child of a list
+      // item.
+      !self._gfmTasklistFirstContentOfListItem
+    ) {
+      return nok(code)
+    }
+
+    effects.enter('taskListCheck')
+    effects.enter('taskListCheckMarker')
+    effects.consume(code)
+    effects.exit('taskListCheckMarker')
+    return inside
+  }
+
+  function inside(code) {
+    // Tab or space.
+    if (code === -2 || code === 32) {
+      effects.enter('taskListCheckValueUnchecked')
+      effects.consume(code)
+      effects.exit('taskListCheckValueUnchecked')
+      return close
+    }
+
+    // Upper- and lower `x`.
+    if (code === 88 || code === 120) {
+      effects.enter('taskListCheckValueChecked')
+      effects.consume(code)
+      effects.exit('taskListCheckValueChecked')
+      return close
+    }
+
+    return nok(code)
+  }
+
+  function close(code) {
+    // `]`
+    if (code === 93) {
+      effects.enter('taskListCheckMarker')
+      effects.consume(code)
+      effects.exit('taskListCheckMarker')
+      effects.exit('taskListCheck')
+      return effects.check({tokenize: spaceThenNonSpace}, ok, nok)
+    }
+
+    return nok(code)
+  }
+}
+
+function spaceThenNonSpace(effects, ok, nok) {
+  var self = this
+
+  return spaceFactory(effects, after, 'whitespace')
+
+  function after(code) {
+    return prefixSize(self.events, 'whitespace') &&
+      code !== null &&
+      !markdownLineEndingOrSpace(code)
+      ? ok(code)
+      : nok(code)
+  }
+}
+
+
+/***/ }),
+
+/***/ 6083:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(6796)
+
+
+/***/ }),
+
+/***/ 6796:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var combine = __nccwpck_require__(8602)
+var autolink = __nccwpck_require__(7321)
+var strikethrough = __nccwpck_require__(7119)
+var table = __nccwpck_require__(7200)
+var tasklist = __nccwpck_require__(2801)
+
+module.exports = create
+
+function create(options) {
+  return combine([autolink, strikethrough(options), table, tasklist])
 }
 
 
@@ -20732,6 +23679,411 @@ module.exports = QuickLRU;
 
 /***/ }),
 
+/***/ 5772:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var syntax = __nccwpck_require__(6083)
+var fromMarkdown = __nccwpck_require__(7831)
+var toMarkdown = __nccwpck_require__(9129)
+
+var warningIssued
+
+module.exports = gfm
+
+function gfm(options) {
+  var data = this.data()
+
+  /* istanbul ignore next - old remark. */
+  if (
+    !warningIssued &&
+    ((this.Parser &&
+      this.Parser.prototype &&
+      this.Parser.prototype.blockTokenizers) ||
+      (this.Compiler &&
+        this.Compiler.prototype &&
+        this.Compiler.prototype.visitors))
+  ) {
+    warningIssued = true
+    console.warn(
+      '[remark-gfm] Warning: please upgrade to remark 13 to use this plugin'
+    )
+  }
+
+  add('micromarkExtensions', syntax(options))
+  add('fromMarkdownExtensions', fromMarkdown)
+  add('toMarkdownExtensions', toMarkdown(options))
+
+  function add(field, value) {
+    /* istanbul ignore if - other extensions. */
+    if (data[field]) data[field].push(value)
+    else data[field] = [value]
+  }
+}
+
+
+/***/ }),
+
+/***/ 1068:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var visit = __nccwpck_require__(199)
+var toString = __nccwpck_require__(7612)
+var findAndReplace = __nccwpck_require__(6855)
+
+module.exports = github
+
+// Hide process use from browserify and the like.
+var proc = typeof global !== 'undefined' && global.process
+
+// Load `fs` and `path` if available.
+var fs
+var path
+
+try {
+  fs = __nccwpck_require__(5747)
+  path = __nccwpck_require__(5622)
+} catch (_) {}
+
+// Previously, GitHub linked `@mention` and `@mentions` to their blog post about
+// mentions (<https://github.com/blog/821>).
+// Since June 2019, and possibly earlier, they stopped linking those references.
+var denyMention = ['mention', 'mentions']
+
+// Denylist of SHAs that are also valid words.
+//
+// GitHub allows abbreviating SHAs up to 7 characters.
+// These cases are ignored in text because they might just be ment as normal
+// words.
+// If you’d like these to link to their SHAs, use more than 7 characters.
+//
+// Generated by:
+//
+// ```sh
+// egrep -i "^[a-f0-9]{7,}$" /usr/share/dict/words
+// ```
+//
+// Added a couple forms of 6 character words in GH-20:
+// <https://github.com/remarkjs/remark-github/issues/20>.
+var denyHash = ['acceded', 'deedeed', 'defaced', 'effaced', 'fabaceae']
+
+// Constants.
+var minShaLength = 7
+
+// Username may only contain alphanumeric characters or single hyphens, and
+// cannot begin or end with a hyphen*.
+//
+// \* That is: until <https://github.com/remarkjs/remark-github/issues/13>.
+var userGroup = '[\\da-z][-\\da-z]{0,38}'
+var projectGroup = '(?:\\.git[\\w-]|\\.(?!git)|[\\w-])+'
+var repoGroup = '(' + userGroup + ')\\/(' + projectGroup + ')'
+
+var linkRegex = new RegExp(
+  '^https?:\\/\\/github\\.com\\/' +
+    repoGroup +
+    '\\/(commit|issues|pull)\\/([a-f\\d]+\\/?(?=[#?]|$))',
+  'i'
+)
+
+var repoRegex = new RegExp(
+  '(?:^|/(?:repos/)?)' + repoGroup + '(?=\\.git|[\\/#@]|$)',
+  'i'
+)
+
+var referenceRegex = new RegExp(
+  '(' +
+    userGroup +
+    ')(?:\\/(' +
+    projectGroup +
+    '))?(?:#([1-9]\\d*)|@([a-f\\d]{7,40}))',
+  'gi'
+)
+
+var mentionRegex = new RegExp(
+  '@(' + userGroup + '(?:\\/' + userGroup + ')?)',
+  'gi'
+)
+
+function github(options) {
+  var settings = options || {}
+  var repository = settings.repository
+  var pkg
+
+  // Get the repository from `package.json`.
+  if (!repository) {
+    try {
+      pkg = JSON.parse(fs.readFileSync(path.join(proc.cwd(), 'package.json')))
+    } catch (_) {}
+
+    repository =
+      pkg && pkg.repository ? pkg.repository.url || pkg.repository : ''
+  }
+
+  // Parse the URL: See the tests for all possible kinds.
+  repository = repoRegex.exec(repository)
+
+  if (!repository) {
+    throw new Error('Missing `repository` field in `options`')
+  }
+
+  repository = {user: repository[1], project: repository[2]}
+
+  return transformer
+
+  function transformer(tree) {
+    findAndReplace(
+      tree,
+      [
+        [referenceRegex, replaceReference],
+        [mentionRegex, replaceMention],
+        [/(?:#|\bgh-)([1-9]\d*)/gi, replaceIssue],
+        [/\b[a-f\d]{7,40}\b/gi, replaceHash]
+      ],
+      {ignore: ['link', 'linkReference']}
+    )
+    visit(tree, 'link', visitor)
+  }
+
+  function replaceMention(value, username, match) {
+    var node
+
+    if (
+      /[\w`]/.test(match.input.charAt(match.index - 1)) ||
+      /[/\w`]/.test(match.input.charAt(match.index + value.length)) ||
+      denyMention.indexOf(username) !== -1
+    ) {
+      return false
+    }
+
+    node = {type: 'text', value: value}
+
+    if (settings.mentionStrong !== false) {
+      node = {type: 'strong', children: [node]}
+    }
+
+    return {
+      type: 'link',
+      title: null,
+      url: 'https://github.com/' + username,
+      children: [node]
+    }
+  }
+
+  function replaceIssue(value, no, match) {
+    if (
+      /\w/.test(match.input.charAt(match.index - 1)) ||
+      /\w/.test(match.input.charAt(match.index + value.length))
+    ) {
+      return false
+    }
+
+    return {
+      type: 'link',
+      title: null,
+      url:
+        'https://github.com/' +
+        repository.user +
+        '/' +
+        repository.project +
+        '/issues/' +
+        no,
+      children: [{type: 'text', value: value}]
+    }
+  }
+
+  function replaceHash(value, match) {
+    if (
+      /[^\t\n\r (@[{]/.test(match.input.charAt(match.index - 1)) ||
+      /\w/.test(match.input.charAt(match.index + value.length)) ||
+      denyHash.indexOf(value) !== -1
+    ) {
+      return false
+    }
+
+    return {
+      type: 'link',
+      title: null,
+      url:
+        'https://github.com/' +
+        repository.user +
+        '/' +
+        repository.project +
+        '/commit/' +
+        value,
+      children: [{type: 'inlineCode', value: abbr(value)}]
+    }
+  }
+
+  function replaceReference($0, user, project, no, sha, match) {
+    var value = ''
+    var nodes
+
+    if (
+      /[^\t\n\r (@[{]/.test(match.input.charAt(match.index - 1)) ||
+      /\w/.test(match.input.charAt(match.index + $0.length))
+    ) {
+      return false
+    }
+
+    nodes = []
+
+    if (user !== repository.user) {
+      value += user
+    }
+
+    if (project && project !== repository.project) {
+      value = user + '/' + project
+    }
+
+    if (no) {
+      value += '#' + no
+    } else {
+      value += '@'
+      nodes.push({type: 'inlineCode', value: abbr(sha)})
+    }
+
+    nodes.unshift({type: 'text', value: value})
+
+    return {
+      type: 'link',
+      title: null,
+      url:
+        'https://github.com/' +
+        user +
+        '/' +
+        (project || repository.project) +
+        '/' +
+        (no ? 'issues' : 'commit') +
+        '/' +
+        (no || sha),
+      children: nodes
+    }
+  }
+
+  function visitor(node) {
+    var link = parse(node)
+    var children
+    var base
+    var comment
+
+    if (!link) {
+      return
+    }
+
+    comment = link.comment ? ' (comment)' : ''
+
+    if (link.project !== repository.project) {
+      base = link.user + '/' + link.project
+    } else if (link.user === repository.user) {
+      base = ''
+    } else {
+      base = link.user
+    }
+
+    if (link.page === 'commit') {
+      children = []
+
+      if (base) {
+        children.push({type: 'text', value: base + '@'})
+      }
+
+      children.push({type: 'inlineCode', value: abbr(link.reference)})
+
+      if (link.comment) {
+        children.push({type: 'text', value: comment})
+      }
+    } else {
+      base += '#'
+      children = [{type: 'text', value: base + abbr(link.reference) + comment}]
+    }
+
+    node.children = children
+  }
+}
+
+// Abbreviate a SHA.
+function abbr(sha) {
+  return sha.slice(0, minShaLength)
+}
+
+// Parse a link and determine whether it links to GitHub.
+function parse(node) {
+  var url = node.url || ''
+  var match = linkRegex.exec(url)
+
+  if (
+    // Not a proper URL.
+    !match ||
+    // Looks like formatting.
+    node.children.length !== 1 ||
+    node.children[0].type !== 'text' ||
+    toString(node) !== url ||
+    // Issues / PRs are decimal only.
+    (match[3] !== 'commit' && /[a-f]/i.test(match[4])) ||
+    // SHAs can be min 4, max 40 characters.
+    (match[3] === 'commit' && (match[4].length < 4 || match[4].length > 40)) ||
+    // Projects can be at most 99 characters.
+    match[2].length >= 100
+  ) {
+    return
+  }
+
+  return {
+    user: match[1],
+    project: match[2],
+    page: match[3],
+    reference: match[4],
+    comment:
+      url.charAt(match[0].length) === '#' && match[0].length + 1 < url.length
+  }
+}
+
+
+/***/ }),
+
+/***/ 7612:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = toString
+
+// Get the text content of a node.
+// Prefer the node’s plain-text fields, otherwise serialize its children,
+// and if the given value is an array, serialize the nodes in it.
+function toString(node) {
+  return (
+    (node &&
+      (node.value ||
+        node.alt ||
+        node.title ||
+        ('children' in node && all(node.children)) ||
+        ('length' in node && all(node)))) ||
+    ''
+  )
+}
+
+function all(values) {
+  var result = []
+  var length = values.length
+  var index = -1
+
+  while (++index < length) {
+    result[index] = toString(values[index])
+  }
+
+  return result.join('')
+}
+
+
+/***/ }),
+
 /***/ 4859:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -20759,6 +24111,84 @@ function parse(options) {
       })
     )
   }
+}
+
+
+/***/ }),
+
+/***/ 6976:
+/***/ ((module) => {
+
+"use strict";
+/*!
+ * repeat-string <https://github.com/jonschlinkert/repeat-string>
+ *
+ * Copyright (c) 2014-2015, Jon Schlinkert.
+ * Licensed under the MIT License.
+ */
+
+
+
+/**
+ * Results cache
+ */
+
+var res = '';
+var cache;
+
+/**
+ * Expose `repeat`
+ */
+
+module.exports = repeat;
+
+/**
+ * Repeat the given `string` the specified `number`
+ * of times.
+ *
+ * **Example:**
+ *
+ * ```js
+ * var repeat = require('repeat-string');
+ * repeat('A', 5);
+ * //=> AAAAA
+ * ```
+ *
+ * @param {String} `string` The string to repeat
+ * @param {Number} `number` The number of times to repeat the string
+ * @return {String} Repeated string
+ * @api public
+ */
+
+function repeat(str, num) {
+  if (typeof str !== 'string') {
+    throw new TypeError('expected a string');
+  }
+
+  // cover common, quick use cases
+  if (num === 1) return str;
+  if (num === 2) return str + str;
+
+  var max = str.length * num;
+  if (cache !== str || typeof cache === 'undefined') {
+    cache = str;
+    res = '';
+  } else if (res.length >= max) {
+    return res.substr(0, max);
+  }
+
+  while (max > res.length && num > 1) {
+    if (num & 1) {
+      res += str;
+    }
+
+    num >>= 1;
+    str += str;
+  }
+
+  res += str;
+  res = res.substr(0, max);
+  return res;
 }
 
 
@@ -21763,6 +25193,91 @@ module.exports = value => {
 
 /***/ }),
 
+/***/ 4070:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = convert
+
+function convert(test) {
+  if (test == null) {
+    return ok
+  }
+
+  if (typeof test === 'string') {
+    return typeFactory(test)
+  }
+
+  if (typeof test === 'object') {
+    return 'length' in test ? anyFactory(test) : allFactory(test)
+  }
+
+  if (typeof test === 'function') {
+    return test
+  }
+
+  throw new Error('Expected function, string, or object as test')
+}
+
+// Utility assert each property in `test` is represented in `node`, and each
+// values are strictly equal.
+function allFactory(test) {
+  return all
+
+  function all(node) {
+    var key
+
+    for (key in test) {
+      if (node[key] !== test[key]) return false
+    }
+
+    return true
+  }
+}
+
+function anyFactory(tests) {
+  var checks = []
+  var index = -1
+
+  while (++index < tests.length) {
+    checks[index] = convert(tests[index])
+  }
+
+  return any
+
+  function any() {
+    var index = -1
+
+    while (++index < checks.length) {
+      if (checks[index].apply(this, arguments)) {
+        return true
+      }
+    }
+
+    return false
+  }
+}
+
+// Utility to convert a string into a function which checks a given node’s type
+// for said string.
+function typeFactory(test) {
+  return type
+
+  function type(node) {
+    return Boolean(node && node.type === test)
+  }
+}
+
+// Utility to return true.
+function ok() {
+  return true
+}
+
+
+/***/ }),
+
 /***/ 1957:
 /***/ ((module) => {
 
@@ -21816,6 +25331,155 @@ function position(pos) {
 
 function index(value) {
   return value && typeof value === 'number' ? value : 1
+}
+
+
+/***/ }),
+
+/***/ 9906:
+/***/ ((module) => {
+
+module.exports = color
+function color(d) {
+  return '\u001B[33m' + d + '\u001B[39m'
+}
+
+
+/***/ }),
+
+/***/ 3246:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+module.exports = visitParents
+
+var convert = __nccwpck_require__(4070)
+var color = __nccwpck_require__(9906)
+
+var CONTINUE = true
+var SKIP = 'skip'
+var EXIT = false
+
+visitParents.CONTINUE = CONTINUE
+visitParents.SKIP = SKIP
+visitParents.EXIT = EXIT
+
+function visitParents(tree, test, visitor, reverse) {
+  var step
+  var is
+
+  if (typeof test === 'function' && typeof visitor !== 'function') {
+    reverse = visitor
+    visitor = test
+    test = null
+  }
+
+  is = convert(test)
+  step = reverse ? -1 : 1
+
+  factory(tree, null, [])()
+
+  function factory(node, index, parents) {
+    var value = typeof node === 'object' && node !== null ? node : {}
+    var name
+
+    if (typeof value.type === 'string') {
+      name =
+        typeof value.tagName === 'string'
+          ? value.tagName
+          : typeof value.name === 'string'
+          ? value.name
+          : undefined
+
+      visit.displayName =
+        'node (' + color(value.type + (name ? '<' + name + '>' : '')) + ')'
+    }
+
+    return visit
+
+    function visit() {
+      var grandparents = parents.concat(node)
+      var result = []
+      var subresult
+      var offset
+
+      if (!test || is(node, index, parents[parents.length - 1] || null)) {
+        result = toResult(visitor(node, parents))
+
+        if (result[0] === EXIT) {
+          return result
+        }
+      }
+
+      if (node.children && result[0] !== SKIP) {
+        offset = (reverse ? node.children.length : -1) + step
+
+        while (offset > -1 && offset < node.children.length) {
+          subresult = factory(node.children[offset], offset, grandparents)()
+
+          if (subresult[0] === EXIT) {
+            return subresult
+          }
+
+          offset =
+            typeof subresult[1] === 'number' ? subresult[1] : offset + step
+        }
+      }
+
+      return result
+    }
+  }
+}
+
+function toResult(value) {
+  if (value !== null && typeof value === 'object' && 'length' in value) {
+    return value
+  }
+
+  if (typeof value === 'number') {
+    return [CONTINUE, value]
+  }
+
+  return [value]
+}
+
+
+/***/ }),
+
+/***/ 199:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+module.exports = visit
+
+var visitParents = __nccwpck_require__(3246)
+
+var CONTINUE = visitParents.CONTINUE
+var SKIP = visitParents.SKIP
+var EXIT = visitParents.EXIT
+
+visit.CONTINUE = CONTINUE
+visit.SKIP = SKIP
+visit.EXIT = EXIT
+
+function visit(tree, test, visitor, reverse) {
+  if (typeof test === 'function' && typeof visitor !== 'function') {
+    reverse = visitor
+    visitor = test
+    test = null
+  }
+
+  visitParents(tree, test, overload, reverse)
+
+  function overload(node, parents) {
+    var parent = parents[parents.length - 1]
+    var index = parent ? parent.children.indexOf(node) : null
+    return visitor(node, index, parent)
+  }
 }
 
 
@@ -22491,7 +26155,7 @@ var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
 var src = __nccwpck_require__(324);
 ;// CONCATENATED MODULE: ./src/properties.ts
-var properties;
+var properties_properties;
 (function (properties) {
     function richText(text) {
         return {
@@ -22548,7 +26212,7 @@ var properties;
         };
     }
     properties.select = select;
-})(properties || (properties = {}));
+})(properties_properties || (properties_properties = {}));
 
 // EXTERNAL MODULE: ./node_modules/unified/index.js
 var unified = __nccwpck_require__(5075);
@@ -22556,37 +26220,8 @@ var unified_default = /*#__PURE__*/__nccwpck_require__.n(unified);
 // EXTERNAL MODULE: ./node_modules/remark-parse/index.js
 var remark_parse = __nccwpck_require__(4859);
 var remark_parse_default = /*#__PURE__*/__nccwpck_require__.n(remark_parse);
-;// CONCATENATED MODULE: ./src/parser/rich_text_builder.ts
-class RichTextBuilder {
-    constructor() {
-        this.annotations = {
-            bold: false,
-            strikethrough: false,
-            underline: false,
-            italic: false,
-            code: false,
-            color: 'default',
-        };
-        this.href = undefined;
-    }
-    build(text) {
-        return {
-            type: 'text',
-            annotations: this.annotations,
-            text: {
-                content: text,
-                link: this.href
-                    ? {
-                        type: 'url',
-                        url: this.href,
-                    }
-                    : undefined,
-            },
-        };
-    }
-}
-
 ;// CONCATENATED MODULE: ./src/blocks.ts
+// A block object represents content within Notion. Blocks can be text, lists, media, and more. A page is a type of block, too!
 var blocks;
 (function (blocks) {
     function paragraph(text) {
@@ -22599,107 +26234,241 @@ var blocks;
         };
     }
     blocks.paragraph = paragraph;
-    function heading(type, text) {
+    function headingOne(text) {
         return {
             object: 'block',
-            type: type,
-            [type]: {
+            type: 'heading_1',
+            heading_1: {
                 text: text,
             },
         };
     }
-    blocks.heading = heading;
-    function listItem(type, text) {
+    blocks.headingOne = headingOne;
+    function headingTwo(text) {
         return {
             object: 'block',
-            type: type,
-            [type]: {
+            type: 'heading_2',
+            heading_2: {
                 text: text,
             },
         };
     }
-    blocks.listItem = listItem;
+    blocks.headingTwo = headingTwo;
+    function headingThree(text) {
+        return {
+            object: 'block',
+            type: 'heading_3',
+            heading_3: {
+                text: text,
+            },
+        };
+    }
+    blocks.headingThree = headingThree;
+    function bulletedListItem(text) {
+        return {
+            object: 'block',
+            type: 'bulleted_list_item',
+            bulleted_list_item: {
+                text: text,
+            },
+        };
+    }
+    blocks.bulletedListItem = bulletedListItem;
+    function numberedListItem(text) {
+        return {
+            object: 'block',
+            type: 'numbered_list_item',
+            numbered_list_item: {
+                text: text,
+            },
+        };
+    }
+    blocks.numberedListItem = numberedListItem;
+    function toDo(checked, text) {
+        return {
+            object: 'block',
+            type: 'to_do',
+            to_do: {
+                text: text,
+                checked: checked,
+            },
+        };
+    }
+    blocks.toDo = toDo;
 })(blocks || (blocks = {}));
+
+;// CONCATENATED MODULE: ./src/common.ts
+var common;
+(function (common) {
+    function richText(content, options = {}) {
+        var _a;
+        const annotations = (_a = options.annotations) !== null && _a !== void 0 ? _a : {};
+        return {
+            type: 'text',
+            annotations: Object.assign({ bold: false, strikethrough: false, underline: false, italic: false, code: false, color: 'default' }, annotations),
+            text: {
+                content: content,
+                link: options.url
+                    ? {
+                        type: 'url',
+                        url: options.url,
+                    }
+                    : undefined,
+            },
+        };
+    }
+    common.richText = richText;
+})(common || (common = {}));
 
 ;// CONCATENATED MODULE: ./src/parser/internal.ts
 
 
-function isLeaf(value) {
-    return value.type === 'code' || value.type === 'text' || value.type === 'inlineCode';
-}
-function parseText(node, builder) {
-    switch (node.type) {
-        case 'inlineCode':
-            builder.annotations.code = true;
-            break;
-        case 'code':
-            builder.annotations.code = true;
-            break;
+function parseInline(element, options) {
+    var _a, _b;
+    const copy = {
+        annotations: Object.assign({}, ((_a = options === null || options === void 0 ? void 0 : options.annotations) !== null && _a !== void 0 ? _a : {})),
+        url: options === null || options === void 0 ? void 0 : options.url,
+    };
+    switch (element.type) {
+        case 'image':
+            return [common.richText((_b = element.title) !== null && _b !== void 0 ? _b : element.url, copy)];
+        case 'text':
+            return [common.richText(element.value, copy)];
+        case 'delete':
+            copy.annotations.strikethrough = true;
+            return element.children.flatMap(child => parseInline(child, copy));
         case 'emphasis':
-            builder.annotations.italic = true;
-            break;
+            copy.annotations.italic = true;
+            return element.children.flatMap(child => parseInline(child, copy));
         case 'strong':
-            builder.annotations.bold = true;
-            break;
+            copy.annotations.bold = true;
+            return element.children.flatMap(child => parseInline(child, copy));
         case 'link':
-            builder.href = node.url;
-            break;
+            copy.url = element.url;
+            return element.children.flatMap(child => parseInline(child, copy));
+        case 'inlineCode':
+            copy.annotations.code = true;
+            return [common.richText(element.value, copy)];
+        default:
+            return [];
     }
-    return isLeaf(node)
-        ? [builder.build(node.value)]
-        : node.children.flatMap(child => parseText(child, builder));
 }
-function parseListItem(node, type) {
-    const mapped = node.children.flatMap(node => parseText(node, new RichTextBuilder()));
-    return blocks.listItem(type, mapped);
+function parseParagraph(element) {
+    const text = element.children.flatMap(child => parseInline(child));
+    return [blocks.paragraph(text)];
 }
-function parseHeading(node) {
-    const key = `heading_${node.depth}`;
-    const mapped = node.children.flatMap(node => parseText(node, new RichTextBuilder()));
-    return [blocks.heading(key, mapped)];
+function parseHeading(element) {
+    const text = element.children.flatMap(child => parseInline(child));
+    switch (element.depth) {
+        case 1:
+            return [blocks.headingOne(text)];
+        case 2:
+            return [blocks.headingTwo(text)];
+        default:
+            return [blocks.headingThree(text)];
+    }
 }
-function parseParagraph(node) {
-    const mapped = node.children.flatMap(node => parseText(node, new RichTextBuilder()));
-    return [blocks.paragraph(mapped)];
+function parseCode(element) {
+    return [blocks.paragraph([common.richText(element.value, { annotations: { code: true } })])];
 }
-function parseList(node) {
-    const type = node.start ? 'numbered_list_item' : 'bulleted_list_item';
-    return node.children.map(item => parseListItem(item, type));
-}
-function parseCode(node) {
-    const builder = new RichTextBuilder();
-    return [blocks.paragraph(parseText(node, builder))];
-}
-function parseNode(root) {
-    return root.children.flatMap((node) => {
-        switch (node.type) {
-            case 'heading':
-                return parseHeading(node);
-            case 'paragraph':
-                return parseParagraph(node);
-            case 'list':
-                return parseList(node);
-            case 'blockquote':
-                return parseNode(node);
-            case 'code':
-                return parseCode(node);
-            default:
-                throw new Error(`Node type ${node.type} not handled.`);
+function parseList(element) {
+    return element.children.flatMap(item => {
+        const paragraph = item.children[0];
+        if (paragraph.type !== 'paragraph') {
+            return [];
+        }
+        const text = paragraph.children.flatMap(child => parseInline(child));
+        if (element.start) {
+            return [blocks.numberedListItem(text)];
+        }
+        else if (item.checked === true || item.checked === false) {
+            return [blocks.toDo(item.checked, text)];
+        }
+        else {
+            return [blocks.bulletedListItem(text)];
         }
     });
 }
+function parseNode(node) {
+    switch (node.type) {
+        case 'heading':
+            return parseHeading(node);
+        case 'paragraph':
+            return parseParagraph(node);
+        case 'code':
+            return parseCode(node);
+        case 'blockquote':
+            return node.children.flatMap(parseNode);
+        case 'list':
+            return parseList(node);
+        default:
+            return [];
+    }
+}
+function parseRoot(root) {
+    return root.children.flatMap(parseNode);
+}
 
+// EXTERNAL MODULE: ./node_modules/remark-gfm/index.js
+var remark_gfm = __nccwpck_require__(5772);
+var remark_gfm_default = /*#__PURE__*/__nccwpck_require__.n(remark_gfm);
+// EXTERNAL MODULE: ./node_modules/remark-github/index.js
+var remark_github = __nccwpck_require__(1068);
+var remark_github_default = /*#__PURE__*/__nccwpck_require__.n(remark_github);
 ;// CONCATENATED MODULE: ./src/parser/index.ts
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 
 
 
-function parseBody(body) {
-    const tokens = unified_default()().use((remark_parse_default())).parse(body);
-    return parseNode(tokens);
+
+
+
+function removeHTML(text) {
+    return text.replace(/<.*>.*<\/.*>/g, '');
+}
+/**
+ * Parses GitHub-flavored markdown text into Notion Blocks.
+ * - Supports all heading types (heading depths 4, 5, 6 are treated as 3 for Notion)
+ * - Supports numbered lists, bulleted lists, to-do lists
+ * - Supports italics, bold, strikethrough, inline code, hyperlinks
+ *
+ * Per Notion limitations, these markdown attributes are not supported:
+ * - Tables (removed)
+ * - HTML tags and content (removed)
+ * - Thematic breaks (removed)
+ * - Code blocks (treated as paragraph)
+ * - Block quotes (treated as paragraph)
+ *
+ * Additionally, formats GitHub-specific smart issue / user / commit links into URLs
+ *
+ * @param body any GFM text
+ * @param options any additional options to use for parsing
+ */
+function parseBodyToBlocks(body, options) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const withoutHtml = removeHTML(body);
+        let root = unified_default()().use((remark_parse_default())).use((remark_gfm_default())).parse(withoutHtml);
+        if (options === null || options === void 0 ? void 0 : options.repositoryUrl) {
+            root = yield unified_default()().use((remark_github_default()), { repository: options.repositoryUrl }).run(root);
+        }
+        return parseRoot(root);
+    });
+}
+function parseBodyToProperty(body) {
+    const withoutHtml = removeHTML(body);
+    return properties.richText(withoutHtml);
 }
 
 ;// CONCATENATED MODULE: ./src/action.ts
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var action_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -22716,26 +26485,26 @@ function parsePropertiesFromPayload(payload, statusOptions) {
     var _a, _b, _c, _d, _e, _f;
     core.info(`payload.issue.body ${JSON.stringify(payload.issue.body, null, 2)}`);
     const result = {
-        Name: properties.title(payload.issue.title),
-        Organization: properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
-        Repository: properties.richText(payload.repository.name),
-        Number: properties.number(payload.issue.number),
-        Assignees: properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
-        Milestone: properties.richText((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
-        Labels: properties.richText((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
-        Author: properties.richText(payload.issue.user.login),
-        Created: properties.date(payload.issue.created_at),
-        Updated: properties.date(payload.issue.updated_at),
-        ID: properties.number(payload.issue.id),
+        Name: properties_properties.title(payload.issue.title),
+        Organization: properties_properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
+        Repository: properties_properties.richText(payload.repository.name),
+        Number: properties_properties.number(payload.issue.number),
+        Assignees: properties_properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
+        Milestone: properties_properties.richText((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
+        Labels: properties_properties.richText((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
+        Author: properties_properties.richText(payload.issue.user.login),
+        Created: properties_properties.date(payload.issue.created_at),
+        Updated: properties_properties.date(payload.issue.updated_at),
+        ID: properties_properties.number(payload.issue.id),
     };
     const status = statusOptions.find(option => { var _a; return option.name.toLowerCase() === ((_a = payload.issue.state) === null || _a === void 0 ? void 0 : _a.toLowerCase()); });
     if (status) {
-        result['Status'] = properties.select(status.id, status.name, status.color);
+        result['Status'] = properties_properties.select(status.id, status.name, status.color);
     }
     return result;
 }
 function getStatusOptions(client, databaseId) {
-    return __awaiter(this, void 0, void 0, function* () {
+    return action_awaiter(this, void 0, void 0, function* () {
         const db = yield client.databases.retrieve({ database_id: databaseId });
         const statusProperty = db.properties['Status'];
         if (statusProperty.type !== 'select') {
@@ -22745,7 +26514,7 @@ function getStatusOptions(client, databaseId) {
     });
 }
 function handleIssueOpened(options) {
-    return __awaiter(this, void 0, void 0, function* () {
+    return action_awaiter(this, void 0, void 0, function* () {
         const { notion, payload } = options;
         core.info(`Creating page for issue #${payload.issue.number}`);
         const statusOptions = yield getStatusOptions(notion.client, notion.databaseId);
@@ -22756,14 +26525,17 @@ function handleIssueOpened(options) {
             properties: parsePropertiesFromPayload(payload, statusOptions),
         });
         const pageId = createdPage.id;
+        const blocks = yield parseBodyToBlocks(payload.issue.body, {
+            repositoryUrl: payload.repository.git_url,
+        });
         yield notion.client.blocks.children.append({
             block_id: pageId,
-            children: parseBody(payload.issue.body),
+            children: blocks,
         });
     });
 }
 function handleIssueEdited(options) {
-    return __awaiter(this, void 0, void 0, function* () {
+    return action_awaiter(this, void 0, void 0, function* () {
         const { notion, payload } = options;
         core.info(`Querying database for page with github id ${payload.issue.id}`);
         const query = yield notion.client.databases.query({
@@ -22791,7 +26563,7 @@ function handleIssueEdited(options) {
     });
 }
 function run(options) {
-    return __awaiter(this, void 0, void 0, function* () {
+    return action_awaiter(this, void 0, void 0, function* () {
         const { notion, github } = options;
         core.info('Starting...');
         const notionClient = new src/* Client */.KU({
