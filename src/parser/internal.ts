@@ -10,18 +10,23 @@ import type {
   ToDoBlock,
 } from '@notionhq/client/build/src/api-types';
 import type {Code, FlowContent, Heading, List, Paragraph, PhrasingContent, Root} from './types';
-import {RichTextBuilder} from './rich_text_builder';
 import {blocks} from '../blocks';
+import {common} from '../common';
 
-function parseInline(element: PhrasingContent, builder: RichTextBuilder): RichText[] {
-  const copy = builder.copy();
+function parseInline(element: PhrasingContent, options?: common.RichTextOptions): RichText[] {
+  const copy = {
+    annotations: {
+      ...(options?.annotations ?? {}),
+    },
+    url: options?.url,
+  };
+
   switch (element.type) {
     case 'image':
-      copy.href = element.url;
-      return [copy.build(element.title ?? element.url)];
+      return [common.richText(element.title ?? element.url, copy)];
 
     case 'text':
-      return [copy.build(element.value)];
+      return [common.richText(element.value, copy)];
 
     case 'delete':
       copy.annotations.strikethrough = true;
@@ -36,12 +41,12 @@ function parseInline(element: PhrasingContent, builder: RichTextBuilder): RichTe
       return element.children.flatMap(child => parseInline(child, copy));
 
     case 'link':
-      copy.href = element.url;
+      copy.url = element.url;
       return element.children.flatMap(child => parseInline(child, copy));
 
     case 'inlineCode':
       copy.annotations.code = true;
-      return [copy.build(element.value)];
+      return [common.richText(element.value, copy)];
 
     default:
       return [];
@@ -49,14 +54,12 @@ function parseInline(element: PhrasingContent, builder: RichTextBuilder): RichTe
 }
 
 function parseParagraph(element: Paragraph): ParagraphBlock[] {
-  const builder = new RichTextBuilder();
-  const text = element.children.flatMap(child => parseInline(child, builder));
+  const text = element.children.flatMap(child => parseInline(child));
   return [blocks.paragraph(text)];
 }
 
 function parseHeading(element: Heading): (HeadingOneBlock | HeadingTwoBlock | HeadingThreeBlock)[] {
-  const builder = new RichTextBuilder();
-  const text = element.children.flatMap(child => parseInline(child, builder));
+  const text = element.children.flatMap(child => parseInline(child));
 
   switch (element.depth) {
     case 1:
@@ -71,23 +74,17 @@ function parseHeading(element: Heading): (HeadingOneBlock | HeadingTwoBlock | He
 }
 
 function parseCode(element: Code): ParagraphBlock[] {
-  const builder = new RichTextBuilder();
-  builder.annotations.code = true;
-  const text = [builder.build(element.value)];
-
-  return [blocks.paragraph(text)];
+  return [blocks.paragraph([common.richText(element.value, {annotations: {code: true}})])];
 }
 
 function parseList(element: List): (BulletedListItemBlock | NumberedListItemBlock | ToDoBlock)[] {
   return element.children.flatMap(item => {
-    const builder = new RichTextBuilder();
-
     const paragraph = item.children[0];
     if (paragraph.type !== 'paragraph') {
       return [] as (BulletedListItemBlock | NumberedListItemBlock | ToDoBlock)[];
     }
 
-    const text = paragraph.children.flatMap(child => parseInline(child, builder));
+    const text = paragraph.children.flatMap(child => parseInline(child));
 
     if (element.start) {
       return [blocks.numberedListItem(text)];

@@ -1,11 +1,11 @@
-import {Annotations, RichText} from '@notionhq/client/build/src/api-types';
-
-interface RichTextOptions {
-  annotations?: Partial<Annotations>;
-  url?: string;
-}
+import type {Annotations, RichText} from '@notionhq/client/build/src/api-types';
 
 export namespace common {
+  export interface RichTextOptions {
+    annotations?: Partial<Annotations>;
+    url?: string;
+  }
+
   export function richText(content: string, options: RichTextOptions = {}): RichText {
     const annotations = options.annotations ?? {};
 

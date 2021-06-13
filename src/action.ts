@@ -72,9 +72,13 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
 
   const pageId = createdPage.id;
 
+  const blocks = await parseBodyToBlocks(payload.issue.body, {
+    repositoryUrl: payload.repository.git_url,
+  });
+
   await notion.client.blocks.children.append({
     block_id: pageId,
-    children: parseBodyToBlocks(payload.issue.body),
+    children: blocks,
   });
 }
 

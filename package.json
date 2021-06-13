@@ -12,7 +12,6 @@
   "devDependencies": {
     "@types/jest": "^26.0.23",
     "@types/node": "^15.12.2",
-    "@types/uuid": "^8.3.0",
     "@vercel/ncc": "^0.28.6",
     "gts": "^3.1.0",
     "jest": "^27.0.4",
@@ -29,8 +28,8 @@
     "@notionhq/client": "^0.1.9",
     "@octokit/webhooks-definitions": "^3.67.3",
     "remark-gfm": "^1.0.0",
+    "remark-github": "^10.1.0",
     "remark-parse": "^9.0.0",
-    "unified": "^9.2.1",
-    "uuid": "^8.3.2"
+    "unified": "^9.2.1"
   }
 }

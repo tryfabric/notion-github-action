@@ -3,9 +3,9 @@ import {blocks} from '../blocks';
 import {common} from '../common';
 
 describe('gfm parser', () => {
-  it('should parse paragraph with nested annotations', () => {
+  it('should parse paragraph with nested annotations', async () => {
     const text = 'Hello _world **foo**_! `code`';
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -26,9 +26,9 @@ describe('gfm parser', () => {
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse text with hrefs and annotations', () => {
+  it('should parse text with hrefs and annotations', async () => {
     const text = 'hello world [this is a _url_](https://example.com) end';
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -47,9 +47,9 @@ describe('gfm parser', () => {
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse thematic breaks', () => {
+  it('should parse thematic breaks', async () => {
     const text = 'hello\n***\nworld';
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -59,7 +59,7 @@ describe('gfm parser', () => {
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse headings', () => {
+  it('should parse headings', async () => {
     const text = `
 # heading1
 ## heading2
@@ -67,7 +67,7 @@ describe('gfm parser', () => {
 #### heading4
     `;
 
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.headingOne([common.richText('heading1')]),
@@ -79,7 +79,7 @@ describe('gfm parser', () => {
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse code block', () => {
+  it('should parse code block', async () => {
     const text = `
 hello
 \`\`\`java
@@ -87,7 +87,7 @@ public class Foo {}
 \`\`\`
     `;
 
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -101,12 +101,12 @@ public class Foo {}
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse block quote', () => {
+  it('should parse block quote', async () => {
     const text = `
 > # hello _world_
     `;
 
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.headingOne([
@@ -120,7 +120,7 @@ public class Foo {}
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse list', () => {
+  it('should parse list', async () => {
     const text = `
 hello
 * a
@@ -128,7 +128,7 @@ hello
 * **c**
     `;
 
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -140,7 +140,7 @@ hello
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should parse github extensions', () => {
+  it('should parse github extensions', async () => {
     const text = `
 https://example.com
 
@@ -153,7 +153,7 @@ https://example.com
 * [x] done
     `;
 
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -173,15 +173,56 @@ https://example.com
     expect(actual).toStrictEqual(expected);
   });
 
-  it('should remove html', () => {
+  it('should remove html', async () => {
     const text = `
 <sub>a</sub>
 b
     `;
 
-    const actual = parseBodyToBlocks(text);
+    const actual = await parseBodyToBlocks(text);
 
     const expected = [blocks.paragraph([common.richText('b')])];
+
+    expect(actual).toStrictEqual(expected);
+  });
+
+  it('should parse github links', async () => {
+    const text = `
+Commit: f8083175fe890cbf14f41d0a06e7aa35d4989587
+
+Issue or PR: #1
+
+Mention: @username
+    `;
+
+    const url = 'https://github.com/remarkjs/remark-github.git';
+
+    const actual = await parseBodyToBlocks(text, {
+      repositoryUrl: url,
+    });
+
+    const expected = [
+      blocks.paragraph([
+        common.richText('Commit: '),
+        common.richText('f808317', {
+          annotations: {code: true},
+          url: 'https://github.com/remarkjs/remark-github/commit/f8083175fe890cbf14f41d0a06e7aa35d4989587',
+        }),
+      ]),
+      blocks.paragraph([
+        common.richText('Issue or PR: '),
+        common.richText('#1', {
+          url: 'https://github.com/remarkjs/remark-github/issues/1',
+        }),
+      ]),
+      blocks.paragraph([
+        common.richText('Mention: '),
+        common.richText('@username', {
+          annotations: {bold: true},
+          url: 'https://github.com/username',
+        }),
+      ]),
+    ];
 
     expect(actual).toStrictEqual(expected);
   });
