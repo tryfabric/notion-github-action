@@ -5,20 +5,23 @@ import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectOption} from '@notionhq/client/build/src/api-types';
-import {markdownToProperty} from './parser';
+
+function removeHTML(text: string): string {
+  return text.replace(/<.*>.*<\/.*>/g, '');
+}
 
 function parsePropertiesFromPayload(
   payload: IssuesEvent,
   statusOptions: SelectOption[]
 ): InputPropertyValueMap {
-  const parsedBody = markdownToProperty(payload.issue.body);
+  const parsedBody = removeHTML(payload.issue.body);
 
   const result: InputPropertyValueMap = {
     Name: properties.title(payload.issue.title),
     Organization: properties.text(payload.organization?.login ?? ''),
     Repository: properties.text(payload.repository.name),
     Number: properties.number(payload.issue.number),
-    Body: parsedBody,
+    Body: properties.text(parsedBody),
     Assignees: properties.text(payload.issue.assignees.map(user => user.login).join(', ')),
     Milestone: properties.text(payload.issue.milestone?.title ?? ''),
     Labels: properties.text(payload.issue.labels?.map(label => label.name).join(', ') ?? ''),

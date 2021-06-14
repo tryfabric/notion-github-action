@@ -10,13 +10,10 @@
   },
   "keywords": [],
   "devDependencies": {
-    "@types/jest": "^26.0.23",
     "@types/node": "^15.12.2",
     "@vercel/ncc": "^0.28.6",
     "gts": "^3.1.0",
-    "jest": "^27.0.4",
     "prettier": "^2.3.1",
-    "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
     "typescript": "^4.3.2"
   },
@@ -26,10 +23,6 @@
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
     "@notionhq/client": "^0.1.9",
-    "@octokit/webhooks-definitions": "^3.67.3",
-    "remark-gfm": "^1.0.0",
-    "remark-github": "^10.1.0",
-    "remark-parse": "^9.0.0",
-    "unified": "^9.2.1"
+    "@octokit/webhooks-definitions": "^3.67.3"
   }
 }
