@@ -26155,9 +26155,9 @@ var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
 var src = __nccwpck_require__(324);
 ;// CONCATENATED MODULE: ./src/properties.ts
-var properties_properties;
+var properties;
 (function (properties) {
-    function richText(text) {
+    function text(text) {
         return {
             type: 'rich_text',
             rich_text: [
@@ -26168,6 +26168,13 @@ var properties_properties;
                     },
                 },
             ],
+        };
+    }
+    properties.text = text;
+    function richText(text) {
+        return {
+            type: 'rich_text',
+            rich_text: text,
         };
     }
     properties.richText = richText;
@@ -26212,7 +26219,7 @@ var properties_properties;
         };
     }
     properties.select = select;
-})(properties_properties || (properties_properties = {}));
+})(properties || (properties = {}));
 
 // EXTERNAL MODULE: ./node_modules/unified/index.js
 var unified = __nccwpck_require__(5075);
@@ -26221,6 +26228,8 @@ var unified_default = /*#__PURE__*/__nccwpck_require__.n(unified);
 var remark_parse = __nccwpck_require__(4859);
 var remark_parse_default = /*#__PURE__*/__nccwpck_require__.n(remark_parse);
 ;// CONCATENATED MODULE: ./src/blocks.ts
+// https://developers.notion.com/reference/errors#limits-for-property-values
+const RICH_TEXT_ARRAY_ELEMENTS_LIMIT = 100;
 // A block object represents content within Notion. Blocks can be text, lists, media, and more. A page is a type of block, too!
 var blocks;
 (function (blocks) {
@@ -26229,7 +26238,7 @@ var blocks;
             object: 'block',
             type: 'paragraph',
             paragraph: {
-                text: text,
+                text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
             },
         };
     }
@@ -26239,7 +26248,7 @@ var blocks;
             object: 'block',
             type: 'heading_1',
             heading_1: {
-                text: text,
+                text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
             },
         };
     }
@@ -26249,7 +26258,7 @@ var blocks;
             object: 'block',
             type: 'heading_2',
             heading_2: {
-                text: text,
+                text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
             },
         };
     }
@@ -26259,7 +26268,7 @@ var blocks;
             object: 'block',
             type: 'heading_3',
             heading_3: {
-                text: text,
+                text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
             },
         };
     }
@@ -26269,7 +26278,7 @@ var blocks;
             object: 'block',
             type: 'bulleted_list_item',
             bulleted_list_item: {
-                text: text,
+                text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
             },
         };
     }
@@ -26279,7 +26288,7 @@ var blocks;
             object: 'block',
             type: 'numbered_list_item',
             numbered_list_item: {
-                text: text,
+                text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
             },
         };
     }
@@ -26289,7 +26298,7 @@ var blocks;
             object: 'block',
             type: 'to_do',
             to_do: {
-                text: text,
+                text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
                 checked: checked,
             },
         };
@@ -26298,16 +26307,24 @@ var blocks;
 })(blocks || (blocks = {}));
 
 ;// CONCATENATED MODULE: ./src/common.ts
+// https://developers.notion.com/reference/errors#limits-for-property-values
+const RICH_TEXT_CONTENT_CHARACTERS_LIMIT = 1000;
+function truncateTextContent(text) {
+    return text.length > RICH_TEXT_CONTENT_CHARACTERS_LIMIT
+        ? text.substring(0, RICH_TEXT_CONTENT_CHARACTERS_LIMIT - 1) + '…'
+        : text;
+}
 var common;
 (function (common) {
     function richText(content, options = {}) {
         var _a;
         const annotations = (_a = options.annotations) !== null && _a !== void 0 ? _a : {};
+        const truncated = truncateTextContent(content);
         return {
             type: 'text',
             annotations: Object.assign({ bold: false, strikethrough: false, underline: false, italic: false, code: false, color: 'default' }, annotations),
             text: {
-                content: content,
+                content: truncated,
                 link: options.url
                     ? {
                         type: 'url',
@@ -26355,21 +26372,22 @@ function parseInline(element, options) {
 }
 function parseParagraph(element) {
     const text = element.children.flatMap(child => parseInline(child));
-    return [blocks.paragraph(text)];
+    return blocks.paragraph(text);
 }
 function parseHeading(element) {
     const text = element.children.flatMap(child => parseInline(child));
     switch (element.depth) {
         case 1:
-            return [blocks.headingOne(text)];
+            return blocks.headingOne(text);
         case 2:
-            return [blocks.headingTwo(text)];
+            return blocks.headingTwo(text);
         default:
-            return [blocks.headingThree(text)];
+            return blocks.headingThree(text);
     }
 }
 function parseCode(element) {
-    return [blocks.paragraph([common.richText(element.value, { annotations: { code: true } })])];
+    const text = [common.richText(element.value, { annotations: { code: true } })];
+    return blocks.paragraph(text);
 }
 function parseList(element) {
     return element.children.flatMap(item => {
@@ -26392,11 +26410,11 @@ function parseList(element) {
 function parseNode(node) {
     switch (node.type) {
         case 'heading':
-            return parseHeading(node);
+            return [parseHeading(node)];
         case 'paragraph':
-            return parseParagraph(node);
+            return [parseParagraph(node)];
         case 'code':
-            return parseCode(node);
+            return [parseCode(node)];
         case 'blockquote':
             return node.children.flatMap(parseNode);
         case 'list':
@@ -26405,7 +26423,7 @@ function parseNode(node) {
             return [];
     }
 }
-function parseRoot(root) {
+function parseBlocks(root) {
     return root.children.flatMap(parseNode);
 }
 
@@ -26452,19 +26470,19 @@ function removeHTML(text) {
  * @param body any GFM text
  * @param options any additional options to use for parsing
  */
-function parseBodyToBlocks(body, options) {
+function markdownToBlocks(body, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const withoutHtml = removeHTML(body);
         let root = unified_default()().use((remark_parse_default())).use((remark_gfm_default())).parse(withoutHtml);
         if (options === null || options === void 0 ? void 0 : options.repositoryUrl) {
             root = yield unified_default()().use((remark_github_default()), { repository: options.repositoryUrl }).run(root);
         }
-        return parseRoot(root);
+        return parseBlocks(root);
     });
 }
-function parseBodyToProperty(body) {
+function markdownToProperty(body) {
     const withoutHtml = removeHTML(body);
-    return properties.richText(withoutHtml);
+    return properties.text(withoutHtml);
 }
 
 ;// CONCATENATED MODULE: ./src/action.ts
@@ -26483,23 +26501,24 @@ var action_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _a
 
 function parsePropertiesFromPayload(payload, statusOptions) {
     var _a, _b, _c, _d, _e, _f;
-    core.info(`payload.issue.body ${JSON.stringify(payload.issue.body, null, 2)}`);
+    const parsedBody = markdownToProperty(payload.issue.body);
     const result = {
-        Name: properties_properties.title(payload.issue.title),
-        Organization: properties_properties.richText((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
-        Repository: properties_properties.richText(payload.repository.name),
-        Number: properties_properties.number(payload.issue.number),
-        Assignees: properties_properties.richText(payload.issue.assignees.map(user => user.login).join(', ')),
-        Milestone: properties_properties.richText((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
-        Labels: properties_properties.richText((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
-        Author: properties_properties.richText(payload.issue.user.login),
-        Created: properties_properties.date(payload.issue.created_at),
-        Updated: properties_properties.date(payload.issue.updated_at),
-        ID: properties_properties.number(payload.issue.id),
+        Name: properties.title(payload.issue.title),
+        Organization: properties.text((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
+        Repository: properties.text(payload.repository.name),
+        Number: properties.number(payload.issue.number),
+        Body: parsedBody,
+        Assignees: properties.text(payload.issue.assignees.map(user => user.login).join(', ')),
+        Milestone: properties.text((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
+        Labels: properties.text((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
+        Author: properties.text(payload.issue.user.login),
+        Created: properties.date(payload.issue.created_at),
+        Updated: properties.date(payload.issue.updated_at),
+        ID: properties.number(payload.issue.id),
     };
     const status = statusOptions.find(option => { var _a; return option.name.toLowerCase() === ((_a = payload.issue.state) === null || _a === void 0 ? void 0 : _a.toLowerCase()); });
     if (status) {
-        result['Status'] = properties_properties.select(status.id, status.name, status.color);
+        result['Status'] = properties.select(status.id, status.name, status.color);
     }
     return result;
 }
@@ -26525,7 +26544,7 @@ function handleIssueOpened(options) {
             properties: parsePropertiesFromPayload(payload, statusOptions),
         });
         const pageId = createdPage.id;
-        const blocks = yield parseBodyToBlocks(payload.issue.body, {
+        const blocks = yield markdownToBlocks(payload.issue.body, {
             repositoryUrl: payload.repository.git_url,
         });
         yield notion.client.blocks.children.append({
