@@ -26579,13 +26579,11 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 const NOTION_TOKEN_KEY = 'notion-token';
 const NOTION_DB_KEY = 'notion-db';
-// const GITHUB_TOKEN_KEY = 'github-token';
 function start() {
     return src_awaiter(this, void 0, void 0, function* () {
         try {
             const notionToken = core.getInput(NOTION_TOKEN_KEY);
             const notionDb = core.getInput(NOTION_DB_KEY);
-            // const githubToken = core.getInput(GITHUB_TOKEN_KEY);
             core.info(`context event: ${lib_github.context.eventName}`);
             core.info(`context action: ${lib_github.context.action}`);
             core.info(`payload action: ${lib_github.context.payload.action}`);
