@@ -18,12 +18,14 @@ Connect your GitHub issues to a Notion database.
 
 <img width="719" alt="Screen Shot 2021-06-14 at 11 41 25 AM" src="https://user-images.githubusercontent.com/1459660/121919912-7f58f900-cd05-11eb-8e7b-960ba0d4519e.png">
 5. Find the ID of your Database by copying the link to it. The link will have the format
+
 ```
 https://www.notion.so/abc?v=123
 ```
+
 where `abc` is the database id.
 
-7. Add the Database's ID as a repository secret for your GitHub repository. Set the `Name` to `NOTION_DATABASE` and the `Value` to the id of your Database.
+6. Add the Database's ID as a repository secret for your GitHub repository. Set the `Name` to `NOTION_DATABASE` and the `Value` to the id of your Database.
 
 ## Use the Action
 
