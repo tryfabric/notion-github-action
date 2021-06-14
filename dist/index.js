@@ -26098,35 +26098,6 @@ module.exports = require("zlib");;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -26151,23 +26122,48 @@ __nccwpck_require__.r(__webpack_exports__);
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(2186);
 // EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
-var github = __nccwpck_require__(5438);
+var lib_github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
 var src = __nccwpck_require__(324);
+;// CONCATENATED MODULE: ./src/common.ts
+// https://developers.notion.com/reference/errors#limits-for-property-values
+const RICH_TEXT_CONTENT_CHARACTERS_LIMIT = 1000;
+function truncateTextContent(text) {
+    return text.length > RICH_TEXT_CONTENT_CHARACTERS_LIMIT
+        ? text.substring(0, RICH_TEXT_CONTENT_CHARACTERS_LIMIT - 1) + '…'
+        : text;
+}
+var common_common;
+(function (common) {
+    function richText(content, options = {}) {
+        var _a;
+        const annotations = (_a = options.annotations) !== null && _a !== void 0 ? _a : {};
+        const truncated = truncateTextContent(content);
+        return {
+            type: 'text',
+            annotations: Object.assign({ bold: false, strikethrough: false, underline: false, italic: false, code: false, color: 'default' }, annotations),
+            text: {
+                content: truncated,
+                link: options.url
+                    ? {
+                        type: 'url',
+                        url: options.url,
+                    }
+                    : undefined,
+            },
+        };
+    }
+    common.richText = richText;
+})(common_common || (common_common = {}));
+
 ;// CONCATENATED MODULE: ./src/properties.ts
+
 var properties;
 (function (properties) {
     function text(text) {
         return {
             type: 'rich_text',
-            rich_text: [
-                {
-                    type: 'text',
-                    text: {
-                        content: text,
-                    },
-                },
-            ],
+            rich_text: [common_common.richText(text)],
         };
     }
     properties.text = text;
@@ -26222,16 +26218,14 @@ var properties;
 })(properties || (properties = {}));
 
 // EXTERNAL MODULE: ./node_modules/unified/index.js
-var unified = __nccwpck_require__(5075);
-var unified_default = /*#__PURE__*/__nccwpck_require__.n(unified);
+var node_modules_unified = __nccwpck_require__(5075);
 // EXTERNAL MODULE: ./node_modules/remark-parse/index.js
 var remark_parse = __nccwpck_require__(4859);
-var remark_parse_default = /*#__PURE__*/__nccwpck_require__.n(remark_parse);
 ;// CONCATENATED MODULE: ./src/blocks.ts
 // https://developers.notion.com/reference/errors#limits-for-property-values
 const RICH_TEXT_ARRAY_ELEMENTS_LIMIT = 100;
 // A block object represents content within Notion. Blocks can be text, lists, media, and more. A page is a type of block, too!
-var blocks;
+var blocks_blocks;
 (function (blocks) {
     function paragraph(text) {
         return {
@@ -26304,38 +26298,7 @@ var blocks;
         };
     }
     blocks.toDo = toDo;
-})(blocks || (blocks = {}));
-
-;// CONCATENATED MODULE: ./src/common.ts
-// https://developers.notion.com/reference/errors#limits-for-property-values
-const RICH_TEXT_CONTENT_CHARACTERS_LIMIT = 1000;
-function truncateTextContent(text) {
-    return text.length > RICH_TEXT_CONTENT_CHARACTERS_LIMIT
-        ? text.substring(0, RICH_TEXT_CONTENT_CHARACTERS_LIMIT - 1) + '…'
-        : text;
-}
-var common;
-(function (common) {
-    function richText(content, options = {}) {
-        var _a;
-        const annotations = (_a = options.annotations) !== null && _a !== void 0 ? _a : {};
-        const truncated = truncateTextContent(content);
-        return {
-            type: 'text',
-            annotations: Object.assign({ bold: false, strikethrough: false, underline: false, italic: false, code: false, color: 'default' }, annotations),
-            text: {
-                content: truncated,
-                link: options.url
-                    ? {
-                        type: 'url',
-                        url: options.url,
-                    }
-                    : undefined,
-            },
-        };
-    }
-    common.richText = richText;
-})(common || (common = {}));
+})(blocks_blocks || (blocks_blocks = {}));
 
 ;// CONCATENATED MODULE: ./src/parser/internal.ts
 
@@ -26423,16 +26386,14 @@ function parseNode(node) {
             return [];
     }
 }
-function parseBlocks(root) {
+function internal_parseBlocks(root) {
     return root.children.flatMap(parseNode);
 }
 
 // EXTERNAL MODULE: ./node_modules/remark-gfm/index.js
 var remark_gfm = __nccwpck_require__(5772);
-var remark_gfm_default = /*#__PURE__*/__nccwpck_require__.n(remark_gfm);
 // EXTERNAL MODULE: ./node_modules/remark-github/index.js
 var remark_github = __nccwpck_require__(1068);
-var remark_github_default = /*#__PURE__*/__nccwpck_require__.n(remark_github);
 ;// CONCATENATED MODULE: ./src/parser/index.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -26473,9 +26434,9 @@ function removeHTML(text) {
 function markdownToBlocks(body, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const withoutHtml = removeHTML(body);
-        let root = unified_default()().use((remark_parse_default())).use((remark_gfm_default())).parse(withoutHtml);
+        let root = unified().use(markdown).use(gfm).parse(withoutHtml);
         if (options === null || options === void 0 ? void 0 : options.repositoryUrl) {
-            root = yield unified_default()().use((remark_github_default()), { repository: options.repositoryUrl }).run(root);
+            root = yield unified().use(github, { repository: options.repositoryUrl }).run(root);
         }
         return parseBlocks(root);
     });
@@ -26537,19 +26498,11 @@ function handleIssueOpened(options) {
         const { notion, payload } = options;
         core.info(`Creating page for issue #${payload.issue.number}`);
         const statusOptions = yield getStatusOptions(notion.client, notion.databaseId);
-        const createdPage = yield notion.client.pages.create({
+        yield notion.client.pages.create({
             parent: {
                 database_id: notion.databaseId,
             },
             properties: parsePropertiesFromPayload(payload, statusOptions),
-        });
-        const pageId = createdPage.id;
-        const blocks = yield markdownToBlocks(payload.issue.body, {
-            repositoryUrl: payload.repository.git_url,
-        });
-        yield notion.client.blocks.children.append({
-            block_id: pageId,
-            children: blocks,
         });
     });
 }
@@ -26633,16 +26586,16 @@ function start() {
             const notionToken = core.getInput(NOTION_TOKEN_KEY);
             const notionDb = core.getInput(NOTION_DB_KEY);
             // const githubToken = core.getInput(GITHUB_TOKEN_KEY);
-            core.info(`context event: ${github.context.eventName}`);
-            core.info(`context action: ${github.context.action}`);
-            core.info(`payload action: ${github.context.payload.action}`);
+            core.info(`context event: ${lib_github.context.eventName}`);
+            core.info(`context action: ${lib_github.context.action}`);
+            core.info(`payload action: ${lib_github.context.payload.action}`);
             const options = {
                 notion: {
                     token: notionToken,
                     databaseId: notionDb,
                 },
                 github: {
-                    payload: github.context.payload,
+                    payload: lib_github.context.payload,
                 },
             };
             yield run(options);
