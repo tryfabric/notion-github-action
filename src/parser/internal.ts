@@ -9,11 +9,11 @@ import type {
   Block,
   ToDoBlock,
 } from '@notionhq/client/build/src/api-types';
-import type {Code, FlowContent, Heading, List, Paragraph, PhrasingContent, Root} from './types';
+import {md} from './types';
 import {blocks} from '../blocks';
 import {common} from '../common';
 
-function parseInline(element: PhrasingContent, options?: common.RichTextOptions): RichText[] {
+function parseInline(element: md.PhrasingContent, options?: common.RichTextOptions): RichText[] {
   const copy = {
     annotations: {
       ...(options?.annotations ?? {}),
@@ -53,31 +53,34 @@ function parseInline(element: PhrasingContent, options?: common.RichTextOptions)
   }
 }
 
-function parseParagraph(element: Paragraph): ParagraphBlock[] {
+function parseParagraph(element: md.Paragraph): ParagraphBlock {
   const text = element.children.flatMap(child => parseInline(child));
-  return [blocks.paragraph(text)];
+  return blocks.paragraph(text);
 }
 
-function parseHeading(element: Heading): (HeadingOneBlock | HeadingTwoBlock | HeadingThreeBlock)[] {
+function parseHeading(element: md.Heading): HeadingOneBlock | HeadingTwoBlock | HeadingThreeBlock {
   const text = element.children.flatMap(child => parseInline(child));
 
   switch (element.depth) {
     case 1:
-      return [blocks.headingOne(text)];
+      return blocks.headingOne(text);
 
     case 2:
-      return [blocks.headingTwo(text)];
+      return blocks.headingTwo(text);
 
     default:
-      return [blocks.headingThree(text)];
+      return blocks.headingThree(text);
   }
 }
 
-function parseCode(element: Code): ParagraphBlock[] {
-  return [blocks.paragraph([common.richText(element.value, {annotations: {code: true}})])];
+function parseCode(element: md.Code): ParagraphBlock {
+  const text = [common.richText(element.value, {annotations: {code: true}})];
+  return blocks.paragraph(text);
 }
 
-function parseList(element: List): (BulletedListItemBlock | NumberedListItemBlock | ToDoBlock)[] {
+function parseList(
+  element: md.List
+): (BulletedListItemBlock | NumberedListItemBlock | ToDoBlock)[] {
   return element.children.flatMap(item => {
     const paragraph = item.children[0];
     if (paragraph.type !== 'paragraph') {
@@ -96,16 +99,16 @@ function parseList(element: List): (BulletedListItemBlock | NumberedListItemBloc
   });
 }
 
-function parseNode(node: FlowContent): Block[] {
+function parseNode(node: md.FlowContent): Block[] {
   switch (node.type) {
     case 'heading':
-      return parseHeading(node);
+      return [parseHeading(node)];
 
     case 'paragraph':
-      return parseParagraph(node);
+      return [parseParagraph(node)];
 
     case 'code':
-      return parseCode(node);
+      return [parseCode(node)];
 
     case 'blockquote':
       return node.children.flatMap(parseNode);
@@ -118,6 +121,6 @@ function parseNode(node: FlowContent): Block[] {
   }
 }
 
-export function parseRoot(root: Root): Block[] {
+export function parseBlocks(root: md.Root): Block[] {
   return root.children.flatMap(parseNode);
 }

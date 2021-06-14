@@ -1,11 +1,12 @@
-import {parseBodyToBlocks} from './index';
+import {markdownToBlocks, markdownToProperty} from './index';
 import {blocks} from '../blocks';
 import {common} from '../common';
+import {properties} from '../properties';
 
 describe('gfm parser', () => {
   it('should parse paragraph with nested annotations', async () => {
     const text = 'Hello _world **foo**_! `code`';
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -28,7 +29,7 @@ describe('gfm parser', () => {
 
   it('should parse text with hrefs and annotations', async () => {
     const text = 'hello world [this is a _url_](https://example.com) end';
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -49,7 +50,7 @@ describe('gfm parser', () => {
 
   it('should parse thematic breaks', async () => {
     const text = 'hello\n***\nworld';
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -67,7 +68,7 @@ describe('gfm parser', () => {
 #### heading4
     `;
 
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.headingOne([common.richText('heading1')]),
@@ -87,7 +88,7 @@ public class Foo {}
 \`\`\`
     `;
 
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -106,7 +107,7 @@ public class Foo {}
 > # hello _world_
     `;
 
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.headingOne([
@@ -128,7 +129,7 @@ hello
 * **c**
     `;
 
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.paragraph([common.richText('hello')]),
@@ -153,7 +154,7 @@ https://example.com
 * [x] done
     `;
 
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [
       blocks.paragraph([
@@ -179,7 +180,7 @@ https://example.com
 b
     `;
 
-    const actual = await parseBodyToBlocks(text);
+    const actual = await markdownToBlocks(text);
 
     const expected = [blocks.paragraph([common.richText('b')])];
 
@@ -197,7 +198,7 @@ Mention: @username
 
     const url = 'https://github.com/remarkjs/remark-github.git';
 
-    const actual = await parseBodyToBlocks(text, {
+    const actual = await markdownToBlocks(text, {
       repositoryUrl: url,
     });
 
@@ -223,6 +224,22 @@ Mention: @username
         }),
       ]),
     ];
+
+    expect(actual).toStrictEqual(expected);
+  });
+
+  it('should convert markdown to property', () => {
+    const text = '_Hello_, world!';
+    const actual = markdownToProperty(text);
+
+    const expected = properties.richText([
+      common.richText('Hello', {
+        annotations: {
+          italic: true,
+        },
+      }),
+      common.richText(', world!'),
+    ]);
 
     expect(actual).toStrictEqual(expected);
   });

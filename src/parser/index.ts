@@ -1,8 +1,8 @@
 import unified from 'unified';
 import markdown from 'remark-parse';
 import type {Block, RichTextInputPropertyValue} from '@notionhq/client/build/src/api-types';
-import {parseRoot} from './internal';
-import type {Root} from './types';
+import {parseBlocks} from './internal';
+import {md} from './types';
 import gfm from 'remark-gfm';
 import {properties} from '../properties';
 import github from 'remark-github';
@@ -33,7 +33,7 @@ interface ParseOptions {
  * @param body any GFM text
  * @param options any additional options to use for parsing
  */
-export async function parseBodyToBlocks(body: string, options?: ParseOptions): Promise<Block[]> {
+export async function markdownToBlocks(body: string, options?: ParseOptions): Promise<Block[]> {
   const withoutHtml = removeHTML(body);
 
   let root = unified().use(markdown).use(gfm).parse(withoutHtml);
@@ -42,10 +42,10 @@ export async function parseBodyToBlocks(body: string, options?: ParseOptions): P
     root = await unified().use(github, {repository: options.repositoryUrl}).run(root);
   }
 
-  return parseRoot(root as unknown as Root);
+  return parseBlocks(root as unknown as md.Root);
 }
 
-export function parseBodyToProperty(body: string): Omit<RichTextInputPropertyValue, 'id'> {
+export function markdownToProperty(body: string): Omit<RichTextInputPropertyValue, 'id'> {
   const withoutHtml = removeHTML(body);
-  return properties.richText(withoutHtml);
+  return properties.text(withoutHtml);
 }

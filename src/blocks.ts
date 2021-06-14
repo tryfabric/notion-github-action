@@ -9,6 +9,9 @@ import type {
   ToDoBlock,
 } from '@notionhq/client/build/src/api-types';
 
+// https://developers.notion.com/reference/errors#limits-for-property-values
+export const RICH_TEXT_ARRAY_ELEMENTS_LIMIT = 100;
+
 // A block object represents content within Notion. Blocks can be text, lists, media, and more. A page is a type of block, too!
 export namespace blocks {
   export function paragraph(text: RichText[]): ParagraphBlock {
@@ -16,7 +19,7 @@ export namespace blocks {
       object: 'block',
       type: 'paragraph',
       paragraph: {
-        text: text,
+        text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
       },
     } as ParagraphBlock;
   }
@@ -26,7 +29,7 @@ export namespace blocks {
       object: 'block',
       type: 'heading_1',
       heading_1: {
-        text: text,
+        text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
       },
     } as HeadingOneBlock;
   }
@@ -36,7 +39,7 @@ export namespace blocks {
       object: 'block',
       type: 'heading_2',
       heading_2: {
-        text: text,
+        text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
       },
     } as HeadingTwoBlock;
   }
@@ -46,7 +49,7 @@ export namespace blocks {
       object: 'block',
       type: 'heading_3',
       heading_3: {
-        text: text,
+        text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
       },
     } as HeadingThreeBlock;
   }
@@ -56,7 +59,7 @@ export namespace blocks {
       object: 'block',
       type: 'bulleted_list_item',
       bulleted_list_item: {
-        text: text,
+        text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
       },
     } as BulletedListItemBlock;
   }
@@ -66,7 +69,7 @@ export namespace blocks {
       object: 'block',
       type: 'numbered_list_item',
       numbered_list_item: {
-        text: text,
+        text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
       },
     } as NumberedListItemBlock;
   }
@@ -76,7 +79,7 @@ export namespace blocks {
       object: 'block',
       type: 'to_do',
       to_do: {
-        text: text,
+        text: text.slice(0, RICH_TEXT_ARRAY_ELEMENTS_LIMIT),
         checked: checked,
       },
     } as ToDoBlock;

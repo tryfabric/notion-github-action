@@ -5,10 +5,11 @@ import type {
   RichTextInputPropertyValue,
   SelectPropertyValue,
   Color,
+  RichText,
 } from '@notionhq/client/build/src/api-types';
 
 export namespace properties {
-  export function richText(text: string): Omit<RichTextInputPropertyValue, 'id'> {
+  export function text(text: string): Omit<RichTextInputPropertyValue, 'id'> {
     return {
       type: 'rich_text',
       rich_text: [
@@ -19,6 +20,13 @@ export namespace properties {
           },
         },
       ],
+    };
+  }
+
+  export function richText(text: RichText[]): Omit<RichTextInputPropertyValue, 'id'> {
+    return {
+      type: 'rich_text',
+      rich_text: text,
     };
   }
 
