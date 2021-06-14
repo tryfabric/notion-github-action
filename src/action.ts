@@ -5,7 +5,7 @@ import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectOption} from '@notionhq/client/build/src/api-types';
-import {markdownToBlocks, markdownToProperty} from './parser';
+import {markdownToProperty} from './parser';
 
 function parsePropertiesFromPayload(
   payload: IssuesEvent,
@@ -64,22 +64,11 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
 
   const statusOptions = await getStatusOptions(notion.client, notion.databaseId);
 
-  const createdPage = await notion.client.pages.create({
+  await notion.client.pages.create({
     parent: {
       database_id: notion.databaseId,
     },
     properties: parsePropertiesFromPayload(payload, statusOptions),
-  });
-
-  const pageId = createdPage.id;
-
-  const blocks = await markdownToBlocks(payload.issue.body, {
-    repositoryUrl: payload.repository.git_url,
-  });
-
-  await notion.client.blocks.children.append({
-    block_id: pageId,
-    children: blocks,
   });
 }
 

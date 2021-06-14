@@ -7,19 +7,13 @@ import type {
   Color,
   RichText,
 } from '@notionhq/client/build/src/api-types';
+import {common} from './common';
 
 export namespace properties {
   export function text(text: string): Omit<RichTextInputPropertyValue, 'id'> {
     return {
       type: 'rich_text',
-      rich_text: [
-        {
-          type: 'text',
-          text: {
-            content: text,
-          },
-        },
-      ],
+      rich_text: [common.richText(text)],
     };
   }
 
