@@ -7,7 +7,7 @@ Connect your GitHub issues to a Notion database.
 
 ---
 
-## Configure
+## Quick Start
 
 1. [Create a new internal Notion integration](https://www.notion.so/my-integrations) and note the value of the Internal Integration Token.
 2. In your GitHub repository, go to `Settings` > `Secrets`, and add a `New repository secret`. Set the `Name` to `NOTION_TOKEN` and the `Value` to the Internal Integration Token you created in the previous step.
@@ -21,13 +21,9 @@ where `abc` is the database id.
 
 6. Add the Database's ID as a repository secret for your GitHub repository. Set the `Name` to `NOTION_DATABASE` and the `Value` to the id of your Database.
 
-## Use the Action
+7. In your GitHub repository, create a GitHub workflow file at the path `.github/workflows/issues-notion-sync.yml`.
 
-In your GitHub repository, create a GitHub workflow to use this Action in.
 
-The workflow should run on the following issue event types: `opened, edited, labeled, unlabeled, assigned, unassigned, milestoned, demilestoned, reopened, closed`.
-
-Create a file in your repository called `.github/workflows/issues-notion-sync.yml`.
 ```yaml
 on:
   issues:
