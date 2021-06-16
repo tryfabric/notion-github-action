@@ -25,7 +25,7 @@ where `abc` is the database id.
 
 In your GitHub repository, create a GitHub workflow to use this Action in.
 
-At minimum, the workflow must run on `issues.opened`. To have the database update, the workflow must also run on the following issue types: `opened, edited, labeled, unlabeled, assigned, unassigned, milestoned, demilestoned, reopened, closed`.
+The workflow should run on the following issue event types: `opened, edited, labeled, unlabeled, assigned, unassigned, milestoned, demilestoned, reopened, closed`.
 
 Create a file in your repository called `.github/workflows/issues-notion-sync.yml`.
 ```yaml
