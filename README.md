@@ -5,6 +5,8 @@
 
 Connect your GitHub issues to a Notion database.
 
+**Like this GitHub Action?** Give us a ⭐️ and [follow us on Twitter for more drops 🪂](https://twitter.com/tryfabric).
+
 ---
 
 ## Quick Start
@@ -40,3 +42,8 @@ jobs:
           notion-token: ${{ secrets.NOTION_TOKEN }}
           notion-db: ${{ secrets.NOTION_DATABASE }}
 ```
+
+
+---
+
+Made with 💙 by the team behind [Fabric](https://tryfabric.com).
