@@ -14550,7 +14550,7 @@ var properties;
             multi_select: names.map(name => {
                 return {
                     name: name,
-                    color: 'default'
+                    color: 'default',
                 };
             }),
         };
