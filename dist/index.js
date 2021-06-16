@@ -14550,6 +14550,7 @@ var properties;
             multi_select: names.map(name => {
                 return {
                     name: name,
+                    color: 'default'
                 };
             }),
         };
@@ -14591,9 +14592,9 @@ function parsePropertiesFromPayload(payload) {
         Repository: properties.text(payload.repository.name),
         Number: properties.number(payload.issue.number),
         Body: properties.text(parsedBody),
-        Assignees: properties.text(payload.issue.assignees.map(assignee => assignee.login).join(', ')),
+        Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
         Milestone: properties.text((_e = (_d = payload.issue.milestone) === null || _d === void 0 ? void 0 : _d.title) !== null && _e !== void 0 ? _e : ''),
-        Labels: properties.text((_g = (_f = payload.issue.labels) === null || _f === void 0 ? void 0 : _f.map(label => label.name).join(', ')) !== null && _g !== void 0 ? _g : ''),
+        Labels: properties.multiSelect((_g = (_f = payload.issue.labels) === null || _f === void 0 ? void 0 : _f.map(label => label.name)) !== null && _g !== void 0 ? _g : []),
         Author: properties.text(payload.issue.user.login),
         Created: properties.date(payload.issue.created_at),
         Updated: properties.date(payload.issue.updated_at),
