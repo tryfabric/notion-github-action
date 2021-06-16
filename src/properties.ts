@@ -6,6 +6,9 @@ import type {
   SelectPropertyValue,
   Color,
   RichText,
+  SelectOption,
+  MultiSelectPropertyValue,
+  MultiSelectOption,
 } from '@notionhq/client/build/src/api-types';
 import {common} from './common';
 
@@ -54,14 +57,24 @@ export namespace properties {
     };
   }
 
-  export function select(id: string, name: string, color: Color): Omit<SelectPropertyValue, 'id'> {
+  export function select(name: string, color: Color = 'default'): Omit<SelectPropertyValue, 'id'> {
     return {
       type: 'select',
       select: {
-        id: id,
         name: name,
         color: color,
-      },
+      } as SelectOption,
+    };
+  }
+
+  export function multiSelect(names: string[]): Omit<MultiSelectPropertyValue, 'id'> {
+    return {
+      type: 'multi_select',
+      multi_select: names.map(name => {
+        return {
+          name: name,
+        } as MultiSelectOption;
+      }),
     };
   }
 }
