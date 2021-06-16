@@ -14534,17 +14534,28 @@ var properties;
         };
     }
     properties.date = date;
-    function select(id, name, color) {
+    function select(name, color = 'default') {
         return {
             type: 'select',
             select: {
-                id: id,
                 name: name,
                 color: color,
             },
         };
     }
     properties.select = select;
+    function multiSelect(names) {
+        return {
+            type: 'multi_select',
+            multi_select: names.map(name => {
+                return {
+                    name: name,
+                    color: 'default',
+                };
+            }),
+        };
+    }
+    properties.multiSelect = multiSelect;
 })(properties || (properties = {}));
 
 ;// CONCATENATED MODULE: ./src/action.ts
@@ -14563,49 +14574,46 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 function removeHTML(text) {
     return text.replace(/<.*>.*<\/.*>/g, '');
 }
-function parsePropertiesFromPayload(payload, statusOptions) {
-    var _a, _b, _c, _d, _e, _f;
+function getStatusSelectOption(state) {
+    switch (state) {
+        case 'open':
+            return properties.select('Open', 'green');
+        case 'closed':
+            return properties.select('Closed', 'red');
+    }
+}
+function parsePropertiesFromPayload(payload) {
+    var _a, _b, _c, _d, _e, _f, _g;
     const parsedBody = removeHTML(payload.issue.body);
+    (_a = payload.issue.labels) === null || _a === void 0 ? void 0 : _a.map(label => label.color);
     const result = {
         Name: properties.title(payload.issue.title),
-        Organization: properties.text((_b = (_a = payload.organization) === null || _a === void 0 ? void 0 : _a.login) !== null && _b !== void 0 ? _b : ''),
+        Organization: properties.text((_c = (_b = payload.organization) === null || _b === void 0 ? void 0 : _b.login) !== null && _c !== void 0 ? _c : ''),
         Repository: properties.text(payload.repository.name),
         Number: properties.number(payload.issue.number),
         Body: properties.text(parsedBody),
-        Assignees: properties.text(payload.issue.assignees.map(user => user.login).join(', ')),
-        Milestone: properties.text((_d = (_c = payload.issue.milestone) === null || _c === void 0 ? void 0 : _c.title) !== null && _d !== void 0 ? _d : ''),
-        Labels: properties.text((_f = (_e = payload.issue.labels) === null || _e === void 0 ? void 0 : _e.map(label => label.name).join(', ')) !== null && _f !== void 0 ? _f : ''),
+        Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
+        Milestone: properties.text((_e = (_d = payload.issue.milestone) === null || _d === void 0 ? void 0 : _d.title) !== null && _e !== void 0 ? _e : ''),
+        Labels: properties.multiSelect((_g = (_f = payload.issue.labels) === null || _f === void 0 ? void 0 : _f.map(label => label.name)) !== null && _g !== void 0 ? _g : []),
         Author: properties.text(payload.issue.user.login),
         Created: properties.date(payload.issue.created_at),
         Updated: properties.date(payload.issue.updated_at),
         ID: properties.number(payload.issue.id),
     };
-    const status = statusOptions.find(option => { var _a; return option.name.toLowerCase() === ((_a = payload.issue.state) === null || _a === void 0 ? void 0 : _a.toLowerCase()); });
-    if (status) {
-        result['Status'] = properties.select(status.id, status.name, status.color);
+    if (payload.issue.state) {
+        result['Status'] = getStatusSelectOption(payload.issue.state);
     }
     return result;
-}
-function getStatusOptions(client, databaseId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const db = yield client.databases.retrieve({ database_id: databaseId });
-        const statusProperty = db.properties['Status'];
-        if (statusProperty.type !== 'select') {
-            throw new Error('`Status` property must be a select property.');
-        }
-        return statusProperty.select.options;
-    });
 }
 function handleIssueOpened(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { notion, payload } = options;
         core.info(`Creating page for issue #${payload.issue.number}`);
-        const statusOptions = yield getStatusOptions(notion.client, notion.databaseId);
         yield notion.client.pages.create({
             parent: {
                 database_id: notion.databaseId,
             },
-            properties: parsePropertiesFromPayload(payload, statusOptions),
+            properties: parsePropertiesFromPayload(payload),
         });
     });
 }
@@ -14630,10 +14638,9 @@ function handleIssueEdited(options) {
         const pageId = query.results[0].id;
         core.info(`Query successful: Page ${pageId}`);
         core.info(`Updating page for issue #${payload.issue.number}`);
-        const statusOptions = yield getStatusOptions(notion.client, notion.databaseId);
         yield notion.client.pages.update({
             page_id: pageId,
-            properties: parsePropertiesFromPayload(payload, statusOptions),
+            properties: parsePropertiesFromPayload(payload),
         });
     });
 }

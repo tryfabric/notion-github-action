@@ -4,17 +4,25 @@ import type {IssuesEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
-import {SelectOption} from '@notionhq/client/build/src/api-types';
+import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
 
 function removeHTML(text: string): string {
   return text.replace(/<.*>.*<\/.*>/g, '');
 }
 
-function parsePropertiesFromPayload(
-  payload: IssuesEvent,
-  statusOptions: SelectOption[]
-): InputPropertyValueMap {
+function getStatusSelectOption(state: 'open' | 'closed'): Omit<SelectPropertyValue, 'id'> {
+  switch (state) {
+    case 'open':
+      return properties.select('Open', 'green');
+    case 'closed':
+      return properties.select('Closed', 'red');
+  }
+}
+
+function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap {
   const parsedBody = removeHTML(payload.issue.body);
+
+  payload.issue.labels?.map(label => label.color);
 
   const result: InputPropertyValueMap = {
     Name: properties.title(payload.issue.title),
@@ -22,21 +30,17 @@ function parsePropertiesFromPayload(
     Repository: properties.text(payload.repository.name),
     Number: properties.number(payload.issue.number),
     Body: properties.text(parsedBody),
-    Assignees: properties.text(payload.issue.assignees.map(user => user.login).join(', ')),
+    Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
     Milestone: properties.text(payload.issue.milestone?.title ?? ''),
-    Labels: properties.text(payload.issue.labels?.map(label => label.name).join(', ') ?? ''),
+    Labels: properties.multiSelect(payload.issue.labels?.map(label => label.name) ?? []),
     Author: properties.text(payload.issue.user.login),
     Created: properties.date(payload.issue.created_at),
     Updated: properties.date(payload.issue.updated_at),
     ID: properties.number(payload.issue.id),
   };
 
-  const status = statusOptions.find(
-    option => option.name.toLowerCase() === payload.issue.state?.toLowerCase()
-  );
-
-  if (status) {
-    result['Status'] = properties.select(status.id, status.name, status.color);
+  if (payload.issue.state) {
+    result['Status'] = getStatusSelectOption(payload.issue.state);
   }
 
   return result;
@@ -50,28 +54,16 @@ interface IssueOpenedOptions {
   payload: IssuesOpenedEvent;
 }
 
-async function getStatusOptions(client: Client, databaseId: string): Promise<SelectOption[]> {
-  const db = await client.databases.retrieve({database_id: databaseId});
-  const statusProperty = db.properties['Status'];
-  if (statusProperty.type !== 'select') {
-    throw new Error('`Status` property must be a select property.');
-  }
-
-  return statusProperty.select.options;
-}
-
 async function handleIssueOpened(options: IssueOpenedOptions) {
   const {notion, payload} = options;
 
   core.info(`Creating page for issue #${payload.issue.number}`);
 
-  const statusOptions = await getStatusOptions(notion.client, notion.databaseId);
-
   await notion.client.pages.create({
     parent: {
       database_id: notion.databaseId,
     },
-    properties: parsePropertiesFromPayload(payload, statusOptions),
+    properties: parsePropertiesFromPayload(payload),
   });
 }
 
@@ -109,11 +101,9 @@ async function handleIssueEdited(options: IssueEditedOptions) {
   core.info(`Query successful: Page ${pageId}`);
   core.info(`Updating page for issue #${payload.issue.number}`);
 
-  const statusOptions = await getStatusOptions(notion.client, notion.databaseId);
-
   await notion.client.pages.update({
     page_id: pageId,
-    properties: parsePropertiesFromPayload(payload, statusOptions),
+    properties: parsePropertiesFromPayload(payload),
   });
 }
 
