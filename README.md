@@ -37,7 +37,7 @@ jobs:
     name: Add GitHub Issues to Notion
     steps:
       - name: Add GitHub Issues to Notion
-        uses: instantish/notion-github-action@1.0.0
+        uses: instantish/notion-github-action@v1.1.0
         with:
           notion-token: ${{ secrets.NOTION_TOKEN }}
           notion-db: ${{ secrets.NOTION_DATABASE }}
