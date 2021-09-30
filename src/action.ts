@@ -6,8 +6,8 @@ import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
 
-function removeHTML(text: string): string {
-  return text.replace(/<.*>.*<\/.*>/g, '');
+function removeHTML(text?: string): string {
+  return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
 }
 
 function getStatusSelectOption(state: 'open' | 'closed'): Omit<SelectPropertyValue, 'id'> {
