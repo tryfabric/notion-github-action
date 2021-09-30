@@ -14572,7 +14572,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 function removeHTML(text) {
-    return text.replace(/<.*>.*<\/.*>/g, '');
+    var _a;
+    return (_a = text === null || text === void 0 ? void 0 : text.replace(/<.*>.*<\/.*>/g, '')) !== null && _a !== void 0 ? _a : '';
 }
 function getStatusSelectOption(state) {
     switch (state) {
