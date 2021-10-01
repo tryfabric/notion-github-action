@@ -43,6 +43,13 @@ jobs:
           notion-db: ${{ secrets.NOTION_DATABASE }}
 ```
 
+## Using `release-it`
+
+1. Locally, on `master` (make sure it's up to date), execute `GITHUB_TOKEN=<TOKEN> release-it`. (Alternatively, set `GITHUB_TOKEN` as a system environment variable)
+2. Follow the interactive prompts, selecting `Yes` for all options.
+3. When selecting the increment, choose `patch` when the release is only bug fixes. For new features, choose `minor`. For major changes, choose `major`.
+
+Release-It will then automatically generate a GitHub release with the changelog inside.
 
 ---
 
