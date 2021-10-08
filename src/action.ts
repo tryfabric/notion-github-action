@@ -5,6 +5,8 @@ import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
+// @ts-ignore
+import {setInitialGitHubToNotionIdMap, syncNotionDatabaseWithGitHub} from './sync';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
@@ -135,7 +137,13 @@ export async function run(options: Options) {
       },
       payload: github.payload as IssuesOpenedEvent,
     });
-  } else {
+  }
+   else if (github.payload.action === 'manual'){
+    await setInitialGitHubToNotionIdMap().then(syncNotionDatabaseWithGitHub);
+   } 
+  
+  else {
+    core.info(github.payload.action)
     await handleIssueEdited({
       notion: {
         client: notionClient,

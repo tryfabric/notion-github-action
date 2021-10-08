@@ -26,7 +26,7 @@
     "typescript": "^4.3.2"
   },
   "author": "Richard Robinson",
-  "license": "MIT",
+  "license": "ISC",
   "dependencies": {
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
