@@ -55,8 +55,14 @@ async function getGitHubIssues(octokit) {
           number: issue.number,
           title: issue.title,
           state: issue.state,
-          comment_count: issue.comments,
-          url: issue.html_url,
+          id: issue.id,
+          labels: issue.labels,
+          assignees: issue.assignees,
+          milestone: issue.milestone,
+          created: issue.created_at,
+          updated: issue.updated_at,
+          body: issue.body,
+          repo_url: issue.repository_url
         })
       }
     }
@@ -88,7 +94,10 @@ async function createPages(notion, databaseId, pagesToCreate) {
 }
 
 function getPropertiesFromIssue(issue) {
-  const { title, number, state, id, body, organization, repo } = issue
+  const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url } = issue
+  const urlComponents = repo_url.split("/")
+  const org = urlComponents[urlComponents.length - 2]
+  const repo = urlComponents[urlComponents - 1]
   return {
     "Name": {
       title: [{ type: "text", text: { content: title } }],
@@ -97,34 +106,34 @@ function getPropertiesFromIssue(issue) {
       select: { name: state },
     },
     "Body": {
-      rich_text: body,
+      rich_text: [{ "text": {"content": body } }],
     },
     "Organization": {
-      rich_text: "",
+      rich_text: [{ "text": {"content": org } }],
     },
     "Repository": {
-      rich_text: "",
+      rich_text: [{ "text": {"content": repo } }],
     },
     "Number": {
-      number,
+      number: number,
     },
     "Assignees": {
-      multi_select: { },
+      multi_select: asignees,
     },
-    "Milestones": {
-      rich_text: "",
+    "Milestone": {
+      rich_text: [{ "text": {"content": milestone } }],
     },
     "Labels": {
-      multi_select: { },
+      multi_select: labels,
     },
     "Author": {
-      rich_text: "julia",
+      rich_text: [{ "text": {"content": author } }],
     },
     "Created": {
-      date: "",
+      date: { "start": created },
     },
     "Updated": {
-      date: "",
+      date: { "start": updated },
     },
     "ID": {
       number: id
