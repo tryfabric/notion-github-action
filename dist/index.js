@@ -14524,7 +14524,7 @@ async function getIssuesFromNotionDatabase() {
     const pages = []
     let cursor = undefined
     while (true) {
-      const { results, next_cursor } = await notion.databases.query({
+      const { results, next_cursor } = await notion.client.databases.query({
         database_id: notion.databaseId,
         start_cursor: cursor,
       })
@@ -14586,7 +14586,7 @@ async function getIssuesFromNotionDatabase() {
     for (const pagesToCreateBatch of pagesToCreateChunks) {
       await Promise.all(
         pagesToCreateBatch.map(issue =>
-          notion.pages.create({
+          notion.client.pages.create({
             parent: { database_id: notion.databaseId },
             properties: getPropertiesFromIssue(issue),
           })
@@ -14600,7 +14600,7 @@ async function getIssuesFromNotionDatabase() {
     for (const pagesToUpdateBatch of pagesToUpdateChunks) {
       await Promise.all(
         pagesToUpdateBatch.map(({ pageId, ...issue }) =>
-          notion.pages.update({
+          notion.client.pages.update({
             page_id: pageId,
             properties: getPropertiesFromIssue(issue),
           })
@@ -14649,7 +14649,7 @@ function run(options) {
         }
         else if (github.event == 'workflow_dispatch') {
             var octokit = getOctokit({ auth: core.getInput('github-token') })
-            var notion = {
+            notion = {
                 client: notionClient,
                 databaseId: notion.databaseId,
             }
