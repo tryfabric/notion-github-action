@@ -19,7 +19,7 @@ inputs:
 
 runs:
   using: 'node12'
-  main: 'src/sync.js'
+  main: 'sync.js'
 branding:
   icon: zap
   color: gray-dark
