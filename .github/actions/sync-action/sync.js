@@ -1,16 +1,16 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const { Client } = require("@notionhq/client")
-const dotenv = require("dotenv")
-const { Octokit } = require("octokit")
-const _ = require("lodash")
+import { getInput } from "@actions/core";
+import github from "@actions/github";
+import { Client } from "@notionhq/client";
+import { config } from "dotenv";
+import { Octokit } from "octokit";
+import { chunk } from "lodash";
 
-dotenv.config()
-const octokit = new Octokit({ auth: core.getInput('github-token') })
-const notion = new Client({ auth: core.getInput('notion-token') })
-const databaseId = core.getInput('notion-db')
-const org = core.getInput('github-org')
-const repo = core.getInput('github-repo')
+config()
+const octokit = new Octokit({ auth: getInput('github-token') })
+const notion = new Client({ auth: getInput('notion-token') })
+const databaseId = getInput('notion-db')
+const org = getInput('github-org')
+const repo = getInput('github-repo')
 const OPERATION_BATCH_SIZE = 10
 
 /**
@@ -150,7 +150,7 @@ async function syncNotionDatabaseWithGitHub() {
   * @param {Array<{ number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>} pagesToCreate
   */
  async function createPages(pagesToCreate) {
-   const pagesToCreateChunks = _.chunk(pagesToCreate, OPERATION_BATCH_SIZE)
+   const pagesToCreateChunks = chunk(pagesToCreate, OPERATION_BATCH_SIZE)
    for (const pagesToCreateBatch of pagesToCreateChunks) {
      await Promise.all(
        pagesToCreateBatch.map(issue =>
@@ -172,7 +172,7 @@ async function syncNotionDatabaseWithGitHub() {
   * @param {Array<{ pageId: string, number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>} pagesToUpdate
   */
  async function updatePages(pagesToUpdate) {
-   const pagesToUpdateChunks = _.chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
+   const pagesToUpdateChunks = chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
    for (const pagesToUpdateBatch of pagesToUpdateChunks) {
      await Promise.all(
        pagesToUpdateBatch.map(({ pageId, ...issue }) =>
@@ -216,4 +216,4 @@ async function syncNotionDatabaseWithGitHub() {
    }
  }
 
- module.exports = { handleChangeIssueStatus, handleToggleIssueSendToDM };
+ export default { handleChangeIssueStatus, handleToggleIssueSendToDM };
