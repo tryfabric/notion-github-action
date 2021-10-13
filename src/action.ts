@@ -8,7 +8,6 @@ import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
 // @ts-ignore
 import {setInitialGitHubToNotionIdMap, syncNotionDatabaseWithGitHub} from './sync';
 import { Octokit } from "octokit";
-import _ from "lodash";
 
 
 

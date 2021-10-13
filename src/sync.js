@@ -1,10 +1,13 @@
+import _ from "lodash";
+
 export async function setInitialGitHubToNotionIdMap(params) {
   console.log("\nsetInitialGitHubToNotionIdMap")
   const currentIssues = await getIssuesFromNotionDatabase(params.notion, params.databaseId)
   for (const { pageId, issueNumber } of currentIssues) {
     params.gitHubIssuesIdToNotionPageId[issueNumber] = pageId
   }
-  console.log(params.gitHubIssuesIdToNotionPageId.toString())
+  console.log("githubIssuesIdToNotionPageId Map")
+  console.log(params.gitHubIssuesIdToNotionPageId)
   return params.gitHubIssuesIdToNotionPageId
 }
  
@@ -69,6 +72,7 @@ async function getGitHubIssuesForRepository(params) {
  
 
 function getNotionOperations(gitHubIssuesIdToNotionPageId, issues) {
+  console.log("\ngetNotionOperations")
   const pagesToCreate = []
   const pagesToUpdate = []
   for (const issue of issues) {
@@ -87,6 +91,7 @@ function getNotionOperations(gitHubIssuesIdToNotionPageId, issues) {
  
 
 async function createPages(notion, databaseId, OPERATION_BATCH_SIZE, pagesToCreate) {
+  console.log("\ncreatePages")
   const pagesToCreateChunks = _.chunk(pagesToCreate, OPERATION_BATCH_SIZE)
   for (const pagesToCreateBatch of pagesToCreateChunks) {
     await Promise.all(
@@ -102,6 +107,7 @@ async function createPages(notion, databaseId, OPERATION_BATCH_SIZE, pagesToCrea
 }
  
 async function updatePages(notion, OPERATION_BATCH_SIZE, pagesToUpdate) {
+  console.log("\nupdatePages")
   const pagesToUpdateChunks = _.chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
   for (const pagesToUpdateBatch of pagesToUpdateChunks) {
     await Promise.all(
