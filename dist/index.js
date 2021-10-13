@@ -14647,7 +14647,7 @@ function run(options) {
                 payload: github.payload,
             });
         }
-        else if (github.context.eventName == 'workflow_dispatch') {
+        else if (github.event == 'workflow_dispatch') {
             dotenv.config()
             const octokit = new Octokit({ auth: core.getInput('github-token') })
             const notion = new Client({ auth: core.getInput('notion-token') })
@@ -14704,6 +14704,7 @@ function start() {
                 },
                 github: {
                     payload: github.context.payload,
+                    event: github.context.eventName,
                 },
             };
             yield run(options);
