@@ -25660,7 +25660,8 @@ async function getGitHubIssues(octokit) {
           created: issue.created_at,
           updated: issue.updated_at,
           body: issue.body,
-          repo_url: issue.repository_url
+          repo_url: issue.repository_url,
+          author: issue.user.login
         })
       }
     }
@@ -25692,7 +25693,7 @@ async function createPages(notion, databaseId, pagesToCreate) {
 }
 
 function getPropertiesFromIssue(issue) {
-  const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url } = issue
+  const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents - 1]
