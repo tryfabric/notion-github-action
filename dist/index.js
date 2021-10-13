@@ -25697,46 +25697,48 @@ function getPropertiesFromIssue(issue) {
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents - 1]
+  console.log("org/repo:")
+  console.log(org + "/" + repo)
   return {
     "Name": {
-      title: [{ type: "text", text: { content: title } }],
+      "title": [{ "text": { "content": title } }]
     },
     "Status": {
-      select: { name: state },
+      "select": { "name": state }
     },
     "Body": {
-      rich_text: [{ "text": {"content": body } }],
+      "rich_text": [{ "text": {"content": body } }]
     },
     "Organization": {
-      rich_text: [{ "text": {"content": org } }],
+      "rich_text": [{ "text": {"content": org } }]
     },
     "Repository": {
-      rich_text: [{ "text": {"content": repo } }],
+      "rich_text": [{ "text": {"content": repo } }]
     },
     "Number": {
-      number: number,
+      "number": number
     },
     "Assignees": {
-      multi_select: asignees,
+      "multi_select": asignees
     },
     "Milestone": {
-      rich_text: [{ "text": {"content": milestone } }],
+      "rich_text": [{ "text": {"content": milestone } }]
     },
     "Labels": {
-      multi_select: labels,
+      multi_select: labels
     },
     "Author": {
-      rich_text: [{ "text": {"content": author } }],
+      "rich_text": [{ "text": {"content": author } }]
     },
     "Created": {
-      date: { "start": created },
+      "date": { "start": created }
     },
     "Updated": {
-      date: { "start": updated },
+      "date": { "start": updated }
     },
     "ID": {
-      number: id
-    },
+      "number": id
+    }
   }
 }
 
