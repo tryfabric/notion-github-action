@@ -14648,7 +14648,7 @@ function run(options) {
             });
         }
         else if (github.event == 'workflow_dispatch') {
-            var octokit = getOctokit({ auth: core.getInput('github-token') })
+            var octokit = getOctokit(core.getInput('github-token'), {}})
             notion = {
                 client: notionClient,
                 databaseId: notion.databaseId,
