@@ -122,7 +122,7 @@ interface Options {
 export async function run(options: Options) {
   const {notion, github} = options;
 
-  core.info('Starting...');
+  core.info('Starting....');
 
   const notionClient = new Client({
     auth: notion.token,
