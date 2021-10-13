@@ -1,4 +1,3 @@
-const { Octokit } = require("@octokit/core");
 const _ = require("lodash")
 
 /******/ (() => { // webpackBootstrap
