@@ -1,0 +1,40 @@
+name: Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      github-org:
+        description: 'Your Github org name or Github username associated with your repo'
+        required: true
+      github-repo:
+        description: 'Your Github repo name'
+        required: true
+      github-token:
+        description: 'Your Github personal access token'
+        required: true
+      notion-db:
+        description: 'The Notion database id'
+        required: true
+      notion-token:
+        description: 'Your Notion API key'
+        required: true
+      
+      
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Add to Notion
+        uses: ./.github/actions/sync-action
+        with:
+          github-org: ${{ github.event.inputs.github-org }}
+          github-repo: ${{ github.event.inputs.github-repo }}
+          github-token: ${{ github.event.inputs.github-token }}
+          notion-token: ${{ github.event.inputs.notion-token }}
+          notion-db: ${{ github.event.inputs.notion-db }}
+          
+
+    
