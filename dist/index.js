@@ -671,7 +671,7 @@ const defaults = {
         agent: Utils.getProxyAgent(baseUrl)
     }
 };
-exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(defaults);
+exports.GitHub = core_1..plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(defaults);
 /**
  * Convience function to correctly format Octokit Options to pass into the constructor.
  *
@@ -14525,7 +14525,7 @@ async function getIssuesFromNotionDatabase() {
     let cursor = undefined
     while (true) {
       const { results, next_cursor } = await notion.databases.query({
-        database_id: databaseId,
+        database_id: notion.databaseId,
         start_cursor: cursor,
       })
       pages.push(...results)
@@ -14587,7 +14587,7 @@ async function getIssuesFromNotionDatabase() {
       await Promise.all(
         pagesToCreateBatch.map(issue =>
           notion.pages.create({
-            parent: { database_id: databaseId },
+            parent: { database_id: notion.databaseId },
             properties: getPropertiesFromIssue(issue),
           })
         )
@@ -14648,12 +14648,14 @@ function run(options) {
             });
         }
         else if (github.event == 'workflow_dispatch') {
-            const octokit = new Octokit({ auth: core.getInput('github-token') })
-            const notion = new Client({ auth: core.getInput('notion-token') })
-            const databaseId = core.getInput('notion-db')
-            const org = core.getInput('github-org')
-            const repo = core.getInput('github-repo')
-            const OPERATION_BATCH_SIZE = 10
+            var octokit = getOctokit({ auth: core.getInput('github-token') })
+            var notion = {
+                client: notionClient,
+                databaseId: notion.databaseId,
+            }
+            var org = core.getInput('github-org')
+            var repo = core.getInput('github-repo')
+            var OPERATION_BATCH_SIZE = 10
 
             const gitHubIssuesIdToNotionPageId = {}
             setInitialGitHubToNotionIdMap().then(syncNotionDatabaseWithGitHub)
