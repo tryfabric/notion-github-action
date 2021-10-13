@@ -25696,6 +25696,9 @@ function getPropertiesFromIssue(issue) {
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
+  // TODO - handle null values in a separate method
+  // TODO - handle mapping labels and assignees to multi select
+  // TODO - note in readme that using this workflow requires the exact same properties as the template database
   if (!body) body = ''
   if (!asignees) asignees = []
   if (!milestone) { 
@@ -25730,7 +25733,7 @@ function getPropertiesFromIssue(issue) {
       rich_text: [{ type: "text", text: { content: milestone } }]
     },
     Labels: {
-      multi_select: labels
+      multi_select: []
     },
     Author: {
       rich_text: [{ type: "text", text: { content: author } }]
