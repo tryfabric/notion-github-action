@@ -34,7 +34,8 @@
     "@notionhq/client": "^0.1.9",
     "@octokit/core": "^3.5.1",
     "@octokit/webhooks-definitions": "^3.67.3",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "octokit": "^1.1.0"
   },
   "repository": {
     "type": "git",
