@@ -28,7 +28,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Add to Notion
-        uses: ./.github/actions/sync-action
+        uses: ./
         with:
           github-org: ${{ github.event.inputs.github-org }}
           github-repo: ${{ github.event.inputs.github-repo }}
