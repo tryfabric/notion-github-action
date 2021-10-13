@@ -138,10 +138,17 @@ export async function run(options: Options) {
       payload: github.payload as IssuesOpenedEvent,
     });
   }
-   else if (github.payload.action === 'manual'){
-    await setInitialGitHubToNotionIdMap().then(syncNotionDatabaseWithGitHub);
-   } 
-  
+  else if (github.payload.action === 'manual'){
+    const gitHubIssuesIdToNotionPageId = {}
+    const notion = new Client({ auth: core.getInput('notion-token') })
+    const databaseId = core.getInput('notion-db')
+    const org = core.getInput('github-org')
+    const repo = core.getInput('github-repo')
+    const OPERATION_BATCH_SIZE = 10
+
+    const params = {gitHubIssuesIdToNotionPageId, notion, databaseId, org, repo, OPERATION_BATCH_SIZE}
+    await setInitialGitHubToNotionIdMap(params).then(syncNotionDatabaseWithGitHub(params));
+  } 
   else {
     core.info(github.payload.action)
     await handleIssueEdited({
