@@ -100,7 +100,11 @@ function getPropertiesFromIssue(issue) {
   const repo = urlComponents[urlComponents.length - 1]
   if (!body) body = ''
   if (!asignees) asignees = []
-  if (!milestone) milestone = ''
+  if (!milestone) { 
+    milestone = ''
+  } else {
+    milestone = milestone.title
+  }
   if (!labels) labels = []
   const properties = {
     Name: {
@@ -125,7 +129,7 @@ function getPropertiesFromIssue(issue) {
       multi_select: asignees
     },
     Milestone: {
-      rich_text: [{ type: "text", text: { content: milestone.title } }]
+      rich_text: [{ type: "text", text: { content: milestone } }]
     },
     Labels: {
       multi_select: labels
