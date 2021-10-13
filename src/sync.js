@@ -1,8 +1,10 @@
 export async function setInitialGitHubToNotionIdMap(params) {
+  console.log("\nsetInitialGitHubToNotionIdMap")
   const currentIssues = await getIssuesFromNotionDatabase(params.notion, params.databaseId)
   for (const { pageId, issueNumber } of currentIssues) {
     params.gitHubIssuesIdToNotionPageId[issueNumber] = pageId
   }
+  console.log(params.gitHubIssuesIdToNotionPageId.toString())
   return params.gitHubIssuesIdToNotionPageId
 }
  
@@ -15,6 +17,7 @@ export async function syncNotionDatabaseWithGitHub(params) {
 }
  
 async function getIssuesFromNotionDatabase(notion, databaseId) {
+  console.log("\ngetIssuesFromNotionDatabase")
   const pages = []
   let cursor = undefined
   while (true) {
@@ -37,6 +40,9 @@ async function getIssuesFromNotionDatabase(notion, databaseId) {
 }
  
 async function getGitHubIssuesForRepository(params) {
+  console.log("\ngetGitHubIssuesForRepository")
+  console.log("\noctokit:")
+  console.log(params.octokit)
   const octokit = params.octokit
   const issues = []
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
