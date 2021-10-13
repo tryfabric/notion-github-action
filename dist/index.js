@@ -14511,6 +14511,7 @@ function run(options) {
             });
         }
         else {
+            core.info('HIT...');
             yield handleIssueEdited({
                 notion: {
                     client: notionClient,
