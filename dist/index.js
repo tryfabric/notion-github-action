@@ -1,3 +1,6 @@
+import { Octokit } from "octokit";
+const _ = require("lodash")
+
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -153,7 +156,7 @@ var ExitCode;
      * A code indicating that the action was a failure
      */
     ExitCode[ExitCode["Failure"] = 1] = "Failure";
-})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
+})(ExitCode = _ExitCode || (exports.ExitCode = {}));
 //-----------------------------------------------------------------------
 // Variables
 //-----------------------------------------------------------------------
@@ -731,16 +734,16 @@ var HttpCodes;
     HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
     HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
     HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
-})(HttpCodes = exports.HttpCodes || (exports.HttpCodes = {}));
+})(HttpCodes = _HttpCodes || (exports.HttpCodes = {}));
 var Headers;
 (function (Headers) {
     Headers["Accept"] = "accept";
     Headers["ContentType"] = "content-type";
-})(Headers = exports.Headers || (exports.Headers = {}));
+})(Headers = _Headers || (exports.Headers = {}));
 var MediaTypes;
 (function (MediaTypes) {
     MediaTypes["ApplicationJson"] = "application/json";
-})(MediaTypes = exports.MediaTypes || (exports.MediaTypes = {}));
+})(MediaTypes = _MediaTypes || (exports.MediaTypes = {}));
 /**
  * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
  * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
@@ -1748,7 +1751,7 @@ var APIErrorCode;
     APIErrorCode["ConflictError"] = "conflict_error";
     APIErrorCode["InternalServerError"] = "internal_server_error";
     APIErrorCode["ServiceUnavailable"] = "service_unavailable";
-})(APIErrorCode = exports.APIErrorCode || (exports.APIErrorCode = {}));
+})(APIErrorCode = _APIErrorCode || (exports.APIErrorCode = {}));
 /**
  * A response from the API indicating a problem.
  *
@@ -1899,7 +1902,7 @@ var LogLevel;
     LogLevel["INFO"] = "info";
     LogLevel["WARN"] = "warn";
     LogLevel["ERROR"] = "error";
-})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
+})(LogLevel = _LogLevel || (exports.LogLevel = {}));
 function makeConsoleLogger(name) {
     return (level, message, extraInfo) => {
         console[level](`${name} ${level}:`, message, extraInfo);
@@ -4586,22 +4589,22 @@ Object.defineProperties(is, {
         value: is.null_
     }
 });
-Object.defineProperties(exports.assert, {
+Object.defineProperties(assert, {
     class: {
-        value: exports.assert.class_
+        value: assert.class_
     },
     function: {
-        value: exports.assert.function_
+        value: assert.function_
     },
     null: {
-        value: exports.assert.null_
+        value: assert.null_
     }
 });
 exports.default = is;
 // For CommonJS default export support
 module.exports = is;
 module.exports.default = is;
-module.exports.assert = exports.assert;
+module.exports.assert = assert;
 
 
 /***/ }),
@@ -6825,7 +6828,7 @@ class Request extends stream_1.Duplex {
         if (json || body || form) {
             this._lockWrite();
         }
-        if (exports.kIsNormalizedAlready in options) {
+        if (kIsNormalizedAlready in options) {
             this.options = options;
         }
         else {
@@ -7144,7 +7147,7 @@ class Request extends stream_1.Duplex {
         // `options.hooks`
         const areHooksDefault = options.hooks === (defaults === null || defaults === void 0 ? void 0 : defaults.hooks);
         options.hooks = { ...options.hooks };
-        for (const event of exports.knownHookEvents) {
+        for (const event of knownHookEvents) {
             if (event in options.hooks) {
                 if (is_1.default.array(options.hooks[event])) {
                     // See https://github.com/microsoft/TypeScript/issues/31445#issuecomment-576929044
@@ -7159,7 +7162,7 @@ class Request extends stream_1.Duplex {
             }
         }
         if (defaults && !areHooksDefault) {
-            for (const event of exports.knownHookEvents) {
+            for (const event of knownHookEvents) {
                 const defaultHooks = defaults.hooks[event];
                 if (defaultHooks.length > 0) {
                     // See https://github.com/microsoft/TypeScript/issues/31445#issuecomment-576929044
@@ -7212,7 +7215,7 @@ class Request extends stream_1.Duplex {
         }
         options.maxRedirects = (_e = options.maxRedirects) !== null && _e !== void 0 ? _e : 0;
         // Set non-enumerable properties
-        exports.setNonEnumerableProperties([defaults, rawOptions], options);
+        setNonEnumerableProperties([defaults, rawOptions], options);
         return normalize_arguments_1.default(options, defaults);
     }
     _lockWrite() {
@@ -7233,7 +7236,7 @@ class Request extends stream_1.Duplex {
         const isJSON = !is_1.default.undefined(options.json);
         const isBody = !is_1.default.undefined(options.body);
         const hasPayload = isForm || isJSON || isBody;
-        const cannotHaveBody = exports.withoutBody.has(options.method) && !(options.method === 'GET' && options.allowGetBody);
+        const cannotHaveBody = withoutBody.has(options.method) && !(options.method === 'GET' && options.allowGetBody);
         this._cannotHaveBody = cannotHaveBody;
         if (hasPayload) {
             if (cannotHaveBody) {
@@ -8039,7 +8042,7 @@ exports.isDnsLookupIpVersion = (value) => {
     return value in conversionTable;
 };
 exports.dnsLookupIpVersionToFamily = (dnsLookupIpVersion) => {
-    if (exports.isDnsLookupIpVersion(dnsLookupIpVersion)) {
+    if (isDnsLookupIpVersion(dnsLookupIpVersion)) {
         return conversionTable[dnsLookupIpVersion];
     }
     throw new Error('Invalid DNS lookup IP version');
@@ -8603,9 +8606,9 @@ const create = (defaults) => {
                 isMutableDefaults = value.mutableDefaults;
             }
         }
-        handlers = handlers.filter(handler => handler !== exports.defaultHandler);
+        handlers = handlers.filter(handler => handler !== defaultHandler);
         if (handlers.length === 0) {
-            handlers.push(exports.defaultHandler);
+            handlers.push(defaultHandler);
         }
         return create({
             options: mergeOptions(...optionsArray),
@@ -14303,6 +14306,8 @@ var core = __nccwpck_require__(2186);
 var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
 var src = __nccwpck_require__(324);
+// EXTERNAL MODULE: ./node_modules/@notionhq/client/build/src/index.js
+var src = __nccwpck_require__(324);
 ;// CONCATENATED MODULE: ./src/common.ts
 // https://developers.notion.com/reference/errors#limits-for-property-values
 const RICH_TEXT_CONTENT_CHARACTERS_LIMIT = 1000;
@@ -14499,7 +14504,6 @@ async function setInitialGitHubToNotionIdMap() {
       gitHubIssuesIdToNotionPageId[issueNumber] = pageId
     }
   }
-
 async function syncNotionDatabaseWithGitHub() {
     // Get all issues currently in the provided GitHub repository.
     console.log("\nFetching issues from Notion DB...")
