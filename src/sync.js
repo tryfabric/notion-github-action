@@ -130,5 +130,3 @@ function getPropertiesFromIssue(issue) {
     },
   }
 }
-
-module.exports = { handleChangeIssueStatus, handleToggleIssueSendToDM };

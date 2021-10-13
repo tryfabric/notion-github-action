@@ -14143,7 +14143,7 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 8384:
-/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
@@ -14151,7 +14151,6 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */   "setInitialGitHubToNotionIdMap": () => (/* binding */ setInitialGitHubToNotionIdMap),
 /* harmony export */   "syncNotionDatabaseWithGitHub": () => (/* binding */ syncNotionDatabaseWithGitHub)
 /* harmony export */ });
-/* module decorator */ module = __nccwpck_require__.hmd(module);
 async function setInitialGitHubToNotionIdMap(params) {
   const currentIssues = await getIssuesFromNotionDatabase(params.notion, params.databaseId)
   for (const { pageId, issueNumber } of currentIssues) {
@@ -14285,7 +14284,6 @@ function getPropertiesFromIssue(issue) {
   }
 }
 
-module.exports = { handleChangeIssueStatus, handleToggleIssueSendToDM };
 
 /***/ }),
 
@@ -14791,8 +14789,8 @@ module.exports = require("zlib");
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -14804,9 +14802,6 @@ module.exports = require("zlib");
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -14822,21 +14817,6 @@ module.exports = require("zlib");
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.hmd = (module) => {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	
