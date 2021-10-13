@@ -25647,6 +25647,8 @@ async function getGitHubIssues(octokit) {
   for await (const { data } of iterator) {
     for (const issue of data) {
       if (!issue.pull_request) {
+        console.log("ISSUE:")
+        console.log(issue)
         issues.push({
           number: issue.number,
           title: issue.title,
@@ -25684,8 +25686,6 @@ async function createPages(notion, databaseId, pagesToCreate) {
 }
 
 function getPropertiesFromIssue(issue) {
-  console.log("ISSUE: ")
-  console.log(issue)
   const { title, number, state, id, body, organization, repo } = issue
   return {
     "Name": {
