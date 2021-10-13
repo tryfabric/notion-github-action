@@ -33,7 +33,7 @@ async function getIssuesAlreadyInNotion(notion, databaseId) {
   return pages.map(page => {
     return {
       pageId: page.id,
-      issueNumber: page.properties["Issue Number"].number,
+      issueNumber: page.properties["Number"].number,
     }
   })
 }
@@ -58,7 +58,7 @@ async function getGitHubIssues(octokit) {
           id: issue.id,
           labels: issue.labels,
           assignees: issue.assignees,
-          milestone: issue.milestone,
+          milestone: issue.milestone?.title,
           created: issue.created_at,
           updated: issue.updated_at,
           body: issue.body,
@@ -74,8 +74,7 @@ async function getGitHubIssues(octokit) {
 function getIssuesNotInNotion(issuePageIds, issues) {
   const pagesToCreate = []
   for (const issue of issues) {
-    const pageId = issuePageIds[issue.number]
-    if (!pageId) {
+    if (!(issue.number in issuePageIds)) {
       pagesToCreate.push(issue)
     }
   }
@@ -99,6 +98,10 @@ function getPropertiesFromIssue(issue) {
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
+  if (!body) body = ''
+  if (!asignees) asignees = []
+  if (!milestone) milestone = ''
+  if (!labels) labels = []
   const properties = {
     Name: {
       title: [{ type: "text", text: { "content": title } }]
