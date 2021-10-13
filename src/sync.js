@@ -1,25 +1,29 @@
+import * as core from '@actions/core';
 import _ from "lodash";
 
-export async function setInitialGitHubToNotionIdMap(params) {
+const OPERATION_BATCH_SIZE = 10;
+
+export async function createIssueMapping(notion, databaseId) {
+  const issuePageIds = {}
   console.log("\nsetInitialGitHubToNotionIdMap")
-  const currentIssues = await getIssuesFromNotionDatabase(params.notion, params.databaseId)
-  for (const { pageId, issueNumber } of currentIssues) {
-    params.gitHubIssuesIdToNotionPageId[issueNumber] = pageId
+  const issuesAlreadyInNotion = await getIssuesAlreadyInNotion(notion, databaseId)
+  for (const { pageId, issueNumber } of issuesAlreadyInNotion) {
+    issuePageIds[issueNumber] = pageId
   }
   console.log("githubIssuesIdToNotionPageId Map")
-  console.log(params.gitHubIssuesIdToNotionPageId)
-  return params.gitHubIssuesIdToNotionPageId
+  console.log(issuePageIds)
+  return issuePageIds
 }
  
-export async function syncNotionDatabaseWithGitHub(params) {
+export async function syncNotionDatabaseWithGitHub(issuePageIds, octokit, notion, databaseId) {
   console.log("\nFetching issues from Notion DB...")
-  const issues = await getGitHubIssuesForRepository(params)
-  const { pagesToCreate, pagesToUpdate } = getNotionOperations(params.gitHubIssuesIdToNotionPageId, issues)
-  await createPages(params.notion, params.databaseId, params.OPERATION_BATCH_SIZE, pagesToCreate)
-  await updatePages(params.notion, params.OPERATION_BATCH_SIZE, pagesToUpdate)
+  const issues = await getGitHubIssuesForRepository(octokit)
+  const { pagesToCreate, pagesToUpdate } = getNotionOperations(issuePageIds, issues)
+  await createPages(notion, databaseId, pagesToCreate)
+  await updatePages(notion, pagesToUpdate)
 }
  
-async function getIssuesFromNotionDatabase(notion, databaseId) {
+async function getIssuesAlreadyInNotion(notion, databaseId) {
   console.log("\ngetIssuesFromNotionDatabase")
   const pages = []
   let cursor = undefined
@@ -42,15 +46,14 @@ async function getIssuesFromNotionDatabase(notion, databaseId) {
   })
 }
  
-async function getGitHubIssuesForRepository(params) {
+async function getGitHubIssuesForRepository(octokit) {
   console.log("\ngetGitHubIssuesForRepository")
   console.log("\noctokit:")
-  console.log(params.octokit)
-  const octokit = params.octokit
+  console.log(octokit)
   const issues = []
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
-    owner: params.org,
-    repo: params.repo,
+    owner: core.getInput('github-org'),
+    repo: core.getInput('github-repo'),
     state: "all",
     per_page: 100,
   })
@@ -69,14 +72,13 @@ async function getGitHubIssuesForRepository(params) {
   }
   return issues
 }
- 
 
-function getNotionOperations(gitHubIssuesIdToNotionPageId, issues) {
+function getNotionOperations(issuePageIds, issues) {
   console.log("\ngetNotionOperations")
   const pagesToCreate = []
   const pagesToUpdate = []
   for (const issue of issues) {
-    const pageId = gitHubIssuesIdToNotionPageId[issue.number]
+    const pageId = issuePageIds[issue.number]
     if (pageId) {
       pagesToUpdate.push({
         ...issue,
@@ -90,7 +92,7 @@ function getNotionOperations(gitHubIssuesIdToNotionPageId, issues) {
 }
  
 
-async function createPages(notion, databaseId, OPERATION_BATCH_SIZE, pagesToCreate) {
+async function createPages(notion, databaseId, pagesToCreate) {
   console.log("\ncreatePages")
   const pagesToCreateChunks = _.chunk(pagesToCreate, OPERATION_BATCH_SIZE)
   for (const pagesToCreateBatch of pagesToCreateChunks) {
@@ -106,7 +108,7 @@ async function createPages(notion, databaseId, OPERATION_BATCH_SIZE, pagesToCrea
   }
 }
  
-async function updatePages(notion, OPERATION_BATCH_SIZE, pagesToUpdate) {
+async function updatePages(notion, pagesToUpdate) {
   console.log("\nupdatePages")
   const pagesToUpdateChunks = _.chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
   for (const pagesToUpdateBatch of pagesToUpdateChunks) {

@@ -6,7 +6,7 @@ import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
 // @ts-ignore
-import {setInitialGitHubToNotionIdMap, syncNotionDatabaseWithGitHub} from './sync';
+import {createIssueMapping, syncNotionDatabaseWithGitHub} from './sync';
 import { Octokit } from "octokit";
 
 
@@ -143,17 +143,11 @@ export async function run(options: Options) {
     });
   }
   else if (github.eventName === 'workflow_dispatch'){
-    const gitHubIssuesIdToNotionPageId = {}
     const octokit = new Octokit({ auth: core.getInput('github-token')})
     const notion = new Client({ auth: core.getInput('notion-token') })
     const databaseId = core.getInput('notion-db')
-    const org = core.getInput('github-org')
-    const repo = core.getInput('github-repo')
-    const OPERATION_BATCH_SIZE = 10
-
-    const params = {gitHubIssuesIdToNotionPageId, octokit, notion, databaseId, org, repo, OPERATION_BATCH_SIZE}
-    params.gitHubIssuesIdToNotionPageId = await setInitialGitHubToNotionIdMap(params);
-    await syncNotionDatabaseWithGitHub(params);
+    const issuePageIds = await createIssueMapping(notion, databaseId);
+    await syncNotionDatabaseWithGitHub(issuePageIds, octokit, notion, databaseId);
   } 
   else {
     //core.info(github.payload.action?.toString())
