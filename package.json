@@ -17,6 +17,7 @@
     "notion-api"
   ],
   "devDependencies": {
+    "@types/lodash": "^4.14.175",
     "@types/node": "^15.12.2",
     "@vercel/ncc": "^0.28.6",
     "gts": "^3.1.0",
@@ -31,9 +32,9 @@
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
     "@notionhq/client": "^0.1.9",
+    "@octokit/core": "^3.5.1",
     "@octokit/webhooks-definitions": "^3.67.3",
-    "lodash": "^4.17.21",
-    "@octokit/core": "^3.5.1"
+    "lodash": "^4.17.21"
   },
   "repository": {
     "type": "git",

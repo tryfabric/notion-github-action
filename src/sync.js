@@ -1,20 +1,3 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const { Client } = require("@notionhq/client")
-const { Octokit } = require("octokit")
-const _ = require("lodash")
-
-const octokit = new Octokit({ auth: core.getInput('github-token') })
-const notion = new Client({ auth: core.getInput('notion-token') })
-const databaseId = core.getInput('notion-db')
-const org = core.getInput('github-org')
-const repo = core.getInput('github-repo')
-const OPERATION_BATCH_SIZE = 10
-
-
-const gitHubIssuesIdToNotionPageId = {}
-
-
 export async function setInitialGitHubToNotionIdMap(params) {
   const currentIssues = await getIssuesFromNotionDatabase(params.notion, params.databaseId)
   for (const { pageId, issueNumber } of currentIssues) {

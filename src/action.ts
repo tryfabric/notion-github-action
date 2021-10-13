@@ -7,6 +7,10 @@ import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoin
 import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
 // @ts-ignore
 import {setInitialGitHubToNotionIdMap, syncNotionDatabaseWithGitHub} from './sync';
+import { Octokit } from "@octokit/core";
+import _ from "lodash";
+
+
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
@@ -140,13 +144,14 @@ export async function run(options: Options) {
   }
   else if (github.payload.action === 'manual'){
     const gitHubIssuesIdToNotionPageId = {}
+    const octokit = new Octokit({ auth: core.getInput('github-token')})
     const notion = new Client({ auth: core.getInput('notion-token') })
     const databaseId = core.getInput('notion-db')
     const org = core.getInput('github-org')
     const repo = core.getInput('github-repo')
     const OPERATION_BATCH_SIZE = 10
 
-    const params = {gitHubIssuesIdToNotionPageId, notion, databaseId, org, repo, OPERATION_BATCH_SIZE}
+    const params = {gitHubIssuesIdToNotionPageId, octokit, notion, databaseId, org, repo, OPERATION_BATCH_SIZE}
     await setInitialGitHubToNotionIdMap(params).then(syncNotionDatabaseWithGitHub(params));
   } 
   else {
