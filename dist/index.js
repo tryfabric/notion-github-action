@@ -25696,10 +25696,8 @@ function getPropertiesFromIssue(issue) {
   const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
-  const repo = urlComponents[urlComponents - 1]
-  console.log("org/repo:")
-  console.log(org + "/" + repo)
-  return {
+  const repo = urlComponents[urlComponents.length - 1]
+  const properties = {
     "Name": {
       "title": [{ "text": { "content": title } }]
     },
@@ -25740,6 +25738,9 @@ function getPropertiesFromIssue(issue) {
       "number": id
     }
   }
+  console.log("properties: ")
+  console.log(properties)
+  return properties
 }
 
 
