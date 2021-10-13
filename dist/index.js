@@ -14156,6 +14156,7 @@ async function setInitialGitHubToNotionIdMap(params) {
   for (const { pageId, issueNumber } of currentIssues) {
     params.gitHubIssuesIdToNotionPageId[issueNumber] = pageId
   }
+  return params.gitHubIssuesIdToNotionPageId
 }
  
 async function syncNotionDatabaseWithGitHub(params) {
@@ -14428,7 +14429,8 @@ function run(options) {
             const repo = core.getInput('github-repo');
             const OPERATION_BATCH_SIZE = 10;
             const params = { gitHubIssuesIdToNotionPageId, octokit, notion, databaseId, org, repo, OPERATION_BATCH_SIZE };
-            yield sync_1.setInitialGitHubToNotionIdMap(params).then(sync_1.syncNotionDatabaseWithGitHub(params));
+            params.gitHubIssuesIdToNotionPageId = yield sync_1.setInitialGitHubToNotionIdMap(params);
+            yield sync_1.syncNotionDatabaseWithGitHub(params);
         }
         else {
             //core.info(github.payload.action?.toString())

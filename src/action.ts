@@ -153,7 +153,8 @@ export async function run(options: Options) {
     const OPERATION_BATCH_SIZE = 10
 
     const params = {gitHubIssuesIdToNotionPageId, octokit, notion, databaseId, org, repo, OPERATION_BATCH_SIZE}
-    await setInitialGitHubToNotionIdMap(params).then(syncNotionDatabaseWithGitHub(params));
+    params.gitHubIssuesIdToNotionPageId = await setInitialGitHubToNotionIdMap(params);
+    await syncNotionDatabaseWithGitHub(params);
   } 
   else {
     //core.info(github.payload.action?.toString())

@@ -3,6 +3,7 @@ export async function setInitialGitHubToNotionIdMap(params) {
   for (const { pageId, issueNumber } of currentIssues) {
     params.gitHubIssuesIdToNotionPageId[issueNumber] = pageId
   }
+  return params.gitHubIssuesIdToNotionPageId
 }
  
 export async function syncNotionDatabaseWithGitHub(params) {
