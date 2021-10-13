@@ -14496,7 +14496,7 @@ function handleIssueEdited(options) {
 function run(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { notion, github } = options;
-        core.info('Starting...');
+        core.info('Starting...1');
         const notionClient = new src/* Client */.KU({
             auth: notion.token,
             logLevel: core.isDebug() ? src/* LogLevel.DEBUG */.in.DEBUG : src/* LogLevel.WARN */.in.WARN,
