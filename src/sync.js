@@ -1,29 +1,22 @@
 import * as core from '@actions/core';
-import _ from "lodash";
 
-const OPERATION_BATCH_SIZE = 10;
 
 export async function createIssueMapping(notion, databaseId) {
   const issuePageIds = {}
-  console.log("\nsetInitialGitHubToNotionIdMap")
   const issuesAlreadyInNotion = await getIssuesAlreadyInNotion(notion, databaseId)
   for (const { pageId, issueNumber } of issuesAlreadyInNotion) {
     issuePageIds[issueNumber] = pageId
   }
-  console.log("githubIssuesIdToNotionPageId Map")
-  console.log(issuePageIds)
   return issuePageIds
 }
  
 export async function syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId) {
-  console.log("\nFetching issues from Notion DB...")
   const issues = await getGitHubIssues(octokit)
   const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues)
   await createPages(notion, databaseId, pagesToCreate)
 }
  
 async function getIssuesAlreadyInNotion(notion, databaseId) {
-  console.log("\ngetIssuesFromNotionDatabase")
   const pages = []
   let cursor = undefined
   while (true) {
@@ -46,9 +39,6 @@ async function getIssuesAlreadyInNotion(notion, databaseId) {
 }
  
 async function getGitHubIssues(octokit) {
-  console.log("\ngetGitHubIssuesForRepository")
-  console.log("\noctokit:")
-  console.log(octokit)
   const issues = []
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
     owner: core.getInput('github-org'),
@@ -73,7 +63,6 @@ async function getGitHubIssues(octokit) {
 }
 
 function getIssuesNotInNotion(issuePageIds, issues) {
-  console.log("\ngetNotionOperations")
   const pagesToCreate = []
   for (const issue of issues) {
     const pageId = issuePageIds[issue.number]
@@ -86,54 +75,58 @@ function getIssuesNotInNotion(issuePageIds, issues) {
  
 
 async function createPages(notion, databaseId, pagesToCreate) {
-  console.log("\ncreatePages")
-  const pagesToCreateChunks = _.chunk(pagesToCreate, OPERATION_BATCH_SIZE)
-  for (const pagesToCreateBatch of pagesToCreateChunks) {
-    await Promise.all(
-      pagesToCreateBatch.map(issue =>
-        notion.pages.create({
-          parent: { database_id: databaseId },
-          properties: getPropertiesFromIssue(issue),
-        })
-      )
+  await Promise.all(
+    pagesToCreate.map(issue =>
+      notion.pages.create({
+        parent: { database_id: databaseId },
+        properties: getPropertiesFromIssue(issue),
+      })
     )
-    console.log(`Completed batch size: ${pagesToCreateBatch.length}`)
-  }
+  )
 }
- 
-async function updatePages(notion, pagesToUpdate) {
-  console.log("\nupdatePages")
-  const pagesToUpdateChunks = _.chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
-  for (const pagesToUpdateBatch of pagesToUpdateChunks) {
-    await Promise.all(
-      pagesToUpdateBatch.map(({ pageId, ...issue }) =>
-        notion.pages.update({
-          page_id: pageId,
-          properties: getPropertiesFromIssue(issue),
-        })
-      )
-    )
-    console.log(`Completed batch size: ${pagesToUpdateBatch.length}`)
-  }
-}
- 
 
 function getPropertiesFromIssue(issue) {
-  const { title, number, state, comment_count, url } = issue
+  console.log("ISSUE: ")
+  console.log(issue)
+  const { title, number, state, url } = issue
   return {
     Name: {
       title: [{ type: "text", text: { content: title } }],
     },
+    "Status": {
+      select: { name: state },
+    },
+    "Body": {
+      select: { name: state },
+    },
+    "Organization": {
+      select: { name: state },
+    },
+    "Repository": {
+      select: { name: state },
+    },
     "Issue Number": {
       number,
     },
-    State: {
+    "Assignees": {
       select: { name: state },
     },
-    "Number of Comments": {
-      number: comment_count,
+    "Milestones": {
+      select: { name: state },
     },
-    "Issue URL": {
+    "Labels": {
+      url,
+    },
+    "Author": {
+      url,
+    },
+    "Created": {
+      url,
+    },
+    "Updated": {
+      url,
+    },
+    "ID": {
       url,
     },
   }
