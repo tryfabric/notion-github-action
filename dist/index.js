@@ -14161,7 +14161,7 @@ async function setInitialGitHubToNotionIdMap(params) {
 async function syncNotionDatabaseWithGitHub(params) {
   console.log("\nFetching issues from Notion DB...")
   const issues = await getGitHubIssuesForRepository(params)
-  const { pagesToCreate, pagesToUpdate } = getNotionOperations(issues)
+  const { pagesToCreate, pagesToUpdate } = getNotionOperations(params.gitHubIssuesIdToNotionPageId, issues)
   await createPages(params.notion, params.databaseId, params.OPERATION_BATCH_SIZE, pagesToCreate)
   await updatePages(params.notion, params.OPERATION_BATCH_SIZE, pagesToUpdate)
 }
@@ -14214,7 +14214,7 @@ async function getGitHubIssuesForRepository(params) {
 }
  
 
-function getNotionOperations(issues) {
+function getNotionOperations(gitHubIssuesIdToNotionPageId, issues) {
   const pagesToCreate = []
   const pagesToUpdate = []
   for (const issue of issues) {
