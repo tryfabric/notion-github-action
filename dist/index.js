@@ -14501,6 +14501,7 @@ function run(options) {
             auth: notion.token,
             logLevel: core.isDebug() ? src/* LogLevel.DEBUG */.in.DEBUG : src/* LogLevel.WARN */.in.WARN,
         });
+        core.info('HIT1');
         if (github.payload.action === 'opened') {
             yield handleIssueOpened({
                 notion: {
@@ -14511,7 +14512,7 @@ function run(options) {
             });
         }
         else {
-            core.info('HIT...');
+            core.info('HIT2');
             yield handleIssueEdited({
                 notion: {
                     client: notionClient,

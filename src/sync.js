@@ -8,8 +8,9 @@ const _ = require("lodash")
 dotenv.config()
 const octokit = new Octokit({ auth: core.getInput('github-token') })
 const notion = new Client({ auth: core.getInput('notion-token') })
-
 const databaseId = core.getInput('notion-db')
+const org = core.getInput('github-org')
+const repo = core.getInput('github-repo')
 const OPERATION_BATCH_SIZE = 10
 
 /**
@@ -94,8 +95,8 @@ async function syncNotionDatabaseWithGitHub() {
  async function getGitHubIssuesForRepository() {
    const issues = []
    const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
-     owner: process.env.GITHUB_REPO_OWNER,
-     repo: process.env.GITHUB_REPO_NAME,
+     owner: org,
+     repo: repo,
      state: "all",
      per_page: 100,
    })
