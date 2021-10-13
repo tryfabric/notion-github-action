@@ -25656,7 +25656,7 @@ async function getGitHubIssues(octokit) {
           id: issue.id,
           labels: issue.labels,
           assignees: issue.assignees,
-          milestone: issue.milestone?.title,
+          milestone: issue.milestone,
           created: issue.created_at,
           updated: issue.updated_at,
           body: issue.body,
@@ -25723,7 +25723,7 @@ function getPropertiesFromIssue(issue) {
       multi_select: asignees
     },
     Milestone: {
-      rich_text: [{ type: "text", text: { content: milestone } }]
+      rich_text: [{ type: "text", text: { content: milestone.title } }]
     },
     Labels: {
       multi_select: labels
