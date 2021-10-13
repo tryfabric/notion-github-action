@@ -14648,7 +14648,6 @@ function run(options) {
             });
         }
         else if (github.event == 'workflow_dispatch') {
-            dotenv.config()
             const octokit = new Octokit({ auth: core.getInput('github-token') })
             const notion = new Client({ auth: core.getInput('notion-token') })
             const databaseId = core.getInput('notion-db')
