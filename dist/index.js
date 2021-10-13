@@ -14154,7 +14154,7 @@ __nccwpck_require__.r(__webpack_exports__);
 async function setInitialGitHubToNotionIdMap(params) {
   const currentIssues = await getIssuesFromNotionDatabase(params.notion, params.databaseId)
   for (const { pageId, issueNumber } of currentIssues) {
-    gitHubIssuesIdToNotionPageId[issueNumber] = pageId
+    params.gitHubIssuesIdToNotionPageId[issueNumber] = pageId
   }
 }
  
