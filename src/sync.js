@@ -94,7 +94,7 @@ async function createPages(notion, databaseId, pagesToCreate) {
 }
 
 function getPropertiesFromIssue(issue) {
-  const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
+  let { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
