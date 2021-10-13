@@ -88,46 +88,46 @@ async function createPages(notion, databaseId, pagesToCreate) {
 function getPropertiesFromIssue(issue) {
   console.log("ISSUE: ")
   console.log(issue)
-  const { title, number, state, url } = issue
+  const { title, number, state, id, body, organization, repo } = issue
   return {
-    Name: {
+    "Name": {
       title: [{ type: "text", text: { content: title } }],
     },
     "Status": {
       select: { name: state },
     },
     "Body": {
-      select: { name: state },
+      rich_text: body,
     },
     "Organization": {
-      select: { name: state },
+      rich_text: "",
     },
     "Repository": {
-      select: { name: state },
+      rich_text: "",
     },
-    "Issue Number": {
+    "Number": {
       number,
     },
     "Assignees": {
-      select: { name: state },
+      multi_select: { },
     },
     "Milestones": {
-      select: { name: state },
+      rich_text: "",
     },
     "Labels": {
-      url,
+      multi_select: { },
     },
     "Author": {
-      url,
+      rich_text: "julia",
     },
     "Created": {
-      url,
+      date: "",
     },
     "Updated": {
-      url,
+      date: "",
     },
     "ID": {
-      url,
+      number: id
     },
   }
 }
