@@ -6,7 +6,7 @@ import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
 // @ts-ignore
-import {createIssueMapping, syncNotionDatabaseWithGitHub} from './sync';
+import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
 import { Octokit } from "octokit";
 
 
@@ -147,7 +147,7 @@ export async function run(options: Options) {
     const notion = new Client({ auth: core.getInput('notion-token') })
     const databaseId = core.getInput('notion-db')
     const issuePageIds = await createIssueMapping(notion, databaseId);
-    await syncNotionDatabaseWithGitHub(issuePageIds, octokit, notion, databaseId);
+    await syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
   } 
   else {
     //core.info(github.payload.action?.toString())

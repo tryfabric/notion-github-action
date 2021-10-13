@@ -42809,7 +42809,7 @@ try {
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   "createIssueMapping": () => (/* binding */ createIssueMapping),
-/* harmony export */   "syncNotionDatabaseWithGitHub": () => (/* binding */ syncNotionDatabaseWithGitHub)
+/* harmony export */   "syncNotionDBWithGitHub": () => (/* binding */ syncNotionDBWithGitHub)
 /* harmony export */ });
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(3984);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
@@ -42832,12 +42832,11 @@ async function createIssueMapping(notion, databaseId) {
   return issuePageIds
 }
  
-async function syncNotionDatabaseWithGitHub(issuePageIds, octokit, notion, databaseId) {
+async function syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId) {
   console.log("\nFetching issues from Notion DB...")
-  const issues = await getGitHubIssuesForRepository(octokit)
-  const { pagesToCreate, pagesToUpdate } = getNotionOperations(issuePageIds, issues)
+  const issues = await getGitHubIssues(octokit)
+  const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues)
   await createPages(notion, databaseId, pagesToCreate)
-  await updatePages(notion, pagesToUpdate)
 }
  
 async function getIssuesAlreadyInNotion(notion, databaseId) {
@@ -42863,7 +42862,7 @@ async function getIssuesAlreadyInNotion(notion, databaseId) {
   })
 }
  
-async function getGitHubIssuesForRepository(octokit) {
+async function getGitHubIssues(octokit) {
   console.log("\ngetGitHubIssuesForRepository")
   console.log("\noctokit:")
   console.log(octokit)
@@ -42890,22 +42889,16 @@ async function getGitHubIssuesForRepository(octokit) {
   return issues
 }
 
-function getNotionOperations(issuePageIds, issues) {
+function getIssuesNotInNotion(issuePageIds, issues) {
   console.log("\ngetNotionOperations")
   const pagesToCreate = []
-  const pagesToUpdate = []
   for (const issue of issues) {
     const pageId = issuePageIds[issue.number]
-    if (pageId) {
-      pagesToUpdate.push({
-        ...issue,
-        pageId,
-      })
-    } else {
+    if (!pageId) {
       pagesToCreate.push(issue)
     }
   }
-  return { pagesToCreate, pagesToUpdate }
+  return pagesToCreate
 }
  
 
@@ -42927,7 +42920,7 @@ async function createPages(notion, databaseId, pagesToCreate) {
  
 async function updatePages(notion, pagesToUpdate) {
   console.log("\nupdatePages")
-  const pagesToUpdateChunks = lodash__WEBPACK_IMPORTED_MODULE_1___default().chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
+  const pagesToUpdateChunks = _.chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
   for (const pagesToUpdateBatch of pagesToUpdateChunks) {
     await Promise.all(
       pagesToUpdateBatch.map(({ pageId, ...issue }) =>
@@ -43103,7 +43096,7 @@ function run(options) {
             const notion = new src_1.Client({ auth: core.getInput('notion-token') });
             const databaseId = core.getInput('notion-db');
             const issuePageIds = yield sync_1.createIssueMapping(notion, databaseId);
-            yield sync_1.syncNotionDatabaseWithGitHub(issuePageIds, octokit, notion, databaseId);
+            yield sync_1.syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
         }
         else {
             //core.info(github.payload.action?.toString())

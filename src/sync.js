@@ -15,12 +15,11 @@ export async function createIssueMapping(notion, databaseId) {
   return issuePageIds
 }
  
-export async function syncNotionDatabaseWithGitHub(issuePageIds, octokit, notion, databaseId) {
+export async function syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId) {
   console.log("\nFetching issues from Notion DB...")
-  const issues = await getGitHubIssuesForRepository(octokit)
-  const { pagesToCreate, pagesToUpdate } = getNotionOperations(issuePageIds, issues)
+  const issues = await getGitHubIssues(octokit)
+  const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues)
   await createPages(notion, databaseId, pagesToCreate)
-  await updatePages(notion, pagesToUpdate)
 }
  
 async function getIssuesAlreadyInNotion(notion, databaseId) {
@@ -46,7 +45,7 @@ async function getIssuesAlreadyInNotion(notion, databaseId) {
   })
 }
  
-async function getGitHubIssuesForRepository(octokit) {
+async function getGitHubIssues(octokit) {
   console.log("\ngetGitHubIssuesForRepository")
   console.log("\noctokit:")
   console.log(octokit)
@@ -73,22 +72,16 @@ async function getGitHubIssuesForRepository(octokit) {
   return issues
 }
 
-function getNotionOperations(issuePageIds, issues) {
+function getIssuesNotInNotion(issuePageIds, issues) {
   console.log("\ngetNotionOperations")
   const pagesToCreate = []
-  const pagesToUpdate = []
   for (const issue of issues) {
     const pageId = issuePageIds[issue.number]
-    if (pageId) {
-      pagesToUpdate.push({
-        ...issue,
-        pageId,
-      })
-    } else {
+    if (!pageId) {
       pagesToCreate.push(issue)
     }
   }
-  return { pagesToCreate, pagesToUpdate }
+  return pagesToCreate
 }
  
 
