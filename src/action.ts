@@ -150,7 +150,7 @@ export async function run(options: Options) {
     await setInitialGitHubToNotionIdMap(params).then(syncNotionDatabaseWithGitHub(params));
   } 
   else {
-    core.info(github.payload.action)
+    //core.info(github.payload.action?.toString())
     await handleIssueEdited({
       notion: {
         client: notionClient,
