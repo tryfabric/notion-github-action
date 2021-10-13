@@ -120,6 +120,7 @@ interface Options {
   };
   github: {
     payload: WebhookPayload;
+    eventName: string;
   };
 }
 
@@ -142,7 +143,7 @@ export async function run(options: Options) {
       payload: github.payload as IssuesOpenedEvent,
     });
   }
-  else if (github.payload.action === 'manual'){
+  else if (github.eventName === 'workflow_dispatch'){
     const gitHubIssuesIdToNotionPageId = {}
     const octokit = new Octokit({ auth: core.getInput('github-token')})
     const notion = new Client({ auth: core.getInput('notion-token') })

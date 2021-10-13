@@ -14419,7 +14419,7 @@ function run(options) {
                 payload: github.payload,
             });
         }
-        else if (github.payload.action === 'manual') {
+        else if (github.eventName === 'workflow_dispatch') {
             const gitHubIssuesIdToNotionPageId = {};
             const octokit = new core_1.Octokit({ auth: core.getInput('github-token') });
             const notion = new src_1.Client({ auth: core.getInput('notion-token') });
@@ -14542,6 +14542,7 @@ function start() {
                 },
                 github: {
                     payload: github.context.payload,
+                    eventName: github.context.eventName,
                 },
             };
             yield action_1.run(options);
