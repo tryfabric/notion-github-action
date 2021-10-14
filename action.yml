@@ -13,6 +13,9 @@ inputs:
   github-repo:
     description: 'Your Github repo name'
     required: false
+  github-token:
+    description: 'Your Github personal access token'
+    required: false
 
 runs:
   using: 'node12'
