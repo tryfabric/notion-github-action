@@ -9,17 +9,10 @@ on:
       github-repo:
         description: 'Your Github repo name'
         required: true
-      github-token:
-        description: 'Your Github personal access token'
-        required: true
       notion-db:
         description: 'The Notion database id'
-        required: true
-      notion-token:
-        description: 'Your Notion API key'
-        required: true
-      
-      
+        required: false
+        default: ${{ secrets.NOTION_DATABASE }}
 
 jobs:
   build:
@@ -32,9 +25,9 @@ jobs:
         with:
           github-org: ${{ github.event.inputs.github-org }}
           github-repo: ${{ github.event.inputs.github-repo }}
-          github-token: ${{ github.event.inputs.github-token }}
-          notion-token: ${{ github.event.inputs.notion-token }}
-          notion-db: ${{ github.event.inputs.notion-db }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          notion-token: ${{ secrets.NOTION_TOKEN }}
+          notion-db: ${{ secrets.NOTION_DATABASE }}
           
 
     

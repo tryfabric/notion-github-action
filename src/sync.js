@@ -128,8 +128,6 @@ function getPropertiesFromIssue(issue) {
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
 
-  console.log(issue)
-
   // These properties are specific to the template DB referenced in the README.
   const properties = {
     Name: {
@@ -172,7 +170,5 @@ function getPropertiesFromIssue(issue) {
       number: id
     }
   }
-  console.log("properties: ")
-  console.log(properties)
   return properties
 }
