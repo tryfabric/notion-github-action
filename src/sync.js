@@ -16,6 +16,7 @@ export async function syncNotionDBWithGitHub(issuePageIds, octokit, notion, data
   await createPages(notion, databaseId, pagesToCreate)
 }
  
+// Notion SDK for JS: https://developers.notion.com/reference/post-database-query 
 async function getIssuesAlreadyInNotion(notion, databaseId) {
   const pages = []
   let cursor = undefined
@@ -38,6 +39,7 @@ async function getIssuesAlreadyInNotion(notion, databaseId) {
   })
 }
  
+// https://docs.github.com/en/rest/reference/issues#list-repository-issues
 async function getGitHubIssues(octokit) {
   const issues = []
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
@@ -79,7 +81,7 @@ function getIssuesNotInNotion(issuePageIds, issues) {
   return pagesToCreate
 }
  
-
+// Notion SDK for JS: https://developers.notion.com/reference/post-page
 async function createPages(notion, databaseId, pagesToCreate) {
   await Promise.all(
     pagesToCreate.map(issue =>
@@ -103,27 +105,32 @@ function validateIssueProperties(issue) {
   return issue
 }
 
-function createLabelsObject(labels) {
-  const labelsObject = []
-  for (const label of labels) {
-    labelsObject.push({ "name": label.name})
+/* The only properties of type `multi-select` are issue.assignees and issue.labels.
+*  For issues.assignees we want to send the `login` field to the Notion DB.
+*  For issues.labels we want to send the `name` field to the NOtion DB.
+*/
+function createMultiSelectObject(items) {
+  const multiSelectObject = []
+  for (const item of items) {
+    multiSelectObject.push({
+       "name": item.name ? item.name : item.login
+      })
   }
-  return labelsObject
+  return multiSelectObject
 }
 
 function getPropertiesFromIssue(issue) {
   issue = validateIssueProperties(issue)
   const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
-  const labelsObject = createLabelsObject(labels)
+  const labelsObject = createMultiSelectObject(labels)
+  const assigneesObject = createMultiSelectObject(assignees)
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
 
   console.log(issue)
 
-  // TODO - handle mapping labels and assignees to multi select
-  // TODO - note in readme that using this workflow requires the exact same properties as the template database
-  // TODO - make notion and github tokens read from secrets not input
+  // These properties are specific to the template DB referenced in the README.
   const properties = {
     Name: {
       title: [{ type: "text", text: { "content": title } }]
@@ -144,7 +151,7 @@ function getPropertiesFromIssue(issue) {
       number
     },
     Assignees: {
-      multi_select: []
+      multi_select: assigneesObject
     },
     Milestone: {
       rich_text: [{ type: "text", text: { content: milestone } }]
