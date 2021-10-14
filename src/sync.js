@@ -31,6 +31,7 @@ async function getIssuesAlreadyInNotion(notion, databaseId) {
     }
     cursor = next_cursor
   }
+  console.log("Hit")
   return pages.map(page => {
     return {
       pageId: page.id,
