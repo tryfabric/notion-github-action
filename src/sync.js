@@ -114,7 +114,7 @@ function createLabelsObject(labels) {
 function getPropertiesFromIssue(issue) {
   issue = validateIssueProperties(issue)
   const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
-  labels = createLabelsObject(labels)
+  const labelsObject = createLabelsObject(labels)
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
@@ -150,7 +150,7 @@ function getPropertiesFromIssue(issue) {
       rich_text: [{ type: "text", text: { content: milestone } }]
     },
     Labels: {
-      multi_select: labels
+      multi_select: labelsObject
     },
     Author: {
       rich_text: [{ type: "text", text: { content: author } }]
