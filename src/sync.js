@@ -31,7 +31,6 @@ async function getIssuesAlreadyInNotion(notion, databaseId) {
     }
     cursor = next_cursor
   }
-  console.log("Hit")
   return pages.map(page => {
     return {
       pageId: page.id,
@@ -122,8 +121,6 @@ function createMultiSelectObject(items) {
 
 function getPropertiesFromIssue(issue) {
   issue = validateIssueProperties(issue)
-  console.log("issue")
-  console.log(issue)
   const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author } = issue
   const labelsObject = createMultiSelectObject(labels)
   const assigneesObject = createMultiSelectObject(assignees)
