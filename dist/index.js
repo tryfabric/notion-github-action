@@ -25647,8 +25647,6 @@ async function getGitHubIssues(octokit) {
   for await (const { data } of iterator) {
     for (const issue of data) {
       if (!issue.pull_request) {
-        console.log("ISSUE:")
-        console.log(issue)
         issues.push({
           number: issue.number,
           title: issue.title,
@@ -25708,6 +25706,9 @@ function getPropertiesFromIssue(issue) {
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
+
+  console.log(issue)
+
   // TODO - handle mapping labels and assignees to multi select
   // TODO - note in readme that using this workflow requires the exact same properties as the template database
   // TODO - make notion and github tokens read from secrets not input
