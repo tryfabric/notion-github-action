@@ -100,6 +100,7 @@ function validateIssueProperties(issue) {
     issue.milestone = issue.milestone.title
   }
   if (!issue.labels) issue.labels = []
+  return issue
 }
 
 function getPropertiesFromIssue(issue) {
