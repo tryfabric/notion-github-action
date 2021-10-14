@@ -124,7 +124,7 @@ interface Options {
 export async function run(options: Options) {
   const {notion, github} = options;
 
-  core.info('Starting....');
+  core.info('Starting...');
 
   const notionClient = new Client({
     auth: notion.token,
@@ -146,7 +146,6 @@ export async function run(options: Options) {
     const issuePageIds = await createIssueMapping(notion, databaseId);
     await syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
   } else {
-    //core.info(github.payload.action?.toString())
     await handleIssueEdited({
       notion: {
         client: notionClient,
