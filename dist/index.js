@@ -25719,9 +25719,9 @@ function createMultiSelectObject(items) {
 
 function getPropertiesFromIssue(issue) {
   issue = validateIssueProperties(issue)
-  const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
+  const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author } = issue
   const labelsObject = createMultiSelectObject(labels)
-  const assigneesObject = createMultiSelectObject(asignees)
+  const assigneesObject = createMultiSelectObject(assignees)
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
