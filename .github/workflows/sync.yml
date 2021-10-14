@@ -9,10 +9,6 @@ on:
       github-repo:
         description: 'Your Github repo name'
         required: true
-      notion-db:
-        description: 'The Notion database id'
-        required: false
-        default: ${{ secrets.NOTION_DATABASE }}
 
 jobs:
   build:
