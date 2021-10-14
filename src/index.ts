@@ -21,6 +21,7 @@ async function start() {
       },
       github: {
         payload: github.context.payload,
+        eventName: github.context.eventName,
       },
     };
 

@@ -43,6 +43,36 @@ jobs:
           notion-db: ${{ secrets.NOTION_DATABASE }}
 ```
 
+8. (Optional) If your Github repository has any preexisting issues that you would like to sync to your new Notion Database you can trigger a manual workflow, First create an additional Github workflow at the path `.github/workflows/manual-issues-notion-sync.yml`.
+
+```yaml
+name: Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      github-org:
+        description: 'Your Github org name or Github username associated with your repo'
+        required: true
+      github-repo:
+        description: 'Your Github repo name'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add GitHub Issues to Notion
+        uses: instantish/notion-github-action@v1.1.0
+        with:
+          github-org: ${{ github.event.inputs.github-org }}
+          github-repo: ${{ github.event.inputs.github-repo }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          notion-token: ${{ secrets.NOTION_TOKEN }}
+          notion-db: ${{ secrets.NOTION_DATABASE }}
+```
+Then follow [these intructions](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) to trigger the workflow.
+
 ## Using `release-it`
 
 1. Locally, on `master` (make sure it's up to date), execute `GITHUB_TOKEN=<TOKEN> release-it`. (Alternatively, set `GITHUB_TOKEN` as a system environment variable)

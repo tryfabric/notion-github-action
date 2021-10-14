@@ -6,7 +6,8 @@ import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
 import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
 // @ts-ignore
-import {setInitialGitHubToNotionIdMap, syncNotionDatabaseWithGitHub} from './sync';
+import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
+import {Octokit} from 'octokit';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
@@ -116,6 +117,7 @@ interface Options {
   };
   github: {
     payload: WebhookPayload;
+    eventName: string;
   };
 }
 
@@ -137,13 +139,14 @@ export async function run(options: Options) {
       },
       payload: github.payload as IssuesOpenedEvent,
     });
-  }
-   else if (github.payload.action === 'manual'){
-    await setInitialGitHubToNotionIdMap().then(syncNotionDatabaseWithGitHub);
-   } 
-  
-  else {
-    core.info(github.payload.action)
+  } else if (github.eventName === 'workflow_dispatch') {
+    const octokit = new Octokit({auth: core.getInput('github-token')});
+    const notion = new Client({auth: core.getInput('notion-token')});
+    const databaseId = core.getInput('notion-db');
+    const issuePageIds = await createIssueMapping(notion, databaseId);
+    await syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
+  } else {
+    //core.info(github.payload.action?.toString())
     await handleIssueEdited({
       notion: {
         client: notionClient,

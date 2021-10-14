@@ -1,219 +1,174 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const { Client } = require("@notionhq/client")
-const dotenv = require("dotenv")
-const { Octokit } = require("octokit")
-const _ = require("lodash")
+import * as core from '@actions/core';
 
-dotenv.config()
-const octokit = new Octokit({ auth: core.getInput('github-token') })
-const notion = new Client({ auth: core.getInput('notion-token') })
-const databaseId = core.getInput('notion-db')
-const org = core.getInput('github-org')
-const repo = core.getInput('github-repo')
-const OPERATION_BATCH_SIZE = 10
 
-/**
- * Local map to store  GitHub issue ID to its Notion pageId.
- * { [issueId: string]: string }
- */
- const gitHubIssuesIdToNotionPageId = {}
+export async function createIssueMapping(notion, databaseId) {
+  const issuePageIds = {}
+  const issuesAlreadyInNotion = await getIssuesAlreadyInNotion(notion, databaseId)
+  for (const { pageId, issueNumber } of issuesAlreadyInNotion) {
+    issuePageIds[issueNumber] = pageId
+  }
+  return issuePageIds
+}
+ 
+export async function syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId) {
+  const issues = await getGitHubIssues(octokit)
+  const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues)
+  await createPages(notion, databaseId, pagesToCreate)
+}
+ 
+// Notion SDK for JS: https://developers.notion.com/reference/post-database-query 
+async function getIssuesAlreadyInNotion(notion, databaseId) {
+  const pages = []
+  let cursor = undefined
+  while (true) {
+    const { results, next_cursor } = await notion.databases.query({
+      database_id: databaseId,
+      start_cursor: cursor,
+    })
+    pages.push(...results)
+    if (!next_cursor) {
+      break
+    }
+    cursor = next_cursor
+  }
+  return pages.map(page => {
+    return {
+      pageId: page.id,
+      issueNumber: page.properties["Number"].number,
+    }
+  })
+}
+ 
+// https://docs.github.com/en/rest/reference/issues#list-repository-issues
+async function getGitHubIssues(octokit) {
+  const issues = []
+  const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
+    owner: core.getInput('github-org'),
+    repo: core.getInput('github-repo'),
+    state: "all",
+    per_page: 100,
+  })
+  for await (const { data } of iterator) {
+    for (const issue of data) {
+      if (!issue.pull_request) {
+        issues.push({
+          number: issue.number,
+          title: issue.title,
+          state: issue.state,
+          id: issue.id,
+          labels: issue.labels,
+          assignees: issue.assignees,
+          milestone: issue.milestone,
+          created: issue.created_at,
+          updated: issue.updated_at,
+          body: issue.body,
+          repo_url: issue.repository_url,
+          author: issue.user.login
+        })
+      }
+    }
+  }
+  return issues
+}
 
- /**
-  * Initialize local data store.
-  * Then sync with GitHub.
-  */
- //setInitialGitHubToNotionIdMap().then(syncNotionDatabaseWithGitHub)
+function getIssuesNotInNotion(issuePageIds, issues) {
+  const pagesToCreate = []
+  for (const issue of issues) {
+    if (!(issue.number in issuePageIds)) {
+      pagesToCreate.push(issue)
+    }
+  }
+  return pagesToCreate
+}
  
- /**
-  * Get and set the initial data store with issues currently in the database.
-  */
-async function setInitialGitHubToNotionIdMap() {
-   const currentIssues = await getIssuesFromNotionDatabase()
-   for (const { pageId, issueNumber } of currentIssues) {
-     gitHubIssuesIdToNotionPageId[issueNumber] = pageId
-   }
- }
- 
-async function syncNotionDatabaseWithGitHub() {
-   // Get all issues currently in the provided GitHub repository.
-   console.log("\nFetching issues from Notion DB...")
-   const issues = await getGitHubIssuesForRepository()
-   console.log(`Fetched ${issues.length} issues from GitHub repository.`)
- 
-   // Group issues into those that need to be created or updated in the Notion database.
-   const { pagesToCreate, pagesToUpdate } = getNotionOperations(issues)
- 
-   // Create pages for new issues.
-   console.log(`\n${pagesToCreate.length} new issues to add to Notion.`)
-   await createPages(pagesToCreate)
- 
-   // Updates pages for existing issues.
-   console.log(`\n${pagesToUpdate.length} issues to update in Notion.`)
-   await updatePages(pagesToUpdate)
- 
-   // Success!
-   console.log("\n✅ Notion database is synced with GitHub.")
- }
- 
- /**
-  * Gets pages from the Notion database.
-  *
-  * @returns {Promise<Array<{ pageId: string, issueNumber: number }>>}
-  */
- async function getIssuesFromNotionDatabase() {
-   const pages = []
-   let cursor = undefined
-   while (true) {
-     const { results, next_cursor } = await notion.databases.query({
-       database_id: databaseId,
-       start_cursor: cursor,
-     })
-     pages.push(...results)
-     if (!next_cursor) {
-       break
-     }
-     cursor = next_cursor
-   }
-   console.log(`${pages.length} issues successfully fetched.`)
-   return pages.map(page => {
-     return {
-       pageId: page.id,
-       issueNumber: page.properties["Issue Number"].number,
-     }
-   })
- }
- 
- /**
-  * Gets issues from a GitHub repository. Pull requests are omitted.
-  *
-  * https://docs.github.com/en/rest/guides/traversing-with-pagination
-  * https://docs.github.com/en/rest/reference/issues
-  *
-  * @returns {Promise<Array<{ number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>>}
-  */
- async function getGitHubIssuesForRepository() {
-   const issues = []
-   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
-     owner: org,
-     repo: repo,
-     state: "all",
-     per_page: 100,
-   })
-   for await (const { data } of iterator) {
-     for (const issue of data) {
-       if (!issue.pull_request) {
-         issues.push({
-           number: issue.number,
-           title: issue.title,
-           state: issue.state,
-           comment_count: issue.comments,
-           url: issue.html_url,
-         })
-       }
-     }
-   }
-   return issues
- }
- 
- /**
-  * Determines which issues already exist in the Notion database.
-  *
-  * @param {Array<{ number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>} issues
-  * @returns {{
-  *   pagesToCreate: Array<{ number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>;
-  *   pagesToUpdate: Array<{ pageId: string, number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>
-  * }}
-  */
- function getNotionOperations(issues) {
-   const pagesToCreate = []
-   const pagesToUpdate = []
-   for (const issue of issues) {
-     const pageId = gitHubIssuesIdToNotionPageId[issue.number]
-     if (pageId) {
-       pagesToUpdate.push({
-         ...issue,
-         pageId,
-       })
-     } else {
-       pagesToCreate.push(issue)
-     }
-   }
-   return { pagesToCreate, pagesToUpdate }
- }
- 
- /**
-  * Creates new pages in Notion.
-  *
-  * https://developers.notion.com/reference/post-page
-  *
-  * @param {Array<{ number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>} pagesToCreate
-  */
- async function createPages(pagesToCreate) {
-   const pagesToCreateChunks = _.chunk(pagesToCreate, OPERATION_BATCH_SIZE)
-   for (const pagesToCreateBatch of pagesToCreateChunks) {
-     await Promise.all(
-       pagesToCreateBatch.map(issue =>
-         notion.pages.create({
-           parent: { database_id: databaseId },
-           properties: getPropertiesFromIssue(issue),
-         })
-       )
-     )
-     console.log(`Completed batch size: ${pagesToCreateBatch.length}`)
-   }
- }
- 
- /**
-  * Updates provided pages in Notion.
-  *
-  * https://developers.notion.com/reference/patch-page
-  *
-  * @param {Array<{ pageId: string, number: number, title: string, state: "open" | "closed", comment_count: number, url: string }>} pagesToUpdate
-  */
- async function updatePages(pagesToUpdate) {
-   const pagesToUpdateChunks = _.chunk(pagesToUpdate, OPERATION_BATCH_SIZE)
-   for (const pagesToUpdateBatch of pagesToUpdateChunks) {
-     await Promise.all(
-       pagesToUpdateBatch.map(({ pageId, ...issue }) =>
-         notion.pages.update({
-           page_id: pageId,
-           properties: getPropertiesFromIssue(issue),
-         })
-       )
-     )
-     console.log(`Completed batch size: ${pagesToUpdateBatch.length}`)
-   }
- }
- 
- //*========================================================================
- // Helpers
- //*========================================================================
- 
- /**
-  * Returns the GitHub issue to conform to this database's schema properties.
-  *
-  * @param {{ number: number, title: string, state: "open" | "closed", comment_count: number, url: string }} issue
-  */
- function getPropertiesFromIssue(issue) {
-   const { title, number, state, comment_count, url } = issue
-   return {
-     Name: {
-       title: [{ type: "text", text: { content: title } }],
-     },
-     "Issue Number": {
-       number,
-     },
-     State: {
-       select: { name: state },
-     },
-     "Number of Comments": {
-       number: comment_count,
-     },
-     "Issue URL": {
-       url,
-     },
-   }
- }
+// Notion SDK for JS: https://developers.notion.com/reference/post-page
+async function createPages(notion, databaseId, pagesToCreate) {
+  await Promise.all(
+    pagesToCreate.map(issue =>
+      notion.pages.create({
+        parent: { database_id: databaseId },
+        properties: getPropertiesFromIssue(issue),
+      })
+    )
+  )
+}
 
- module.exports = { handleChangeIssueStatus, handleToggleIssueSendToDM };
+function validateIssueProperties(issue) {
+  if (!issue.body) issue.body = ''
+  if (!issue.asignees) issue.asignees = []
+  if (!issue.milestone) { 
+    issue.milestone = ''
+  } else {
+    issue.milestone = issue.milestone.title
+  }
+  if (!issue.labels) issue.labels = []
+  return issue
+}
+
+/* The only properties of type `multi-select` are issue.assignees and issue.labels.
+*  For issues.assignees we want to send the `login` field to the Notion DB.
+*  For issues.labels we want to send the `name` field to the NOtion DB.
+*/
+function createMultiSelectObject(items) {
+  const multiSelectObject = []
+  for (const item of items) {
+    multiSelectObject.push({
+       "name": item.name ? item.name : item.login
+      })
+  }
+  return multiSelectObject
+}
+
+function getPropertiesFromIssue(issue) {
+  issue = validateIssueProperties(issue)
+  const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author } = issue
+  const labelsObject = createMultiSelectObject(labels)
+  const assigneesObject = createMultiSelectObject(assignees)
+  const urlComponents = repo_url.split("/")
+  const org = urlComponents[urlComponents.length - 2]
+  const repo = urlComponents[urlComponents.length - 1]
+
+  // These properties are specific to the template DB referenced in the README.
+  const properties = {
+    Name: {
+      title: [{ type: "text", text: { "content": title } }]
+    },
+    Status: {
+      select: { name: state }
+    },
+    Body: {
+      rich_text: [{ type: "text", text: { content: body } }]
+    },
+    Organization: {
+      rich_text: [{ type: "text", text: { content: org } }]
+    },
+    Repository: {
+      rich_text: [{ type: "text", text: { content: repo } }]
+    },
+    Number: {
+      number
+    },
+    Assignees: {
+      multi_select: assigneesObject
+    },
+    Milestone: {
+      rich_text: [{ type: "text", text: { content: milestone } }]
+    },
+    Labels: {
+      multi_select: labelsObject
+    },
+    Author: {
+      rich_text: [{ type: "text", text: { content: author } }]
+    },
+    Created: {
+      date: { "start": created }
+    },
+    Updated: {
+      date: { "start": updated }
+    },
+    ID: {
+      number: id
+    }
+  }
+  return properties
+}
