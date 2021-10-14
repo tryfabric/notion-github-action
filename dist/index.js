@@ -25691,22 +25691,26 @@ async function createPages(notion, databaseId, pagesToCreate) {
   )
 }
 
+function validateIssueProperties(issue) {
+  if (!issue.body) issue.body = ''
+  if (!issue.asignees) issue.asignees = []
+  if (!issue.milestone) { 
+    issue.milestone = ''
+  } else {
+    issue.milestone = issue.milestone.title
+  }
+  if (!issue.labels) issue.labels = []
+}
+
 function getPropertiesFromIssue(issue) {
-  let { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
+  issue = validateIssueProperties(issue)
+  const { number, title, state, id, labels, asignees, milestone, created, updated, body, repo_url, author } = issue
   const urlComponents = repo_url.split("/")
   const org = urlComponents[urlComponents.length - 2]
   const repo = urlComponents[urlComponents.length - 1]
-  // TODO - handle null values in a separate method
   // TODO - handle mapping labels and assignees to multi select
   // TODO - note in readme that using this workflow requires the exact same properties as the template database
-  if (!body) body = ''
-  if (!asignees) asignees = []
-  if (!milestone) { 
-    milestone = ''
-  } else {
-    milestone = milestone.title
-  }
-  if (!labels) labels = []
+  // TODO - make notion and github tokens read from secrets not input
   const properties = {
     Name: {
       title: [{ type: "text", text: { "content": title } }]
