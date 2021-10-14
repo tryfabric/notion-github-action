@@ -25892,7 +25892,7 @@ function handleIssueEdited(options) {
 function run(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { notion, github } = options;
-        core.info('Starting....');
+        core.info('Starting...');
         const notionClient = new src_1.Client({
             auth: notion.token,
             logLevel: core.isDebug() ? src_1.LogLevel.DEBUG : src_1.LogLevel.WARN,
@@ -25914,7 +25914,6 @@ function run(options) {
             yield sync_1.syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
         }
         else {
-            //core.info(github.payload.action?.toString())
             yield handleIssueEdited({
                 notion: {
                     client: notionClient,
