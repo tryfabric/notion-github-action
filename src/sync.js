@@ -106,7 +106,7 @@ function validateIssueProperties(issue) {
 function createLabelsObject(labels) {
   const labelsObject = []
   for (const label of labels) {
-    labelsObject.push({ "name": label.name, "color": "default"})
+    labelsObject.push({ "name": label.name})
   }
   return labelsObject
 }
