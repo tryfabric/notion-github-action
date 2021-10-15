@@ -26168,7 +26168,7 @@ function getPropertiesFromIssue(issue) {
             multi_select: assigneesObject,
         },
         Milestone: {
-            rich_text: [{ type: 'text', text: { content: milestone.title } }],
+            rich_text: [{ type: 'text', text: { content: milestone } }],
         },
         Labels: {
             multi_select: labelsObject,
