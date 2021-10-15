@@ -25975,6 +25975,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.syncNotionDBWithGitHub = exports.createIssueMapping = void 0;
 const core = __importStar(__nccwpck_require__(3984));
+const properties_1 = __nccwpck_require__(8854);
 function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
@@ -26135,6 +26136,20 @@ function createMultiSelectObject(items) {
     }
     return multiSelectObject;
 }
+function mapStateToColor(state) {
+    switch (state) {
+        case 'Open':
+            return 'green';
+        case 'open':
+            return 'green';
+        case 'Closed':
+            return 'red';
+        case 'closed':
+            return 'red';
+        default:
+            return 'default';
+    }
+}
 function getPropertiesFromIssue(issue) {
     issue = validateIssueProperties(issue);
     const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author, } = issue;
@@ -26143,50 +26158,24 @@ function getPropertiesFromIssue(issue) {
     const urlComponents = repo_url.split('/');
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
+    const color = mapStateToColor(state);
     // These properties are specific to the template DB referenced in the README.
-    // These properties are specific to the template DB referenced in the README.
-    const properties = {
-        Name: {
-            title: [{ type: 'text', text: { content: title } }],
-        },
-        Status: {
-            select: { name: state },
-        },
-        Body: {
-            rich_text: [{ type: 'text', text: { content: body } }],
-        },
-        Organization: {
-            rich_text: [{ type: 'text', text: { content: org } }],
-        },
-        Repository: {
-            rich_text: [{ type: 'text', text: { content: repo } }],
-        },
-        Number: {
-            number,
-        },
-        Assignees: {
-            multi_select: assigneesObject,
-        },
-        Milestone: {
-            rich_text: [{ type: 'text', text: { content: milestone } }],
-        },
-        Labels: {
-            multi_select: labelsObject,
-        },
-        Author: {
-            rich_text: [{ type: 'text', text: { content: author } }],
-        },
-        Created: {
-            date: { start: created },
-        },
-        Updated: {
-            date: { start: updated },
-        },
-        ID: {
-            number: id,
-        },
+    const props = {
+        Name: properties_1.properties.title(title),
+        Status: properties_1.properties.select(state, color),
+        Body: properties_1.properties.text(body),
+        Organization: properties_1.properties.text(org),
+        Repository: properties_1.properties.text(repo),
+        Number: properties_1.properties.number(number),
+        Assignees: properties_1.properties.multiSelect(assigneesObject),
+        Milestone: properties_1.properties.text(milestone.title),
+        Labels: properties_1.properties.multiSelect(labelsObject),
+        Author: properties_1.properties.text(author),
+        Created: properties_1.properties.date(created),
+        Updated: properties_1.properties.date(updated),
+        ID: properties_1.properties.number(id),
     };
-    return properties;
+    return props;
 }
 
 

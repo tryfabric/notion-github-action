@@ -5,7 +5,11 @@ import {PaginateInterface} from '@octokit/plugin-paginate-rest';
 import {Api} from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 import {RequestError} from '@octokit/request-error';
 import type {Page} from '@notionhq/client/build/src/api-types';
-import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
+import {
+  DatabasesQueryResponse,
+  InputPropertyValueMap,
+} from '@notionhq/client/build/src/api-endpoints';
+import {properties} from './properties';
 
 // TODO theres gotta be an importable type for these Github things
 type GithubLabel = {
@@ -247,7 +251,22 @@ function createMultiSelectObject(items: any): string[] {
   return multiSelectObject;
 }
 
-function getPropertiesFromIssue(issue: GithubIssue): any {
+function mapStateToColor(state: string) {
+  switch (state) {
+    case 'Open':
+      return 'green';
+    case 'open':
+      return 'green';
+    case 'Closed':
+      return 'red';
+    case 'closed':
+      return 'red';
+    default:
+      return 'default';
+  }
+}
+
+function getPropertiesFromIssue(issue: GithubIssue): InputPropertyValueMap {
   issue = validateIssueProperties(issue);
   const {
     number,
@@ -268,49 +287,23 @@ function getPropertiesFromIssue(issue: GithubIssue): any {
   const urlComponents = repo_url.split('/');
   const org = urlComponents[urlComponents.length - 2];
   const repo = urlComponents[urlComponents.length - 1];
+  const color = mapStateToColor(state);
 
   // These properties are specific to the template DB referenced in the README.
-  // These properties are specific to the template DB referenced in the README.
-  const properties = {
-    Name: {
-      title: [{type: 'text', text: {content: title}}],
-    },
-    Status: {
-      select: {name: state},
-    },
-    Body: {
-      rich_text: [{type: 'text', text: {content: body}}],
-    },
-    Organization: {
-      rich_text: [{type: 'text', text: {content: org}}],
-    },
-    Repository: {
-      rich_text: [{type: 'text', text: {content: repo}}],
-    },
-    Number: {
-      number,
-    },
-    Assignees: {
-      multi_select: assigneesObject,
-    },
-    Milestone: {
-      rich_text: [{type: 'text', text: {content: milestone}}],
-    },
-    Labels: {
-      multi_select: labelsObject,
-    },
-    Author: {
-      rich_text: [{type: 'text', text: {content: author}}],
-    },
-    Created: {
-      date: {start: created},
-    },
-    Updated: {
-      date: {start: updated},
-    },
-    ID: {
-      number: id,
-    },
+  const props: InputPropertyValueMap = {
+    Name: properties.title(title),
+    Status: properties.select(state, color),
+    Body: properties.text(body),
+    Organization: properties.text(org),
+    Repository: properties.text(repo),
+    Number: properties.number(number),
+    Assignees: properties.multiSelect(assigneesObject),
+    Milestone: properties.text(milestone.title),
+    Labels: properties.multiSelect(labelsObject),
+    Author: properties.text(author),
+    Created: properties.date(created),
+    Updated: properties.date(updated),
+    ID: properties.number(id),
   };
-  return properties;
+  return props;
 }
