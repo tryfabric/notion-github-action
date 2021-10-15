@@ -26140,12 +26140,14 @@ function mapStateToColor(state) {
     switch (state) {
         case 'Open':
             return 'green';
-        case 'open':
-            return 'green';
         case 'Closed':
             return 'red';
+        case 'Opened':
+            return 'blue';
+        case 'open':
+            return 'brown';
         case 'closed':
-            return 'red';
+            return 'gray';
         default:
             return 'default';
     }
