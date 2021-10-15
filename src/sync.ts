@@ -294,7 +294,7 @@ function getPropertiesFromIssue(issue: GithubIssue): any {
       multi_select: assigneesObject,
     },
     Milestone: {
-      rich_text: [{type: 'text', text: {content: milestone}}],
+      rich_text: [{type: 'text', text: {content: milestone.title}}],
     },
     Labels: {
       multi_select: labelsObject,
