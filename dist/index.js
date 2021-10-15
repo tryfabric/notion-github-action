@@ -26144,10 +26144,11 @@ function getPropertiesFromIssue(issue) {
     const urlComponents = repo_url.split('/');
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
+    const color = state === 'Open' ? 'green' : 'red';
     // These properties are specific to the template DB referenced in the README.
     const props = {
         Name: properties_1.properties.title(title),
-        Status: properties_1.properties.select(state),
+        Status: properties_1.properties.select(state, color),
         Body: properties_1.properties.text(body),
         Organization: properties_1.properties.text(org),
         Repository: properties_1.properties.text(repo),
