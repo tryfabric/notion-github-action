@@ -272,12 +272,11 @@ function getPropertiesFromIssue(issue: GithubIssue): InputPropertyValueMap {
   const urlComponents = repo_url.split('/');
   const org = urlComponents[urlComponents.length - 2];
   const repo = urlComponents[urlComponents.length - 1];
-  const color = state === 'Open' ? 'green' : 'red';
 
   // These properties are specific to the template DB referenced in the README.
   const props: InputPropertyValueMap = {
     Name: properties.title(title),
-    Status: properties.select(state, color),
+    Status: properties.select(state),
     Body: properties.text(body),
     Organization: properties.text(org),
     Repository: properties.text(repo),
