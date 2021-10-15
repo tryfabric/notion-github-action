@@ -26136,22 +26136,6 @@ function createMultiSelectObject(items) {
     }
     return multiSelectObject;
 }
-function mapStateToColor(state) {
-    switch (state) {
-        case 'Open':
-            return 'green';
-        case 'Closed':
-            return 'red';
-        case 'Opened':
-            return 'blue';
-        case 'open':
-            return 'brown';
-        case 'closed':
-            return 'gray';
-        default:
-            return 'default';
-    }
-}
 function getPropertiesFromIssue(issue) {
     issue = validateIssueProperties(issue);
     const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author, } = issue;
@@ -26160,7 +26144,7 @@ function getPropertiesFromIssue(issue) {
     const urlComponents = repo_url.split('/');
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
-    const color = mapStateToColor(state);
+    const color = state === 'Open' ? 'green' : 'red';
     // These properties are specific to the template DB referenced in the README.
     const props = {
         Name: properties_1.properties.title(title),

@@ -251,23 +251,6 @@ function createMultiSelectObject(items: any): string[] {
   return multiSelectObject;
 }
 
-function mapStateToColor(state: string) {
-  switch (state) {
-    case 'Open':
-      return 'green';
-    case 'Closed':
-      return 'red';
-    case 'Opened':
-      return 'blue';
-    case 'open':
-      return 'brown';
-    case 'closed':
-      return 'gray';
-    default:
-      return 'default';
-  }
-}
-
 function getPropertiesFromIssue(issue: GithubIssue): InputPropertyValueMap {
   issue = validateIssueProperties(issue);
   const {
@@ -289,7 +272,7 @@ function getPropertiesFromIssue(issue: GithubIssue): InputPropertyValueMap {
   const urlComponents = repo_url.split('/');
   const org = urlComponents[urlComponents.length - 2];
   const repo = urlComponents[urlComponents.length - 1];
-  const color = mapStateToColor(state);
+  const color = state === 'Open' ? 'green' : 'red';
 
   // These properties are specific to the template DB referenced in the README.
   const props: InputPropertyValueMap = {
