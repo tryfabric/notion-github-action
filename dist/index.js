@@ -25623,6 +25623,7 @@ exports.run = void 0;
 const src_1 = __nccwpck_require__(3766);
 const core = __importStar(__nccwpck_require__(3984));
 const properties_1 = __nccwpck_require__(8854);
+// @ts-ignore
 const sync_1 = __nccwpck_require__(1423);
 const octokit_1 = __nccwpck_require__(1343);
 function removeHTML(text) {
@@ -25975,7 +25976,6 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.syncNotionDBWithGitHub = exports.createIssueMapping = void 0;
 const core = __importStar(__nccwpck_require__(3984));
-const properties_1 = __nccwpck_require__(8854);
 function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
@@ -25999,7 +25999,7 @@ exports.syncNotionDBWithGitHub = syncNotionDBWithGitHub;
 function getIssuesAlreadyInNotion(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const pages = Array();
-        let cursor = '';
+        let cursor = undefined;
         while (cursor !== null) {
             const { results, next_cursor } = (yield notion.databases.query({
                 database_id: databaseId,
@@ -26077,20 +26077,22 @@ function getIssuesNotInNotion(issuePageIds, issues) {
 // Notion SDK for JS: https://developers.notion.com/reference/post-page
 function createPages(notion, databaseId, pagesToCreate) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield Promise.all(pagesToCreate.map(issue => notion.pages.create({
+        yield Promise.all(pagesToCreate.map((issue) => notion.pages.create({
             parent: { database_id: databaseId },
             properties: getPropertiesFromIssue(issue),
         })));
     });
 }
 function validateIssueProperties(issue) {
-    var _a;
     if (!issue.body)
         issue.body = '';
-    if (!issue.assignees)
-        issue.assignees = [];
-    if (!((_a = issue.milestone) === null || _a === void 0 ? void 0 : _a.title)) {
-        issue.milestone.title = '';
+    if (!issue.asignees)
+        issue.asignees = [];
+    if (!issue.milestone) {
+        issue.milestone = '';
+    }
+    else {
+        issue.milestone = issue.milestone.title;
     }
     if (!issue.labels)
         issue.labels = [];
@@ -26103,7 +26105,9 @@ function validateIssueProperties(issue) {
 function createMultiSelectObject(items) {
     const multiSelectObject = [];
     for (const item of items) {
-        multiSelectObject.push(item.name ? item.name : item.login);
+        multiSelectObject.push({
+            name: item.name ? item.name : item.login,
+        });
     }
     return multiSelectObject;
 }
@@ -26116,22 +26120,48 @@ function getPropertiesFromIssue(issue) {
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
     // These properties are specific to the template DB referenced in the README.
-    const props = {
-        Name: properties_1.properties.title(title),
-        Status: properties_1.properties.select(state),
-        Body: properties_1.properties.text(body),
-        Organization: properties_1.properties.text(org),
-        Repository: properties_1.properties.text(repo),
-        Number: properties_1.properties.number(number),
-        Assignees: properties_1.properties.multiSelect(assigneesObject),
-        Milestone: properties_1.properties.text(milestone.title),
-        Labels: properties_1.properties.multiSelect(labelsObject),
-        Author: properties_1.properties.text(author),
-        Created: properties_1.properties.date(created),
-        Updated: properties_1.properties.date(updated),
-        ID: properties_1.properties.number(id),
+    const properties = {
+        Name: {
+            title: [{ type: 'text', text: { content: title } }],
+        },
+        Status: {
+            select: { name: state },
+        },
+        Body: {
+            rich_text: [{ type: 'text', text: { content: body } }],
+        },
+        Organization: {
+            rich_text: [{ type: 'text', text: { content: org } }],
+        },
+        Repository: {
+            rich_text: [{ type: 'text', text: { content: repo } }],
+        },
+        Number: {
+            number,
+        },
+        Assignees: {
+            multi_select: assigneesObject,
+        },
+        Milestone: {
+            rich_text: [{ type: 'text', text: { content: milestone } }],
+        },
+        Labels: {
+            multi_select: labelsObject,
+        },
+        Author: {
+            rich_text: [{ type: 'text', text: { content: author } }],
+        },
+        Created: {
+            date: { start: created },
+        },
+        Updated: {
+            date: { start: updated },
+        },
+        ID: {
+            number: id,
+        },
     };
-    return props;
+    return properties;
 }
 
 
