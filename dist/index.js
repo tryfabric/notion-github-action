@@ -25999,7 +25999,7 @@ exports.syncNotionDBWithGitHub = syncNotionDBWithGitHub;
 function getIssuesAlreadyInNotion(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const pages = Array();
-        let cursor = undefined;
+        let cursor = '';
         while (cursor !== null) {
             const { results, next_cursor } = (yield notion.databases.query({
                 database_id: databaseId,

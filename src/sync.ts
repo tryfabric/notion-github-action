@@ -116,7 +116,7 @@ export async function syncNotionDBWithGitHub(
 // Notion SDK for JS: https://developers.notion.com/reference/post-database-query
 async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
   const pages = Array<Page>();
-  let cursor = undefined;
+  let cursor = '';
   while (cursor !== null) {
     const {results, next_cursor} = (await notion.databases.query({
       database_id: databaseId,
