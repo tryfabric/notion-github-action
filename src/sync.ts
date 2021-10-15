@@ -204,7 +204,36 @@ function validateIssueProperties(issue: GithubIssue): GithubIssue {
   if (!issue.body) issue.body = '';
   if (!issue.assignees) issue.assignees = [];
   if (!issue.milestone?.title) {
-    issue.milestone.title = '';
+    issue.milestone = {
+      url: '',
+      html_url: '',
+      labels_url: '',
+      id: 0,
+      node_id: '',
+      number: 0,
+      title: '',
+      description: '',
+      creator: {
+        login: '',
+        id: 0,
+        node_id: '',
+        avatar_url: '',
+        gravatar_id: '',
+        url: '',
+        html_url: '',
+        followers_url: '',
+        following_url: '',
+        gists_url: '',
+        starred_url: '',
+        subscriptions_url: '',
+        organizations_url: '',
+        repos_url: '',
+        events_url: '',
+        received_events_url: '',
+        type: '',
+        site_admin: false,
+      },
+    };
   }
   if (!issue.labels) issue.labels = [];
   return issue;
