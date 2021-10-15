@@ -26090,36 +26090,7 @@ function validateIssueProperties(issue) {
     if (!issue.assignees)
         issue.assignees = [];
     if (!((_a = issue.milestone) === null || _a === void 0 ? void 0 : _a.title)) {
-        issue.milestone = {
-            url: '',
-            html_url: '',
-            labels_url: '',
-            id: 0,
-            node_id: '',
-            number: 0,
-            title: '',
-            description: '',
-            creator: {
-                login: '',
-                id: 0,
-                node_id: '',
-                avatar_url: '',
-                gravatar_id: '',
-                url: '',
-                html_url: '',
-                followers_url: '',
-                following_url: '',
-                gists_url: '',
-                starred_url: '',
-                subscriptions_url: '',
-                organizations_url: '',
-                repos_url: '',
-                events_url: '',
-                received_events_url: '',
-                type: '',
-                site_admin: false,
-            },
-        };
+        issue.milestone.title = '';
     }
     if (!issue.labels)
         issue.labels = [];
