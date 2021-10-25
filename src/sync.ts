@@ -82,7 +82,8 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
 function getIssuesNotInNotion(issuePageIds: Map<string, string>, issues: gh.Issue[]) {
   const pagesToCreate = [];
   for (const issue of issues) {
-    if (!issuePageIds.has(`${issue.number}`)) {
+    //@ts-ignore
+    if (!issuePageIds.has(issue.number)) {
       pagesToCreate.push(issue);
     }
   }
