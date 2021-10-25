@@ -13,7 +13,9 @@ async function start() {
     core.info(`context event: ${github.context.eventName}`);
     core.info(`context action: ${github.context.action}`);
     core.info(`payload action: ${github.context.payload.action}`);
-
+    core.info(`payload full repo: ${github.context.payload.repository?.full_name}`);
+    //@ts-ignore
+    core.info(`payload org: ${github.context.payload.repository?.full_name.split('/')[0]}`);
     const options = {
       notion: {
         token: notionToken,

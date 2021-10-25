@@ -25825,6 +25825,7 @@ const action_1 = __nccwpck_require__(9261);
 const NOTION_TOKEN_KEY = 'notion-token';
 const NOTION_DB_KEY = 'notion-db';
 function start() {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const notionToken = core.getInput(NOTION_TOKEN_KEY);
@@ -25832,6 +25833,9 @@ function start() {
             core.info(`context event: ${github.context.eventName}`);
             core.info(`context action: ${github.context.action}`);
             core.info(`payload action: ${github.context.payload.action}`);
+            core.info(`payload full repo: ${(_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.full_name}`);
+            //@ts-ignore
+            core.info(`payload org: ${(_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.full_name.split('/')[0]}`);
             const options = {
                 notion: {
                     token: notionToken,
