@@ -155,6 +155,7 @@ function getPropertiesFromIssue(issue: gh.Issue) {
     user,
   } = issue;
   const author = user?.login;
+  core.info(`author getProps: ${author}`);
   const labelsObject = createMultiSelectObject(labels);
   const assigneesObject = createMultiSelectObject(assignees);
   const urlComponents = repository_url.split('/');

@@ -26129,6 +26129,7 @@ function getPropertiesFromIssue(issue) {
     issue = validateIssueProperties(issue);
     const { number, title, state, id, labels, assignees, milestone, created_at, updated_at, body, repository_url, user, } = issue;
     const author = user === null || user === void 0 ? void 0 : user.login;
+    core.info(`author getProps: ${author}`);
     const labelsObject = createMultiSelectObject(labels);
     const assigneesObject = createMultiSelectObject(assignees);
     const urlComponents = repository_url.split('/');
