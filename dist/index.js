@@ -25982,6 +25982,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.syncNotionDBWithGitHub = exports.createIssueMapping = void 0;
 const core = __importStar(__nccwpck_require__(3984));
+const properties_1 = __nccwpck_require__(8854);
 function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
@@ -26083,7 +26084,6 @@ function createPages(notion, databaseId, pagesToCreate) {
         core.info('Adding Github Issues to Notion...');
         yield Promise.all(pagesToCreate.map(issue => notion.pages.create({
             parent: { database_id: databaseId },
-            //@ts-ignore
             properties: getPropertiesFromIssue(issue),
         })));
     });
@@ -26104,68 +26104,38 @@ function validateIssueProperties(issue) {
  *  For issues.assignees we want to send the `login` field to the Notion DB.
  *  For issues.labels we want to send the `name` field to the NOtion DB.
  */
-function createMultiSelectObject(items) {
-    const multiSelectObject = [];
-    for (const item of items) {
-        multiSelectObject.push({
-            name: item.name ? item.name : item.login,
-        });
-    }
-    return multiSelectObject;
+function createMultiSelectObjects(issue) {
+    var _a;
+    const assigneesObject = issue.assignees.map((assignee) => assignee.login);
+    const labelsObject = (_a = issue.labels) === null || _a === void 0 ? void 0 : _a.map((label) => label.name);
+    return { assigneesObject, labelsObject };
 }
 function getPropertiesFromIssue(issue) {
     issue = validateIssueProperties(issue);
-    const { number, title, state, id, labels, assignees, milestone, created_at, updated_at, body, repository_url, user, } = issue;
+    const { number, title, state, id, milestone, created_at, updated_at, body, repository_url, user } = issue;
     const author = user === null || user === void 0 ? void 0 : user.login;
     core.info(`author getProps: ${author}`);
-    const labelsObject = createMultiSelectObject(labels);
-    const assigneesObject = createMultiSelectObject(assignees);
+    const { assigneesObject, labelsObject } = createMultiSelectObjects(issue);
     const urlComponents = repository_url.split('/');
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
     // These properties are specific to the template DB referenced in the README.
-    const properties = {
-        Name: {
-            title: [{ type: 'text', text: { content: title } }],
-        },
-        Status: {
-            select: { name: state },
-        },
-        Body: {
-            rich_text: [{ type: 'text', text: { content: body } }],
-        },
-        Organization: {
-            rich_text: [{ type: 'text', text: { content: org } }],
-        },
-        Repository: {
-            rich_text: [{ type: 'text', text: { content: repo } }],
-        },
-        Number: {
-            number,
-        },
-        Assignees: {
-            multi_select: assigneesObject,
-        },
-        Milestone: {
-            rich_text: [{ type: 'text', text: { content: milestone ? milestone.title : '' } }],
-        },
-        Labels: {
-            multi_select: labelsObject,
-        },
-        Author: {
-            rich_text: [{ type: 'text', text: { content: author } }],
-        },
-        Created: {
-            date: { start: created_at },
-        },
-        Updated: {
-            date: { start: updated_at },
-        },
-        ID: {
-            number: id,
-        },
+    const props = {
+        Name: properties_1.properties.title(title),
+        Status: properties_1.properties.select(state ? state : ''),
+        Body: properties_1.properties.text(body ? body : ''),
+        Organization: properties_1.properties.text(org),
+        Repository: properties_1.properties.text(repo),
+        Number: properties_1.properties.number(number),
+        Assignees: properties_1.properties.multiSelect(assigneesObject),
+        Milestone: properties_1.properties.text(milestone ? milestone.title : ''),
+        Labels: properties_1.properties.multiSelect(labelsObject ? labelsObject : []),
+        Author: properties_1.properties.text(author),
+        Created: properties_1.properties.date(created_at),
+        Updated: properties_1.properties.date(updated_at),
+        ID: properties_1.properties.number(id),
     };
-    return properties;
+    return props;
 }
 
 
