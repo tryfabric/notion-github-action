@@ -58,7 +58,7 @@ async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
 async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
   core.info('Finding Github Issues...');
-  const issues = [];
+  const issues: gh.Issue[] = [];
   // TODO add try catch
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
     owner: githubRepo.split('/')[0],
@@ -70,20 +70,8 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
     for (const issue of data) {
       core.info(`issue author: ${issue.user?.login}`);
       if (!issue.pull_request) {
-        issues.push({
-          number: issue.number,
-          title: issue.title,
-          state: issue.state,
-          id: issue.id,
-          labels: issue.labels,
-          assignees: issue.assignees,
-          milestone: issue.milestone,
-          created_at: issue.created_at,
-          updated_at: issue.updated_at,
-          body: issue.body!,
-          repository_url: issue.repository_url,
-          author: issue.user?.login,
-        });
+        // @ts-ignore
+        issues.push(issue);
       }
     }
   }
