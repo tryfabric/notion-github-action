@@ -13,7 +13,7 @@ export async function createIssueMapping(notion: Client, databaseId: string) {
   for ({pageId, issueNumber} of issuesAlreadyInNotion) {
     issuePageIds.set(issueNumber, pageId);
   }
-  core.info(`isssuePageIds: ${issuePageIds}`);
+  core.info(`isssuePageIds: ${JSON.stringify(issuePageIds)}`);
   return issuePageIds;
 }
 
