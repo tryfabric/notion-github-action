@@ -25585,195 +25585,6 @@ try {
 
 /***/ }),
 
-/***/ 8384:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "createIssueMapping": () => (/* binding */ createIssueMapping),
-/* harmony export */   "syncNotionDBWithGitHub": () => (/* binding */ syncNotionDBWithGitHub)
-/* harmony export */ });
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(3984);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-
-
-
-async function createIssueMapping(notion, databaseId) {
-  const issuePageIds = {}
-  const issuesAlreadyInNotion = await getIssuesAlreadyInNotion(notion, databaseId)
-  for (const { pageId, issueNumber } of issuesAlreadyInNotion) {
-    issuePageIds[issueNumber] = pageId
-  }
-  return issuePageIds
-}
- 
-async function syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId) {
-  const issues = await getGitHubIssues(octokit)
-  const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues)
-  await createPages(notion, databaseId, pagesToCreate)
-}
- 
-// Notion SDK for JS: https://developers.notion.com/reference/post-database-query 
-async function getIssuesAlreadyInNotion(notion, databaseId) {
-  const pages = []
-  let cursor = undefined
-  while (true) {
-    const { results, next_cursor } = await notion.databases.query({
-      database_id: databaseId,
-      start_cursor: cursor,
-    })
-    pages.push(...results)
-    if (!next_cursor) {
-      break
-    }
-    cursor = next_cursor
-  }
-  return pages.map(page => {
-    return {
-      pageId: page.id,
-      issueNumber: page.properties["Number"].number,
-    }
-  })
-}
- 
-// https://docs.github.com/en/rest/reference/issues#list-repository-issues
-async function getGitHubIssues(octokit) {
-  const issues = []
-  const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
-    owner: _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github-org'),
-    repo: _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('github-repo'),
-    state: "all",
-    per_page: 100,
-  })
-  for await (const { data } of iterator) {
-    for (const issue of data) {
-      if (!issue.pull_request) {
-        issues.push({
-          number: issue.number,
-          title: issue.title,
-          state: issue.state,
-          id: issue.id,
-          labels: issue.labels,
-          assignees: issue.assignees,
-          milestone: issue.milestone,
-          created: issue.created_at,
-          updated: issue.updated_at,
-          body: issue.body,
-          repo_url: issue.repository_url,
-          author: issue.user.login
-        })
-      }
-    }
-  }
-  return issues
-}
-
-function getIssuesNotInNotion(issuePageIds, issues) {
-  const pagesToCreate = []
-  for (const issue of issues) {
-    if (!(issue.number in issuePageIds)) {
-      pagesToCreate.push(issue)
-    }
-  }
-  return pagesToCreate
-}
- 
-// Notion SDK for JS: https://developers.notion.com/reference/post-page
-async function createPages(notion, databaseId, pagesToCreate) {
-  await Promise.all(
-    pagesToCreate.map(issue =>
-      notion.pages.create({
-        parent: { database_id: databaseId },
-        properties: getPropertiesFromIssue(issue),
-      })
-    )
-  )
-}
-
-function validateIssueProperties(issue) {
-  if (!issue.body) issue.body = ''
-  if (!issue.asignees) issue.asignees = []
-  if (!issue.milestone) { 
-    issue.milestone = ''
-  } else {
-    issue.milestone = issue.milestone.title
-  }
-  if (!issue.labels) issue.labels = []
-  return issue
-}
-
-/* The only properties of type `multi-select` are issue.assignees and issue.labels.
-*  For issues.assignees we want to send the `login` field to the Notion DB.
-*  For issues.labels we want to send the `name` field to the NOtion DB.
-*/
-function createMultiSelectObject(items) {
-  const multiSelectObject = []
-  for (const item of items) {
-    multiSelectObject.push({
-       "name": item.name ? item.name : item.login
-      })
-  }
-  return multiSelectObject
-}
-
-function getPropertiesFromIssue(issue) {
-  issue = validateIssueProperties(issue)
-  const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author } = issue
-  const labelsObject = createMultiSelectObject(labels)
-  const assigneesObject = createMultiSelectObject(assignees)
-  const urlComponents = repo_url.split("/")
-  const org = urlComponents[urlComponents.length - 2]
-  const repo = urlComponents[urlComponents.length - 1]
-
-  // These properties are specific to the template DB referenced in the README.
-  const properties = {
-    Name: {
-      title: [{ type: "text", text: { "content": title } }]
-    },
-    Status: {
-      select: { name: state }
-    },
-    Body: {
-      rich_text: [{ type: "text", text: { content: body } }]
-    },
-    Organization: {
-      rich_text: [{ type: "text", text: { content: org } }]
-    },
-    Repository: {
-      rich_text: [{ type: "text", text: { content: repo } }]
-    },
-    Number: {
-      number
-    },
-    Assignees: {
-      multi_select: assigneesObject
-    },
-    Milestone: {
-      rich_text: [{ type: "text", text: { content: milestone } }]
-    },
-    Labels: {
-      multi_select: labelsObject
-    },
-    Author: {
-      rich_text: [{ type: "text", text: { content: author } }]
-    },
-    Created: {
-      date: { "start": created }
-    },
-    Updated: {
-      date: { "start": updated }
-    },
-    ID: {
-      number: id
-    }
-  }
-  return properties
-}
-
-
-/***/ }),
-
 /***/ 9261:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -25812,8 +25623,7 @@ exports.run = void 0;
 const src_1 = __nccwpck_require__(3766);
 const core = __importStar(__nccwpck_require__(3984));
 const properties_1 = __nccwpck_require__(8854);
-// @ts-ignore
-const sync_1 = __nccwpck_require__(8384);
+const sync_1 = __nccwpck_require__(1423);
 const octokit_1 = __nccwpck_require__(1343);
 function removeHTML(text) {
     var _a;
@@ -25890,6 +25700,7 @@ function handleIssueEdited(options) {
     });
 }
 function run(options) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const { notion, github } = options;
         core.info('Starting...');
@@ -25911,7 +25722,11 @@ function run(options) {
             const notion = new src_1.Client({ auth: core.getInput('notion-token') });
             const databaseId = core.getInput('notion-db');
             const issuePageIds = yield sync_1.createIssueMapping(notion, databaseId);
-            yield sync_1.syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
+            if (!((_a = github.payload.repository) === null || _a === void 0 ? void 0 : _a.full_name)) {
+                throw new Error('Unable to find repository name in github webhook context');
+            }
+            const githubRepo = github.payload.repository.full_name;
+            yield sync_1.syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId, githubRepo);
         }
         else {
             yield handleIssueEdited({
@@ -26122,6 +25937,225 @@ var properties;
 
 /***/ }),
 
+/***/ 1423:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.syncNotionDBWithGitHub = exports.createIssueMapping = void 0;
+function createIssueMapping(notion, databaseId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const issuePageIds = new Map();
+        const issuesAlreadyInNotion = yield getIssuesAlreadyInNotion(notion, databaseId);
+        let pageId;
+        let issueNumber;
+        for ({ pageId, issueNumber } of issuesAlreadyInNotion) {
+            issuePageIds.set(issueNumber, pageId);
+        }
+        return issuePageIds;
+    });
+}
+exports.createIssueMapping = createIssueMapping;
+function syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId, githubRepo) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const issues = yield getGitHubIssues(octokit, githubRepo);
+        const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues);
+        yield createPages(notion, databaseId, pagesToCreate);
+    });
+}
+exports.syncNotionDBWithGitHub = syncNotionDBWithGitHub;
+// Notion SDK for JS: https://developers.notion.com/reference/post-database-query
+function getIssuesAlreadyInNotion(notion, databaseId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const pages = [];
+        let cursor = undefined;
+        // @ts-ignore
+        while (true) {
+            const response = yield notion.databases.query({
+                database_id: databaseId,
+                start_cursor: cursor,
+            });
+            const next_cursor = response.next_cursor;
+            const results = response.results;
+            pages.push(...results);
+            if (!next_cursor) {
+                break;
+            }
+            cursor = next_cursor;
+        }
+        return pages.map(page => {
+            return {
+                pageId: page.id,
+                // @ts-ignore
+                issueNumber: page.properties['Number'].number,
+            };
+        });
+    });
+}
+// https://docs.github.com/en/rest/reference/issues#list-repository-issues
+function getGitHubIssues(octokit, githubRepo) {
+    var e_1, _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const issues = [];
+        const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
+            owner: githubRepo.split('/')[0],
+            repo: githubRepo.split('/')[0],
+            state: 'all',
+            per_page: 100,
+        });
+        try {
+            for (var iterator_1 = __asyncValues(iterator), iterator_1_1; iterator_1_1 = yield iterator_1.next(), !iterator_1_1.done;) {
+                const { data } = iterator_1_1.value;
+                for (const issue of data) {
+                    if (!issue.pull_request) {
+                        issues.push({
+                            number: issue.number,
+                            title: issue.title,
+                            state: issue.state,
+                            id: issue.id,
+                            labels: issue.labels,
+                            assignees: issue.assignees,
+                            milestone: issue.milestone,
+                            created: issue.created_at,
+                            updated: issue.updated_at,
+                            body: issue.body,
+                            repo_url: issue.repository_url,
+                            author: issue.user.login,
+                        });
+                    }
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (iterator_1_1 && !iterator_1_1.done && (_a = iterator_1.return)) yield _a.call(iterator_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        return issues;
+    });
+}
+function getIssuesNotInNotion(issuePageIds, issues) {
+    const pagesToCreate = [];
+    for (const issue of issues) {
+        if (!(issue.number in issuePageIds)) {
+            pagesToCreate.push(issue);
+        }
+    }
+    return pagesToCreate;
+}
+// Notion SDK for JS: https://developers.notion.com/reference/post-page
+function createPages(notion, databaseId, pagesToCreate) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield Promise.all(pagesToCreate.map(issue => notion.pages.create({
+            parent: { database_id: databaseId },
+            //@ts-ignore
+            properties: getPropertiesFromIssue(issue),
+        })));
+    });
+}
+function validateIssueProperties(issue) {
+    if (!issue.body)
+        issue.body = '';
+    if (!issue.asignees)
+        issue.asignees = [];
+    if (!issue.milestone) {
+        issue.milestone = '';
+    }
+    else {
+        issue.milestone = issue.milestone.title;
+    }
+    if (!issue.labels)
+        issue.labels = [];
+    return issue;
+}
+/* The only properties of type `multi-select` are issue.assignees and issue.labels.
+ *  For issues.assignees we want to send the `login` field to the Notion DB.
+ *  For issues.labels we want to send the `name` field to the NOtion DB.
+ */
+function createMultiSelectObject(items) {
+    const multiSelectObject = [];
+    for (const item of items) {
+        multiSelectObject.push({
+            name: item.name ? item.name : item.login,
+        });
+    }
+    return multiSelectObject;
+}
+function getPropertiesFromIssue(issue) {
+    issue = validateIssueProperties(issue);
+    const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author, } = issue;
+    const labelsObject = createMultiSelectObject(labels);
+    const assigneesObject = createMultiSelectObject(assignees);
+    const urlComponents = repo_url.split('/');
+    const org = urlComponents[urlComponents.length - 2];
+    const repo = urlComponents[urlComponents.length - 1];
+    // These properties are specific to the template DB referenced in the README.
+    const properties = {
+        Name: {
+            title: [{ type: 'text', text: { content: title } }],
+        },
+        Status: {
+            select: { name: state },
+        },
+        Body: {
+            rich_text: [{ type: 'text', text: { content: body } }],
+        },
+        Organization: {
+            rich_text: [{ type: 'text', text: { content: org } }],
+        },
+        Repository: {
+            rich_text: [{ type: 'text', text: { content: repo } }],
+        },
+        Number: {
+            number,
+        },
+        Assignees: {
+            multi_select: assigneesObject,
+        },
+        Milestone: {
+            rich_text: [{ type: 'text', text: { content: milestone } }],
+        },
+        Labels: {
+            multi_select: labelsObject,
+        },
+        Author: {
+            rich_text: [{ type: 'text', text: { content: author } }],
+        },
+        Created: {
+            date: { start: created },
+        },
+        Updated: {
+            date: { start: updated },
+        },
+        ID: {
+            number: id,
+        },
+    };
+    return properties;
+}
+
+
+/***/ }),
+
 /***/ 1040:
 /***/ ((module) => {
 
@@ -26299,46 +26333,6 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";

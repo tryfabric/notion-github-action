@@ -143,7 +143,11 @@ export async function run(options: Options) {
     const notion = new Client({auth: core.getInput('notion-token')});
     const databaseId = core.getInput('notion-db');
     const issuePageIds = await createIssueMapping(notion, databaseId);
-    await syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
+    if (!github.payload.repository?.full_name) {
+      throw new Error('Unable to find repository name in github webhook context');
+    }
+    const githubRepo = github.payload.repository.full_name;
+    await syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId, githubRepo);
   } else {
     await handleIssueEdited({
       notion: {
