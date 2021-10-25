@@ -8,6 +8,7 @@ import {properties} from './properties';
 export async function createIssueMapping(notion: Client, databaseId: string) {
   const issuePageIds = new Map<string, string>();
   const issuesAlreadyInNotion = await getIssuesAlreadyInNotion(notion, databaseId);
+  console.info(issuesAlreadyInNotion);
   let pageId: string;
   let issueNumber: string;
   for ({pageId, issueNumber} of issuesAlreadyInNotion) {
@@ -40,6 +41,7 @@ async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
       database_id: databaseId,
       start_cursor: cursor,
     });
+    core.info(`response: ${response}`);
     const next_cursor = response.next_cursor;
     const results = response.results;
     pages.push(...results);

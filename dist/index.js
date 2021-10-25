@@ -25987,6 +25987,7 @@ function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
         const issuesAlreadyInNotion = yield getIssuesAlreadyInNotion(notion, databaseId);
+        console.info(issuesAlreadyInNotion);
         let pageId;
         let issueNumber;
         for ({ pageId, issueNumber } of issuesAlreadyInNotion) {
@@ -26017,6 +26018,7 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
                 database_id: databaseId,
                 start_cursor: cursor,
             });
+            core.info(`response: ${response}`);
             const next_cursor = response.next_cursor;
             const results = response.results;
             pages.push(...results);
