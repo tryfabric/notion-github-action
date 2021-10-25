@@ -137,16 +137,16 @@ function getPropertiesFromIssue(issue: gh.Issue) {
   // These properties are specific to the template DB referenced in the README.
   const props = {
     Name: properties.title(title),
-    Status: properties.select(state ? state : ''),
+    Status: {
+      select: {name: state},
+    },
     Body: properties.text(body ? body : ''),
     Organization: properties.text(org),
     Repository: properties.text(repo),
     Number: properties.number(number),
     Assignees: properties.multiSelect(assigneesObject),
     Milestone: properties.text(milestone ? milestone.title : ''),
-    Labels: {
-      multi_select: labelsObject,
-    },
+    Labels: properties.multiSelect(labelsObject ? labelsObject : []),
     Author: properties.text(author),
     Created: properties.date(created_at),
     Updated: properties.date(updated_at),
