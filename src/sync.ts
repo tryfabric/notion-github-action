@@ -6,12 +6,13 @@ import {Octokit} from 'octokit';
 import {properties} from './properties';
 
 export async function createIssueMapping(notion: Client, databaseId: string) {
-  const issuePageIds = new Map<string, string>();
-  const issuesAlreadyInNotion = await getIssuesAlreadyInNotion(notion, databaseId);
+  const issuePageIds = new Map<number, string>();
+  const issuesAlreadyInNotion: {
+    pageId: string;
+    issueNumber: number;
+  }[] = await getIssuesAlreadyInNotion(notion, databaseId);
   console.info(issuesAlreadyInNotion);
-  let pageId: string;
-  let issueNumber: string;
-  for ({pageId, issueNumber} of issuesAlreadyInNotion) {
+  for (const {pageId, issueNumber} of issuesAlreadyInNotion) {
     issuePageIds.set(issueNumber, pageId);
   }
   core.info(`isssuePageIds: ${JSON.stringify(issuePageIds)}`);
@@ -82,14 +83,11 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
   return issues;
 }
 
-function getIssuesNotInNotion(issuePageIds: Map<string, string>, issues: gh.Issue[]) {
+function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: gh.Issue[]) {
   const pagesToCreate = [];
   for (const issue of issues) {
-    core.info(JSON.stringify(issue));
     core.info(JSON.stringify(issuePageIds));
-    if (!issuePageIds.has(issue.number.toString())) {
-      core.info(`typeof issue.number: ${typeof issue.number.toString()}`);
-      core.info(`issue.number: ${issue.number.toString()}`);
+    if (!issuePageIds.has(issue.number)) {
       pagesToCreate.push(issue);
     }
   }
