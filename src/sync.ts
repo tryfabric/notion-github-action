@@ -15,12 +15,15 @@ export async function createIssueMapping(notion: Client, databaseId: string) {
   for (const {pageId, issueNumber} of issuesAlreadyInNotion) {
     issuePageIds.set(issueNumber, pageId);
   }
-  core.info(`isssuePageIds: ${JSON.stringify(issuePageIds)}`);
+  core.info('issuePageIds:');
+  issuePageIds.forEach((value: string, key: number) => {
+    console.log(key, value);
+  });
   return issuePageIds;
 }
 
 export async function syncNotionDBWithGitHub(
-  issuePageIds: Map<string, string>,
+  issuePageIds: Map<number, string>,
   octokit: Octokit,
   notion: Client,
   databaseId: string,
