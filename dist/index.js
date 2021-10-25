@@ -26084,6 +26084,7 @@ function createPages(notion, databaseId, pagesToCreate) {
         core.info('Adding Github Issues to Notion...');
         yield Promise.all(pagesToCreate.map(issue => notion.pages.create({
             parent: { database_id: databaseId },
+            //@ts-ignore
             properties: getPropertiesFromIssue(issue),
         })));
     });
@@ -26129,7 +26130,9 @@ function getPropertiesFromIssue(issue) {
         Number: properties_1.properties.number(number),
         Assignees: properties_1.properties.multiSelect(assigneesObject),
         Milestone: properties_1.properties.text(milestone ? milestone.title : ''),
-        Labels: properties_1.properties.multiSelect(labelsObject ? labelsObject : []),
+        Labels: {
+            multi_select: labelsObject,
+        },
         Author: properties_1.properties.text(author),
         Created: properties_1.properties.date(created_at),
         Updated: properties_1.properties.date(updated_at),

@@ -96,6 +96,7 @@ async function createPages(notion: Client, databaseId: string, pagesToCreate: gh
     pagesToCreate.map(issue =>
       notion.pages.create({
         parent: {database_id: databaseId},
+        //@ts-ignore
         properties: getPropertiesFromIssue(issue),
       })
     )
@@ -143,7 +144,9 @@ function getPropertiesFromIssue(issue: gh.Issue) {
     Number: properties.number(number),
     Assignees: properties.multiSelect(assigneesObject),
     Milestone: properties.text(milestone ? milestone.title : ''),
-    Labels: properties.multiSelect(labelsObject ? labelsObject : []),
+    Labels: {
+      multi_select: labelsObject,
+    },
     Author: properties.text(author),
     Created: properties.date(created_at),
     Updated: properties.date(updated_at),
