@@ -26035,6 +26035,7 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
 function getGitHubIssues(octokit, githubRepo) {
     var e_1, _a;
+    var _b;
     return __awaiter(this, void 0, void 0, function* () {
         core.info('Finding Github Issues...');
         const issues = [];
@@ -26049,6 +26050,7 @@ function getGitHubIssues(octokit, githubRepo) {
             for (var iterator_1 = __asyncValues(iterator), iterator_1_1; iterator_1_1 = yield iterator_1.next(), !iterator_1_1.done;) {
                 const { data } = iterator_1_1.value;
                 for (const issue of data) {
+                    core.info(`issue author: ${(_b = issue.user) === null || _b === void 0 ? void 0 : _b.login}`);
                     if (!issue.pull_request) {
                         issues.push({
                             number: issue.number,
