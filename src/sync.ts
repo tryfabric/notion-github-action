@@ -82,7 +82,7 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
           updated_at: issue.updated_at,
           body: issue.body!,
           repository_url: issue.repository_url,
-          author: issue.user!.login,
+          author: issue.user?.login,
         });
       }
     }
