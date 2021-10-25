@@ -26020,7 +26020,7 @@ function getGitHubIssues(octokit, githubRepo) {
         const issues = [];
         const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
             owner: githubRepo.split('/')[0],
-            repo: githubRepo.split('/')[0],
+            repo: githubRepo.split('/')[1],
             state: 'all',
             per_page: 100,
         });
