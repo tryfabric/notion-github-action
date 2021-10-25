@@ -26072,7 +26072,7 @@ function getGitHubIssues(octokit, githubRepo) {
 function getIssuesNotInNotion(issuePageIds, issues) {
     const pagesToCreate = [];
     for (const issue of issues) {
-        if (!issuePageIds.has(issue.number.toString())) {
+        if (!issuePageIds.has(`${issue.number}`)) {
             pagesToCreate.push(issue);
         }
     }
@@ -26089,21 +26089,9 @@ function createPages(notion, databaseId, pagesToCreate) {
         })));
     });
 }
-function validateIssueProperties(issue) {
-    if (!issue.body)
-        issue.body = '';
-    if (!issue.assignees)
-        issue.assignees = [];
-    if (!issue.milestone) {
-        issue.milestone = null;
-    }
-    if (!issue.labels)
-        issue.labels = [];
-    return issue;
-}
-/* The only properties of type `multi-select` are issue.assignees and issue.labels.
- *  For issues.assignees we want to send the `login` field to the Notion DB.
- *  For issues.labels we want to send the `name` field to the NOtion DB.
+/*
+ *  For the `Asignees` field in the Notion DB we want to send only issues.assignees.login
+ *  For the `Labels` field in the Notion DB we want to send only issues.labels.name
  */
 function createMultiSelectObjects(issue) {
     var _a;
@@ -26112,7 +26100,6 @@ function createMultiSelectObjects(issue) {
     return { assigneesObject, labelsObject };
 }
 function getPropertiesFromIssue(issue) {
-    issue = validateIssueProperties(issue);
     const { number, title, state, id, milestone, created_at, updated_at, body, repository_url, user } = issue;
     const author = user === null || user === void 0 ? void 0 : user.login;
     core.info(`author getProps: ${author}`);
