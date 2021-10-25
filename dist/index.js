@@ -25940,10 +25940,29 @@ var properties;
 /***/ }),
 
 /***/ 1423:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -25962,6 +25981,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.syncNotionDBWithGitHub = exports.createIssueMapping = void 0;
+const core = __importStar(__nccwpck_require__(3984));
 function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
@@ -25986,6 +26006,7 @@ exports.syncNotionDBWithGitHub = syncNotionDBWithGitHub;
 // Notion SDK for JS: https://developers.notion.com/reference/post-database-query
 function getIssuesAlreadyInNotion(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info('Checking for issues already in the database...');
         const pages = [];
         let cursor = undefined;
         // @ts-ignore
@@ -26015,6 +26036,7 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
 function getGitHubIssues(octokit, githubRepo) {
     var e_1, _a;
     return __awaiter(this, void 0, void 0, function* () {
+        core.info('Finding Github Issues...');
         const issues = [];
         // TODO add try catch
         const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
@@ -26068,6 +26090,7 @@ function getIssuesNotInNotion(issuePageIds, issues) {
 // Notion SDK for JS: https://developers.notion.com/reference/post-page
 function createPages(notion, databaseId, pagesToCreate) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info('Adding Github Issues to Notion...');
         yield Promise.all(pagesToCreate.map(issue => notion.pages.create({
             parent: { database_id: databaseId },
             //@ts-ignore
@@ -26103,7 +26126,7 @@ function createMultiSelectObject(items) {
 function getPropertiesFromIssue(issue) {
     issue = validateIssueProperties(issue);
     const { number, title, state, id, labels, assignees, milestone, created_at, updated_at, body, repository_url, user, } = issue;
-    const author = user.login;
+    const author = user === null || user === void 0 ? void 0 : user.login;
     const labelsObject = createMultiSelectObject(labels);
     const assigneesObject = createMultiSelectObject(assignees);
     const urlComponents = repository_url.split('/');

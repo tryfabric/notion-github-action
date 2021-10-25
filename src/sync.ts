@@ -1,6 +1,7 @@
 import {Client} from '@notionhq/client/build/src';
 import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
 import * as gh from '@octokit/webhooks-types/schema';
+import * as core from '@actions/core';
 import {Octokit} from 'octokit';
 
 export async function createIssueMapping(notion: Client, databaseId: string) {
@@ -28,6 +29,7 @@ export async function syncNotionDBWithGitHub(
 
 // Notion SDK for JS: https://developers.notion.com/reference/post-database-query
 async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
+  core.info('Checking for issues already in the database...');
   const pages = [];
   let cursor = undefined;
   // @ts-ignore
@@ -55,6 +57,7 @@ async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
 
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
 async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
+  core.info('Finding Github Issues...');
   const issues = [];
   // TODO add try catch
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
@@ -98,6 +101,7 @@ function getIssuesNotInNotion(issuePageIds: Map<string, string>, issues: any) {
 
 // Notion SDK for JS: https://developers.notion.com/reference/post-page
 async function createPages(notion: Client, databaseId: string, pagesToCreate: gh.Issue[]) {
+  core.info('Adding Github Issues to Notion...');
   await Promise.all(
     pagesToCreate.map(issue =>
       notion.pages.create({
@@ -149,7 +153,7 @@ function getPropertiesFromIssue(issue: gh.Issue) {
     repository_url,
     user,
   } = issue;
-  const author = user.login;
+  const author = user?.login;
   const labelsObject = createMultiSelectObject(labels);
   const assigneesObject = createMultiSelectObject(assignees);
   const urlComponents = repository_url.split('/');
