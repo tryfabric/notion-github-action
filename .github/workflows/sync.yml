@@ -1,14 +1,6 @@
 name: Sync
 
-on:
-  workflow_dispatch:
-    inputs:
-      github-org:
-        description: 'Your Github org name or Github username associated with your repo'
-        required: true
-      github-repo:
-        description: 'Your Github repo name'
-        required: true
+on: workflow_dispatch
 
 jobs:
   build:

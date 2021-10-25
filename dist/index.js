@@ -26077,7 +26077,7 @@ function getGitHubIssues(octokit, githubRepo) {
     });
 }
 function getIssuesNotInNotion(issuePageIds, issues) {
-    core.info(`issuePageIds: ${issuePageIds}`);
+    core.info(`issuePageIds: ${issuePageIds.toString()}`);
     const pagesToCreate = [];
     for (const issue of issues) {
         core.info(`issue.number: ${issue.number}`);
