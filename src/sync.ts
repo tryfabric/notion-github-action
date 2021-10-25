@@ -184,7 +184,7 @@ function getPropertiesFromIssue(issue: gh.Issue) {
       multi_select: assigneesObject,
     },
     Milestone: {
-      rich_text: [{type: 'text', text: {content: milestone?.title}}],
+      rich_text: [{type: 'text', text: {content: milestone ? milestone.title : ''}}],
     },
     Labels: {
       multi_select: labelsObject,
