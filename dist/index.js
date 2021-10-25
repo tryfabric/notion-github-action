@@ -26086,7 +26086,7 @@ function getIssuesNotInNotion(issuePageIds, issues) {
     const pagesToCreate = [];
     for (const issue of issues) {
         core.info(`issue.number: ${issue.number}`);
-        if (!(issue.number.toString() in issuePageIds)) {
+        if (!issuePageIds.has(issue.number.toString())) {
             core.info('issue.number not in issuePageIds!!!');
             core.info(`type of issue.number: ${typeof issue.number}`);
             pagesToCreate.push(issue);
