@@ -139,11 +139,20 @@ export async function run(options: Options) {
       payload: github.payload as IssuesOpenedEvent,
     });
   } else if (github.eventName === 'workflow_dispatch') {
-    const octokit = new Octokit({auth: core.getInput('github-token')});
+    if (!github.payload.repository?.full_name) {
+      throw new Error('Repository details not found in Github context');
+    }
     const notion = new Client({auth: core.getInput('notion-token')});
     const databaseId = core.getInput('notion-db');
     const issuePageIds = await createIssueMapping(notion, databaseId);
-    await syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId);
+    const params = {
+      githubRepo: github.payload.repository.full_name,
+      octokit: new Octokit({auth: core.getInput('github-token')}),
+      notion,
+      databaseId,
+      issuePageIds,
+    };
+    await syncNotionDBWithGitHub(params);
   } else {
     await handleIssueEdited({
       notion: {

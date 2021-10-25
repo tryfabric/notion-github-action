@@ -1,4 +1,3 @@
-import * as core from '@actions/core';
 import {Client} from '@notionhq/client/build/src';
 import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
 import {Octokit} from 'octokit';
@@ -14,13 +13,15 @@ export async function createIssueMapping(notion: Client, databaseId: string) {
   return issuePageIds;
 }
 
-export async function syncNotionDBWithGitHub(
-  issuePageIds: Map<string, string>,
-  octokit: Octokit,
-  notion: Client,
-  databaseId: string
-) {
-  const issues = await getGitHubIssues(octokit);
+export async function syncNotionDBWithGitHub(params: {
+  githubRepo: string;
+  issuePageIds: Map<string, string>;
+  octokit: Octokit;
+  notion: Client;
+  databaseId: string;
+}) {
+  const {githubRepo, issuePageIds, octokit, notion, databaseId} = params;
+  const issues = await getGitHubIssues(octokit, githubRepo);
   const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues);
   await createPages(notion, databaseId, pagesToCreate);
 }
@@ -53,11 +54,11 @@ async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
 }
 
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
-async function getGitHubIssues(octokit: Octokit) {
+async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
   const issues = [];
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
-    owner: core.getInput('github-org'),
-    repo: core.getInput('github-repo'),
+    owner: githubRepo?.split('/')[0],
+    repo: githubRepo?.split('/')[1],
     state: 'all',
     per_page: 100,
   });
