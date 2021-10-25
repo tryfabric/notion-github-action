@@ -25940,29 +25940,10 @@ var properties;
 /***/ }),
 
 /***/ 1423:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -25981,7 +25962,6 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.syncNotionDBWithGitHub = exports.createIssueMapping = void 0;
-const core = __importStar(__nccwpck_require__(3984));
 function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
@@ -26056,10 +26036,10 @@ function getGitHubIssues(octokit, githubRepo) {
                             labels: issue.labels,
                             assignees: issue.assignees,
                             milestone: issue.milestone,
-                            created: issue.created_at,
-                            updated: issue.updated_at,
+                            created_at: issue.created_at,
+                            updated_at: issue.updated_at,
                             body: issue.body,
-                            repo_url: issue.repository_url,
+                            repository_url: issue.repository_url,
                             author: issue.user.login,
                         });
                     }
@@ -26077,20 +26057,9 @@ function getGitHubIssues(octokit, githubRepo) {
     });
 }
 function getIssuesNotInNotion(issuePageIds, issues) {
-    const jsonObject = {};
-    issuePageIds.forEach((value, key) => {
-        //@ts-ignore
-        jsonObject[key] = value;
-    });
-    core.info(`issuePageIds: ${JSON.stringify(jsonObject)}`);
     const pagesToCreate = [];
     for (const issue of issues) {
-        core.info(`issue.number: ${issue.number}`);
-        core.info(`conditional w #: ${issuePageIds.has(issue.number)}`);
-        core.info(`conditional w str: ${issuePageIds.has(issue.number.toString())}`);
-        if (!issuePageIds.has(issue.number)) {
-            core.info('issue.number not in issuePageIds!!!');
-            core.info(`type of issue.number: ${typeof issue.number}`);
+        if (!issuePageIds.has(issue.number.toString())) {
             pagesToCreate.push(issue);
         }
     }
@@ -26109,13 +26078,10 @@ function createPages(notion, databaseId, pagesToCreate) {
 function validateIssueProperties(issue) {
     if (!issue.body)
         issue.body = '';
-    if (!issue.asignees)
-        issue.asignees = [];
+    if (!issue.assignees)
+        issue.assignees = [];
     if (!issue.milestone) {
-        issue.milestone = '';
-    }
-    else {
-        issue.milestone = issue.milestone.title;
+        issue.milestone = null;
     }
     if (!issue.labels)
         issue.labels = [];
@@ -26136,10 +26102,11 @@ function createMultiSelectObject(items) {
 }
 function getPropertiesFromIssue(issue) {
     issue = validateIssueProperties(issue);
-    const { number, title, state, id, labels, assignees, milestone, created, updated, body, repo_url, author, } = issue;
+    const { number, title, state, id, labels, assignees, milestone, created_at, updated_at, body, repository_url, user, } = issue;
+    const author = user.login;
     const labelsObject = createMultiSelectObject(labels);
     const assigneesObject = createMultiSelectObject(assignees);
-    const urlComponents = repo_url.split('/');
+    const urlComponents = repository_url.split('/');
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
     // These properties are specific to the template DB referenced in the README.
@@ -26166,7 +26133,7 @@ function getPropertiesFromIssue(issue) {
             multi_select: assigneesObject,
         },
         Milestone: {
-            rich_text: [{ type: 'text', text: { content: milestone } }],
+            rich_text: [{ type: 'text', text: { content: milestone.title } }],
         },
         Labels: {
             multi_select: labelsObject,
@@ -26175,10 +26142,10 @@ function getPropertiesFromIssue(issue) {
             rich_text: [{ type: 'text', text: { content: author } }],
         },
         Created: {
-            date: { start: created },
+            date: { start: created_at },
         },
         Updated: {
-            date: { start: updated },
+            date: { start: updated_at },
         },
         ID: {
             number: id,

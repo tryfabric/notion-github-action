@@ -1,6 +1,6 @@
 import {Client} from '@notionhq/client/build/src';
 import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
-import * as core from '@actions/core';
+import * as gh from '@octokit/webhooks-types/schema';
 import {Octokit} from 'octokit';
 
 export async function createIssueMapping(notion: Client, databaseId: string) {
@@ -74,10 +74,10 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
           labels: issue.labels,
           assignees: issue.assignees,
           milestone: issue.milestone,
-          created: issue.created_at,
-          updated: issue.updated_at,
-          body: issue.body,
-          repo_url: issue.repository_url,
+          created_at: issue.created_at,
+          updated_at: issue.updated_at,
+          body: issue.body!,
+          repository_url: issue.repository_url,
           author: issue.user!.login,
         });
       }
@@ -87,20 +87,9 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
 }
 
 function getIssuesNotInNotion(issuePageIds: Map<string, string>, issues: any) {
-  const jsonObject = {};
-  issuePageIds.forEach((value, key) => {
-    //@ts-ignore
-    jsonObject[key] = value;
-  });
-  core.info(`issuePageIds: ${JSON.stringify(jsonObject)}`);
   const pagesToCreate = [];
   for (const issue of issues) {
-    core.info(`issue.number: ${issue.number}`);
-    core.info(`conditional w #: ${issuePageIds.has(issue.number)}`);
-    core.info(`conditional w str: ${issuePageIds.has(issue.number.toString())}`);
-    if (!issuePageIds.has(issue.number)) {
-      core.info('issue.number not in issuePageIds!!!');
-      core.info(`type of issue.number: ${typeof issue.number}`);
+    if (!issuePageIds.has(issue.number.toString())) {
       pagesToCreate.push(issue);
     }
   }
@@ -108,7 +97,7 @@ function getIssuesNotInNotion(issuePageIds: Map<string, string>, issues: any) {
 }
 
 // Notion SDK for JS: https://developers.notion.com/reference/post-page
-async function createPages(notion: Client, databaseId: string, pagesToCreate: any[]) {
+async function createPages(notion: Client, databaseId: string, pagesToCreate: gh.Issue[]) {
   await Promise.all(
     pagesToCreate.map(issue =>
       notion.pages.create({
@@ -120,13 +109,11 @@ async function createPages(notion: Client, databaseId: string, pagesToCreate: an
   );
 }
 
-function validateIssueProperties(issue: any) {
+function validateIssueProperties(issue: gh.Issue) {
   if (!issue.body) issue.body = '';
-  if (!issue.asignees) issue.asignees = [];
+  if (!issue.assignees) issue.assignees = [];
   if (!issue.milestone) {
-    issue.milestone = '';
-  } else {
-    issue.milestone = issue.milestone.title;
+    issue.milestone = null;
   }
   if (!issue.labels) issue.labels = [];
   return issue;
@@ -146,7 +133,7 @@ function createMultiSelectObject(items: any) {
   return multiSelectObject;
 }
 
-function getPropertiesFromIssue(issue: any) {
+function getPropertiesFromIssue(issue: gh.Issue) {
   issue = validateIssueProperties(issue);
   const {
     number,
@@ -156,15 +143,16 @@ function getPropertiesFromIssue(issue: any) {
     labels,
     assignees,
     milestone,
-    created,
-    updated,
+    created_at,
+    updated_at,
     body,
-    repo_url,
-    author,
+    repository_url,
+    user,
   } = issue;
+  const author = user.login;
   const labelsObject = createMultiSelectObject(labels);
   const assigneesObject = createMultiSelectObject(assignees);
-  const urlComponents = repo_url.split('/');
+  const urlComponents = repository_url.split('/');
   const org = urlComponents[urlComponents.length - 2];
   const repo = urlComponents[urlComponents.length - 1];
 
@@ -192,7 +180,7 @@ function getPropertiesFromIssue(issue: any) {
       multi_select: assigneesObject,
     },
     Milestone: {
-      rich_text: [{type: 'text', text: {content: milestone}}],
+      rich_text: [{type: 'text', text: {content: milestone!.title}}],
     },
     Labels: {
       multi_select: labelsObject,
@@ -201,10 +189,10 @@ function getPropertiesFromIssue(issue: any) {
       rich_text: [{type: 'text', text: {content: author}}],
     },
     Created: {
-      date: {start: created},
+      date: {start: created_at},
     },
     Updated: {
-      date: {start: updated},
+      date: {start: updated_at},
     },
     ID: {
       number: id,
