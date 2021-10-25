@@ -71,7 +71,8 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
   for await (const {data} of iterator) {
     for (const issue of data) {
       core.info(`issue author: ${issue.user?.login}`);
-      if (issue && !issue.pull_request) {
+      if (!issue.pull_request) {
+        // @ts-ignore
         issues.push(issue);
       }
     }

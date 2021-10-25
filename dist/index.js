@@ -25992,6 +25992,7 @@ function createIssueMapping(notion, databaseId) {
         for ({ pageId, issueNumber } of issuesAlreadyInNotion) {
             issuePageIds.set(issueNumber, pageId);
         }
+        core.info(`isssuePageIds: ${issuePageIds}`);
         return issuePageIds;
     });
 }
