@@ -26013,15 +26013,16 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
         core.info('Checking for issues already in the database...');
         const pages = [];
         let cursor = undefined;
-        // @ts-ignore
-        while (true) {
+        let next_cursor = 'true';
+        while (next_cursor) {
             const response = yield notion.databases.query({
                 database_id: databaseId,
                 start_cursor: cursor,
             });
             core.info(`response: ${response}`);
-            const next_cursor = response.next_cursor;
+            next_cursor = response.next_cursor;
             const results = response.results;
+            core.info(`results: ${results}`);
             pages.push(...results);
             if (!next_cursor) {
                 break;
@@ -26031,7 +26032,7 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
         return pages.map(page => {
             return {
                 pageId: page.id,
-                // @ts-ignore
+                //@ts-ignore
                 issueNumber: page.properties['Number'].number,
             };
         });
@@ -26057,7 +26058,7 @@ function getGitHubIssues(octokit, githubRepo) {
                 for (const issue of data) {
                     core.info(`issue author: ${(_b = issue.user) === null || _b === void 0 ? void 0 : _b.login}`);
                     if (!issue.pull_request) {
-                        // @ts-ignore
+                        //@ts-ignore
                         issues.push(issue);
                     }
                 }
@@ -26089,7 +26090,7 @@ function createPages(notion, databaseId, pagesToCreate) {
         core.info('Adding Github Issues to Notion...');
         yield Promise.all(pagesToCreate.map(issue => notion.pages.create({
             parent: { database_id: databaseId },
-            //@ts-ignore
+            //@ts-ignore - labels color id issue
             properties: getPropertiesFromIssue(issue),
         })));
     });
@@ -26107,7 +26108,6 @@ function createMultiSelectObjects(issue) {
 function getPropertiesFromIssue(issue) {
     const { number, title, state, id, milestone, created_at, updated_at, body, repository_url, user } = issue;
     const author = user === null || user === void 0 ? void 0 : user.login;
-    core.info(`author getProps: ${author}`);
     const { assigneesObject, labelsObject } = createMultiSelectObjects(issue);
     const urlComponents = repository_url.split('/');
     const org = urlComponents[urlComponents.length - 2];

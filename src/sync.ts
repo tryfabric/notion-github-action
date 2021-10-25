@@ -5,7 +5,15 @@ import * as core from '@actions/core';
 import {Octokit} from 'octokit';
 import {properties} from './properties';
 
-export async function createIssueMapping(notion: Client, databaseId: string) {
+type PageIdAndIssueNumber = {
+  pageId: string;
+  issueNumber: number;
+};
+
+export async function createIssueMapping(
+  notion: Client,
+  databaseId: string
+): Promise<Map<number, string>> {
   const issuePageIds = new Map<number, string>();
   const issuesAlreadyInNotion: {
     pageId: string;
@@ -35,19 +43,23 @@ export async function syncNotionDBWithGitHub(
 }
 
 // Notion SDK for JS: https://developers.notion.com/reference/post-database-query
-async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
+async function getIssuesAlreadyInNotion(
+  notion: Client,
+  databaseId: string
+): Promise<PageIdAndIssueNumber[]> {
   core.info('Checking for issues already in the database...');
   const pages = [];
   let cursor = undefined;
-  // @ts-ignore
-  while (true) {
+  let next_cursor: string | null = 'true';
+  while (next_cursor) {
     const response: DatabasesQueryResponse = await notion.databases.query({
       database_id: databaseId,
       start_cursor: cursor,
     });
     core.info(`response: ${response}`);
-    const next_cursor = response.next_cursor;
+    next_cursor = response.next_cursor;
     const results = response.results;
+    core.info(`results: ${results}`);
     pages.push(...results);
     if (!next_cursor) {
       break;
@@ -57,14 +69,14 @@ async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
   return pages.map(page => {
     return {
       pageId: page.id,
-      // @ts-ignore
+      //@ts-ignore
       issueNumber: page.properties['Number'].number,
     };
   });
 }
 
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
-async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
+async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<gh.Issue[]> {
   core.info('Finding Github Issues...');
   const issues: gh.Issue[] = [];
   // TODO add try catch
@@ -78,7 +90,7 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
     for (const issue of data) {
       core.info(`issue author: ${issue.user?.login}`);
       if (!issue.pull_request) {
-        // @ts-ignore
+        //@ts-ignore
         issues.push(issue);
       }
     }
@@ -86,8 +98,8 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
   return issues;
 }
 
-function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: gh.Issue[]) {
-  const pagesToCreate = [];
+function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: gh.Issue[]): gh.Issue[] {
+  const pagesToCreate: gh.Issue[] = [];
   for (const issue of issues) {
     core.info(JSON.stringify(issuePageIds));
     if (!issuePageIds.has(issue.number)) {
@@ -104,7 +116,7 @@ async function createPages(notion: Client, databaseId: string, pagesToCreate: gh
     pagesToCreate.map(issue =>
       notion.pages.create({
         parent: {database_id: databaseId},
-        //@ts-ignore
+        //@ts-ignore - labels color id issue
         properties: getPropertiesFromIssue(issue),
       })
     )
@@ -115,7 +127,10 @@ async function createPages(notion: Client, databaseId: string, pagesToCreate: gh
  *  For the `Asignees` field in the Notion DB we want to send only issues.assignees.login
  *  For the `Labels` field in the Notion DB we want to send only issues.labels.name
  */
-function createMultiSelectObjects(issue: gh.Issue) {
+function createMultiSelectObjects(issue: gh.Issue): {
+  assigneesObject: string[];
+  labelsObject: string[] | undefined;
+} {
   const assigneesObject = issue.assignees.map((assignee: {login: string}) => assignee.login);
   const labelsObject = issue.labels?.map((label: {name: string}) => label.name);
   return {assigneesObject, labelsObject};
@@ -125,7 +140,6 @@ function getPropertiesFromIssue(issue: gh.Issue) {
   const {number, title, state, id, milestone, created_at, updated_at, body, repository_url, user} =
     issue;
   const author = user?.login;
-  core.info(`author getProps: ${author}`);
   const {assigneesObject, labelsObject} = createMultiSelectObjects(issue);
   const urlComponents = repository_url.split('/');
   const org = urlComponents[urlComponents.length - 2];
