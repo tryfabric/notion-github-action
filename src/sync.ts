@@ -13,6 +13,7 @@ export async function createIssueMapping(notion: Client, databaseId: string) {
   for ({pageId, issueNumber} of issuesAlreadyInNotion) {
     issuePageIds.set(issueNumber, pageId);
   }
+  core.info(`isssuePageIds: ${issuePageIds}`);
   return issuePageIds;
 }
 
@@ -70,8 +71,7 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
   for await (const {data} of iterator) {
     for (const issue of data) {
       core.info(`issue author: ${issue.user?.login}`);
-      if (!issue.pull_request) {
-        // @ts-ignore
+      if (issue && !issue.pull_request) {
         issues.push(issue);
       }
     }
