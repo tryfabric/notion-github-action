@@ -25825,7 +25825,7 @@ const action_1 = __nccwpck_require__(9261);
 const NOTION_TOKEN_KEY = 'notion-token';
 const NOTION_DB_KEY = 'notion-db';
 function start() {
-    var _a, _b;
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const notionToken = core.getInput(NOTION_TOKEN_KEY);
@@ -25834,8 +25834,6 @@ function start() {
             core.info(`context action: ${github.context.action}`);
             core.info(`payload action: ${github.context.payload.action}`);
             core.info(`payload full repo: ${(_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.full_name}`);
-            //@ts-ignore
-            core.info(`payload org: ${(_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.full_name.split('/')[0]}`);
             const options = {
                 notion: {
                     token: notionToken,
@@ -25942,10 +25940,29 @@ var properties;
 /***/ }),
 
 /***/ 1423:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -25964,6 +25981,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.syncNotionDBWithGitHub = exports.createIssueMapping = void 0;
+const core = __importStar(__nccwpck_require__(3984));
 function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
@@ -26018,6 +26036,7 @@ function getGitHubIssues(octokit, githubRepo) {
     var e_1, _a;
     return __awaiter(this, void 0, void 0, function* () {
         const issues = [];
+        // TODO add try catch
         const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
             owner: githubRepo.split('/')[0],
             repo: githubRepo.split('/')[1],
@@ -26058,8 +26077,10 @@ function getGitHubIssues(octokit, githubRepo) {
     });
 }
 function getIssuesNotInNotion(issuePageIds, issues) {
+    core.info(`issuePageIds: ${issuePageIds}`);
     const pagesToCreate = [];
     for (const issue of issues) {
+        core.info(`issue.number: ${issue.number}`);
         if (!(issue.number in issuePageIds)) {
             pagesToCreate.push(issue);
         }

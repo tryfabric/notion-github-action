@@ -1,5 +1,6 @@
 import {Client} from '@notionhq/client/build/src';
 import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
+import * as core from '@actions/core';
 import {Octokit} from 'octokit';
 
 export async function createIssueMapping(notion: Client, databaseId: string) {
@@ -55,6 +56,7 @@ async function getIssuesAlreadyInNotion(notion: Client, databaseId: string) {
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
 async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
   const issues = [];
+  // TODO add try catch
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
     owner: githubRepo.split('/')[0],
     repo: githubRepo.split('/')[1],
@@ -85,8 +87,10 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string) {
 }
 
 function getIssuesNotInNotion(issuePageIds: Map<string, string>, issues: any) {
+  core.info(`issuePageIds: ${issuePageIds}`);
   const pagesToCreate = [];
   for (const issue of issues) {
+    core.info(`issue.number: ${issue.number}`);
     if (!(issue.number in issuePageIds)) {
       pagesToCreate.push(issue);
     }
