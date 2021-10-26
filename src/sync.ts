@@ -1,6 +1,9 @@
 import {Client} from '@notionhq/client/build/src';
-import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
-import * as gh from '@octokit/webhooks-types/schema';
+import {
+  DatabasesQueryResponse,
+  InputPropertyValueMap,
+} from '@notionhq/client/build/src/api-endpoints';
+import {Issue} from '@octokit/webhooks-types/schema';
 import * as core from '@actions/core';
 import {Octokit} from 'octokit';
 import {properties} from './properties';
@@ -77,9 +80,9 @@ async function getIssuesAlreadyInNotion(
 }
 
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
-async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<gh.Issue[]> {
+async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<Issue[]> {
   core.info('Finding Github Issues...');
-  const issues: gh.Issue[] = [];
+  const issues: Issue[] = [];
   // TODO add try catch
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
     owner: githubRepo.split('/')[0],
@@ -90,15 +93,15 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<gh
   for await (const {data} of iterator) {
     for (const issue of data) {
       if (!issue.pull_request) {
-        issues.push(<gh.Issue>issue);
+        issues.push(<Issue>issue);
       }
     }
   }
   return issues;
 }
 
-function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: gh.Issue[]): gh.Issue[] {
-  const pagesToCreate: gh.Issue[] = [];
+function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: Issue[]): Issue[] {
+  const pagesToCreate: Issue[] = [];
   for (const issue of issues) {
     core.info(JSON.stringify(issuePageIds));
     if (!issuePageIds.has(issue.number)) {
@@ -109,7 +112,11 @@ function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: gh.Issu
 }
 
 // Notion SDK for JS: https://developers.notion.com/reference/post-page
-async function createPages(notion: Client, databaseId: string, pagesToCreate: gh.Issue[]) {
+async function createPages(
+  notion: Client,
+  databaseId: string,
+  pagesToCreate: Issue[]
+): Promise<void> {
   core.info('Adding Github Issues to Notion...');
   await Promise.all(
     pagesToCreate.map(issue =>
@@ -125,7 +132,7 @@ async function createPages(notion: Client, databaseId: string, pagesToCreate: gh
  *  For the `Asignees` field in the Notion DB we want to send only issues.assignees.login
  *  For the `Labels` field in the Notion DB we want to send only issues.labels.name
  */
-function createMultiSelectObjects(issue: gh.Issue): {
+function createMultiSelectObjects(issue: Issue): {
   assigneesObject: string[];
   labelsObject: string[] | undefined;
 } {
@@ -134,7 +141,7 @@ function createMultiSelectObjects(issue: gh.Issue): {
   return {assigneesObject, labelsObject};
 }
 
-function getPropertiesFromIssue(issue: gh.Issue) {
+function getPropertiesFromIssue(issue: Issue): InputPropertyValueMap {
   const {number, title, state, id, milestone, created_at, updated_at, body, repository_url, user} =
     issue;
   const author = user?.login;
@@ -144,9 +151,9 @@ function getPropertiesFromIssue(issue: gh.Issue) {
   const repo = urlComponents[urlComponents.length - 1];
 
   // These properties are specific to the template DB referenced in the README.
-  const props = {
+  return {
     Name: properties.title(title),
-    Status: properties.selectWithoutColor(state!),
+    Status: properties.getStatusSelectOption(state!),
     Body: properties.text(body ? body : ''),
     Organization: properties.text(org),
     Repository: properties.text(repo),
@@ -159,5 +166,4 @@ function getPropertiesFromIssue(issue: gh.Issue) {
     Updated: properties.date(updated_at),
     ID: properties.number(id),
   };
-  return props;
 }

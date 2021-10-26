@@ -57,21 +57,21 @@ export namespace properties {
     };
   }
 
+  export function getStatusSelectOption(state: 'open' | 'closed'): Omit<SelectPropertyValue, 'id'> {
+    switch (state) {
+      case 'open':
+        return properties.select('Open', 'green');
+      case 'closed':
+        return properties.select('Closed', 'red');
+    }
+  }
+
   export function select(name: string, color: Color = 'default'): Omit<SelectPropertyValue, 'id'> {
     return {
       type: 'select',
       select: {
         name: name,
         color: color,
-      } as SelectOption,
-    };
-  }
-
-  export function selectWithoutColor(name: string): Omit<SelectPropertyValue, 'id'> {
-    return {
-      type: 'select',
-      select: {
-        name: name,
       } as SelectOption,
     };
   }

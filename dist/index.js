@@ -25629,14 +25629,6 @@ function removeHTML(text) {
     var _a;
     return (_a = text === null || text === void 0 ? void 0 : text.replace(/<.*>.*<\/.*>/g, '')) !== null && _a !== void 0 ? _a : '';
 }
-function getStatusSelectOption(state) {
-    switch (state) {
-        case 'open':
-            return properties_1.properties.select('Open', 'green');
-        case 'closed':
-            return properties_1.properties.select('Closed', 'red');
-    }
-}
 function parsePropertiesFromPayload(payload) {
     var _a, _b, _c, _d, _e, _f, _g;
     const parsedBody = removeHTML(payload.issue.body);
@@ -25656,7 +25648,7 @@ function parsePropertiesFromPayload(payload) {
         ID: properties_1.properties.number(payload.issue.id),
     };
     if (payload.issue.state) {
-        result['Status'] = getStatusSelectOption(payload.issue.state);
+        result['Status'] = properties_1.properties.getStatusSelectOption(payload.issue.state);
     }
     return result;
 }
@@ -25912,6 +25904,15 @@ var properties;
         };
     }
     properties.date = date;
+    function getStatusSelectOption(state) {
+        switch (state) {
+            case 'open':
+                return properties.select('Open', 'green');
+            case 'closed':
+                return properties.select('Closed', 'red');
+        }
+    }
+    properties.getStatusSelectOption = getStatusSelectOption;
     function select(name, color = 'default') {
         return {
             type: 'select',
@@ -25922,15 +25923,6 @@ var properties;
         };
     }
     properties.select = select;
-    function selectWithoutColor(name) {
-        return {
-            type: 'select',
-            select: {
-                name: name,
-            },
-        };
-    }
-    properties.selectWithoutColor = selectWithoutColor;
     function multiSelect(names) {
         return {
             type: 'multi_select',
@@ -26117,9 +26109,9 @@ function getPropertiesFromIssue(issue) {
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
     // These properties are specific to the template DB referenced in the README.
-    const props = {
+    return {
         Name: properties_1.properties.title(title),
-        Status: properties_1.properties.selectWithoutColor(state),
+        Status: properties_1.properties.getStatusSelectOption(state),
         Body: properties_1.properties.text(body ? body : ''),
         Organization: properties_1.properties.text(org),
         Repository: properties_1.properties.text(repo),
@@ -26132,7 +26124,6 @@ function getPropertiesFromIssue(issue) {
         Updated: properties_1.properties.date(updated_at),
         ID: properties_1.properties.number(id),
     };
-    return props;
 }
 
 
