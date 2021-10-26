@@ -7,11 +7,8 @@ inputs:
   notion-db:
     description: 'The Notion database id'
     required: true
-  github-org:
-    description: 'Your Github org name or Github username associated with your repo'
-    required: false
-  github-repo:
-    description: 'Your Github repo name'
+  github-token:
+    description: 'Your Github personal access token'
     required: false
 
 runs:
