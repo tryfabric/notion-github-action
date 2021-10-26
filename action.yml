@@ -8,7 +8,7 @@ inputs:
     description: 'The Notion database id'
     required: true
   github-token:
-    description: 'Your Github personal access token'
+    description: 'Your GitHub personal access token'
     required: false
 
 runs:
