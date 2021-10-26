@@ -60,9 +60,9 @@ export namespace properties {
   export function getStatusSelectOption(state: 'open' | 'closed'): Omit<SelectPropertyValue, 'id'> {
     switch (state) {
       case 'open':
-        return properties.select('Open', 'green');
+        return select('Open', 'green');
       case 'closed':
-        return properties.select('Closed', 'red');
+        return select('Closed', 'red');
     }
   }
 

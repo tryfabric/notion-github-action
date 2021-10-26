@@ -27,7 +27,6 @@ export async function createIssueMapping(
   for (const {pageId, issueNumber} of issuesAlreadyInNotion) {
     issuePageIds.set(issueNumber, pageId);
   }
-  core.info('issuePageIds:');
   issuePageIds.forEach((value: string, key: number) => {
     console.log(key, value);
   });
@@ -60,10 +59,8 @@ async function getIssuesAlreadyInNotion(
       database_id: databaseId,
       start_cursor: cursor,
     });
-    core.info(`response: ${response}`);
     next_cursor = response.next_cursor;
     const results: Page[] = response.results;
-    core.info(`results: ${results}`);
     pages.push(...results);
     if (!next_cursor) {
       break;
@@ -83,7 +80,6 @@ async function getIssuesAlreadyInNotion(
 async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<Issue[]> {
   core.info('Finding Github Issues...');
   const issues: Issue[] = [];
-  // TODO add try catch
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
     owner: githubRepo.split('/')[0],
     repo: githubRepo.split('/')[1],
@@ -103,7 +99,6 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<Is
 function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: Issue[]): Issue[] {
   const pagesToCreate: Issue[] = [];
   for (const issue of issues) {
-    core.info(JSON.stringify(issuePageIds));
     if (!issuePageIds.has(issue.number)) {
       pagesToCreate.push(issue);
     }
