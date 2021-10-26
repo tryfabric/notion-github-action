@@ -26030,10 +26030,10 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
             cursor = next_cursor;
         }
         return pages.map(page => {
+            const num = page.properties['Number'];
             return {
                 pageId: page.id,
-                //@ts-ignore
-                issueNumber: page.properties['Number'].number,
+                issueNumber: num.number,
             };
         });
     });
@@ -26041,7 +26041,6 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
 function getGitHubIssues(octokit, githubRepo) {
     var e_1, _a;
-    var _b;
     return __awaiter(this, void 0, void 0, function* () {
         core.info('Finding Github Issues...');
         const issues = [];
@@ -26056,9 +26055,7 @@ function getGitHubIssues(octokit, githubRepo) {
             for (var iterator_1 = __asyncValues(iterator), iterator_1_1; iterator_1_1 = yield iterator_1.next(), !iterator_1_1.done;) {
                 const { data } = iterator_1_1.value;
                 for (const issue of data) {
-                    core.info(`issue author: ${(_b = issue.user) === null || _b === void 0 ? void 0 : _b.login}`);
                     if (!issue.pull_request) {
-                        //@ts-ignore
                         issues.push(issue);
                     }
                 }
@@ -26090,7 +26087,6 @@ function createPages(notion, databaseId, pagesToCreate) {
         core.info('Adding Github Issues to Notion...');
         yield Promise.all(pagesToCreate.map(issue => notion.pages.create({
             parent: { database_id: databaseId },
-            //@ts-ignore - labels color id issue
             properties: getPropertiesFromIssue(issue),
         })));
     });
@@ -26112,12 +26108,12 @@ function getPropertiesFromIssue(issue) {
     const urlComponents = repository_url.split('/');
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
+    const color = state === 'open' ? 'green' : state === 'closed' ? 'red' : 'default';
+    const nonNullState = state ? state : '';
     // These properties are specific to the template DB referenced in the README.
     const props = {
         Name: properties_1.properties.title(title),
-        Status: {
-            select: { name: state },
-        },
+        Status: properties_1.properties.select(nonNullState, color),
         Body: properties_1.properties.text(body ? body : ''),
         Organization: properties_1.properties.text(org),
         Repository: properties_1.properties.text(repo),

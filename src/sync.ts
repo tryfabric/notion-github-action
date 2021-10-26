@@ -4,6 +4,7 @@ import * as gh from '@octokit/webhooks-types/schema';
 import * as core from '@actions/core';
 import {Octokit} from 'octokit';
 import {properties} from './properties';
+import {NumberPropertyValue, Page} from '@notionhq/client/build/src/api-types';
 
 type PageIdAndIssueNumber = {
   pageId: string;
@@ -58,7 +59,7 @@ async function getIssuesAlreadyInNotion(
     });
     core.info(`response: ${response}`);
     next_cursor = response.next_cursor;
-    const results = response.results;
+    const results: Page[] = response.results;
     core.info(`results: ${results}`);
     pages.push(...results);
     if (!next_cursor) {
@@ -67,10 +68,10 @@ async function getIssuesAlreadyInNotion(
     cursor = next_cursor;
   }
   return pages.map(page => {
+    const num = <NumberPropertyValue>page.properties['Number'];
     return {
       pageId: page.id,
-      //@ts-ignore
-      issueNumber: page.properties['Number'].number,
+      issueNumber: num.number,
     };
   });
 }
@@ -88,10 +89,8 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<gh
   });
   for await (const {data} of iterator) {
     for (const issue of data) {
-      core.info(`issue author: ${issue.user?.login}`);
       if (!issue.pull_request) {
-        //@ts-ignore
-        issues.push(issue);
+        issues.push(<gh.Issue>issue);
       }
     }
   }
@@ -116,7 +115,6 @@ async function createPages(notion: Client, databaseId: string, pagesToCreate: gh
     pagesToCreate.map(issue =>
       notion.pages.create({
         parent: {database_id: databaseId},
-        //@ts-ignore - labels color id issue
         properties: getPropertiesFromIssue(issue),
       })
     )
@@ -144,13 +142,12 @@ function getPropertiesFromIssue(issue: gh.Issue) {
   const urlComponents = repository_url.split('/');
   const org = urlComponents[urlComponents.length - 2];
   const repo = urlComponents[urlComponents.length - 1];
-
+  const color = state === 'open' ? 'green' : state === 'closed' ? 'red' : 'default';
+  const nonNullState = state ? state : '';
   // These properties are specific to the template DB referenced in the README.
   const props = {
     Name: properties.title(title),
-    Status: {
-      select: {name: state},
-    },
+    Status: properties.select(nonNullState, color),
     Body: properties.text(body ? body : ''),
     Organization: properties.text(org),
     Repository: properties.text(repo),
