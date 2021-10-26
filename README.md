@@ -76,7 +76,7 @@ jobs:
           notion-db: ${{ secrets.NOTION_DATABASE }}
 ```
 
-Then follow [these intructions](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) to trigger the workflow.
+Then you will need to [Create a Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) and add it as a secret to your repository under the name `GITHUB_TOKEN`. Finally, follow [these intructions](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) to trigger the workflow.
 
 _Note: This action will only work on Notion Databases created from the templated linked above_
 
