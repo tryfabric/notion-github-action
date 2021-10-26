@@ -25922,13 +25922,21 @@ var properties;
         };
     }
     properties.select = select;
+    function selectWithoutColor(name) {
+        return {
+            type: 'select',
+            select: {
+                name: name,
+            },
+        };
+    }
+    properties.selectWithoutColor = selectWithoutColor;
     function multiSelect(names) {
         return {
             type: 'multi_select',
             multi_select: names.map(name => {
                 return {
                     name: name,
-                    color: 'default',
                 };
             }),
         };
@@ -26108,12 +26116,10 @@ function getPropertiesFromIssue(issue) {
     const urlComponents = repository_url.split('/');
     const org = urlComponents[urlComponents.length - 2];
     const repo = urlComponents[urlComponents.length - 1];
-    const color = state === 'open' ? 'green' : state === 'closed' ? 'red' : 'default';
-    const nonNullState = state ? state : '';
     // These properties are specific to the template DB referenced in the README.
     const props = {
         Name: properties_1.properties.title(title),
-        Status: properties_1.properties.select(nonNullState, color),
+        Status: properties_1.properties.selectWithoutColor(state),
         Body: properties_1.properties.text(body ? body : ''),
         Organization: properties_1.properties.text(org),
         Repository: properties_1.properties.text(repo),

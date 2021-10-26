@@ -67,13 +67,21 @@ export namespace properties {
     };
   }
 
+  export function selectWithoutColor(name: string): Omit<SelectPropertyValue, 'id'> {
+    return {
+      type: 'select',
+      select: {
+        name: name,
+      } as SelectOption,
+    };
+  }
+
   export function multiSelect(names: string[]): Omit<MultiSelectPropertyValue, 'id'> {
     return {
       type: 'multi_select',
       multi_select: names.map(name => {
         return {
           name: name,
-          color: 'default',
         } as MultiSelectOption;
       }),
     };

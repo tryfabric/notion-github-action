@@ -142,12 +142,11 @@ function getPropertiesFromIssue(issue: gh.Issue) {
   const urlComponents = repository_url.split('/');
   const org = urlComponents[urlComponents.length - 2];
   const repo = urlComponents[urlComponents.length - 1];
-  const color = state === 'open' ? 'green' : state === 'closed' ? 'red' : 'default';
-  const nonNullState = state ? state : '';
+
   // These properties are specific to the template DB referenced in the README.
   const props = {
     Name: properties.title(title),
-    Status: properties.select(nonNullState, color),
+    Status: properties.selectWithoutColor(state!),
     Body: properties.text(body ? body : ''),
     Organization: properties.text(org),
     Repository: properties.text(repo),
