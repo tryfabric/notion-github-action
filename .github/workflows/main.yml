@@ -20,7 +20,7 @@ on:
 jobs:
   notion_job:
     runs-on: ubuntu-latest
-    name: Test Action
+    name: Notion Action
     steps:
       - name: Checkout
         uses: actions/checkout@v2
