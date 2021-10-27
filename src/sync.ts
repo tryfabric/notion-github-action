@@ -120,7 +120,7 @@ async function createPages(
 }
 
 /*
- *  For the `Asignees` field in the Notion DB we want to send only issues.assignees.login
+ *  For the `Assignees` field in the Notion DB we want to send only issues.assignees.login
  *  For the `Labels` field in the Notion DB we want to send only issues.labels.name
  */
 function createMultiSelectObjects(issue: Issue): {

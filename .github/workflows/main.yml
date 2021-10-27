@@ -1,6 +1,21 @@
+name: Notion Job
+
 on:
+  workflow_dispatch:
   issues:
-    types: [opened, edited, labeled, unlabeled, assigned, unassigned, milestoned, demilestoned, reopened, closed]
+    types:
+      [
+        opened,
+        edited,
+        labeled,
+        unlabeled,
+        assigned,
+        unassigned,
+        milestoned,
+        demilestoned,
+        reopened,
+        closed,
+      ]
 
 jobs:
   notion_job:
