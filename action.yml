@@ -9,7 +9,7 @@ inputs:
     required: true
   github-token:
     description: 'Your GitHub personal access token'
-    required: false
+    required: true
 
 runs:
   using: 'node12'
