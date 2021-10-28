@@ -13,7 +13,6 @@ async function start() {
     core.info(`context event: ${github.context.eventName}`);
     core.info(`context action: ${github.context.action}`);
     core.info(`payload action: ${github.context.payload.action}`);
-
     const options = {
       notion: {
         token: notionToken,
@@ -21,6 +20,7 @@ async function start() {
       },
       github: {
         payload: github.context.payload,
+        eventName: github.context.eventName,
       },
     };
 

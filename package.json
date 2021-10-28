@@ -1,6 +1,6 @@
 {
-  "name": "notion-github-action",
-  "version": "1.1.0",
+  "name": "@instantish/notion-github-action",
+  "version": "1.1.1",
   "description": "A GitHub Action that syncs issues to a Notion database. Multi-repository friendly.",
   "main": "dist/index.js",
   "scripts": {
@@ -17,6 +17,7 @@
     "notion-api"
   ],
   "devDependencies": {
+    "@types/lodash": "^4.14.175",
     "@types/node": "^15.12.2",
     "@vercel/ncc": "^0.28.6",
     "gts": "^3.1.0",
@@ -26,11 +27,34 @@
     "typescript": "^4.3.2"
   },
   "author": "Richard Robinson",
-  "license": "MIT",
+  "license": "ISC",
   "dependencies": {
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
     "@notionhq/client": "^0.1.9",
-    "@octokit/webhooks-definitions": "^3.67.3"
+    "@octokit/core": "^3.5.1",
+    "@octokit/webhooks-definitions": "^3.67.3",
+    "lodash": "^4.17.21",
+    "octokit": "^1.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instantish/notion-github-action.git"
+  },
+  "bugs": {
+    "url": "https://github.com/instantish/notion-github-action/issues"
+  },
+  "homepage": "https://github.com/instantish/notion-github-action#readme",
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "@babel/preset-env"
+          ]
+        }
+      ]
+    ]
   }
 }

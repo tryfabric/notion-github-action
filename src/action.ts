@@ -4,19 +4,11 @@ import type {IssuesEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {properties} from './properties';
 import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
-import {SelectPropertyValue} from '@notionhq/client/build/src/api-types';
+import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
+import {Octokit} from 'octokit';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
-}
-
-function getStatusSelectOption(state: 'open' | 'closed'): Omit<SelectPropertyValue, 'id'> {
-  switch (state) {
-    case 'open':
-      return properties.select('Open', 'green');
-    case 'closed':
-      return properties.select('Closed', 'red');
-  }
 }
 
 function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap {
@@ -40,7 +32,7 @@ function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap
   };
 
   if (payload.issue.state) {
-    result['Status'] = getStatusSelectOption(payload.issue.state);
+    result['Status'] = properties.getStatusSelectOption(payload.issue.state);
   }
 
   return result;
@@ -114,6 +106,7 @@ interface Options {
   };
   github: {
     payload: WebhookPayload;
+    eventName: string;
   };
 }
 
@@ -135,6 +128,16 @@ export async function run(options: Options) {
       },
       payload: github.payload as IssuesOpenedEvent,
     });
+  } else if (github.eventName === 'workflow_dispatch') {
+    const octokit = new Octokit({auth: core.getInput('github-token')});
+    const notion = new Client({auth: core.getInput('notion-token')});
+    const databaseId = core.getInput('notion-db');
+    const issuePageIds = await createIssueMapping(notion, databaseId);
+    if (!github.payload.repository?.full_name) {
+      throw new Error('Unable to find repository name in github webhook context');
+    }
+    const githubRepo = github.payload.repository.full_name;
+    await syncNotionDBWithGitHub(issuePageIds, octokit, notion, databaseId, githubRepo);
   } else {
     await handleIssueEdited({
       notion: {

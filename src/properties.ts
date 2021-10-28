@@ -57,6 +57,15 @@ export namespace properties {
     };
   }
 
+  export function getStatusSelectOption(state: 'open' | 'closed'): Omit<SelectPropertyValue, 'id'> {
+    switch (state) {
+      case 'open':
+        return select('Open', 'green');
+      case 'closed':
+        return select('Closed', 'red');
+    }
+  }
+
   export function select(name: string, color: Color = 'default'): Omit<SelectPropertyValue, 'id'> {
     return {
       type: 'select',
@@ -73,7 +82,6 @@ export namespace properties {
       multi_select: names.map(name => {
         return {
           name: name,
-          color: 'default',
         } as MultiSelectOption;
       }),
     };

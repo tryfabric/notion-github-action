@@ -7,6 +7,10 @@ inputs:
   notion-db:
     description: 'The Notion database id'
     required: true
+  github-token:
+    description: 'Your GitHub personal access token'
+    required: true
+
 runs:
   using: 'node12'
   main: 'dist/index.js'

@@ -1,11 +1,26 @@
+name: Notion Sync
+
 on:
+  workflow_dispatch:
   issues:
-    types: [opened, edited, labeled, unlabeled, assigned, unassigned, milestoned, demilestoned, reopened, closed]
+    types:
+      [
+        opened,
+        edited,
+        labeled,
+        unlabeled,
+        assigned,
+        unassigned,
+        milestoned,
+        demilestoned,
+        reopened,
+        closed,
+      ]
 
 jobs:
   notion_job:
     runs-on: ubuntu-latest
-    name: Test Action
+    name: Notion Action
     steps:
       - name: Checkout
         uses: actions/checkout@v2
