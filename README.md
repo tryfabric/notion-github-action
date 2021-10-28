@@ -24,12 +24,10 @@ where `abc` is the database id.
 
 6. Add the Database's ID as a repository secret for your GitHub repository. Set the `Name` to `NOTION_DATABASE` and the `Value` to the id of your Database.
 
-7. Add a Github [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) as a repository secret for your GitHub repository. Set the `Name` to `GITHUB_TOKEN` and the `Value` to the personal access token.
-
-8. In your GitHub repository, create a GitHub workflow file at the path `.github/workflows/issues-notion-sync.yml`.
+7. In your GitHub repository, create a GitHub workflow file at the path `.github/workflows/issues-notion-sync.yml`.
 
 ```yaml
-name: Notion Job
+name: Notion Sync
 
 on:
   workflow_dispatch:
@@ -58,11 +56,12 @@ jobs:
         with:
           notion-token: ${{ secrets.NOTION_TOKEN }}
           notion-db: ${{ secrets.NOTION_DATABASE }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-9. (Optional) If your Github repository has any preexisting issues that you would like to sync to your new Notion Database you can trigger a manual workflow. Follow [these intructions](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) to run the `Notion Job` workflow.
+8. (Optional) If your Github repository has any preexisting issues that you would like to sync to your new Notion Database you can trigger a manual workflow. Make sure your organization's default `GITHUB_TOKEN` has [read and write permissions](https://docs.github.com/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization#setting-the-permissions-of-the-github_token-for-your-organization) then follow [these intructions](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) to run the `Notion Job` workflow.
 
-_Note: This workflow will only work on Notion Databases created from the templated linked above._
+_Note: The manual workflow will only work on Notion Databases created from the templated linked above._
 
 ## Using `release-it`
 
