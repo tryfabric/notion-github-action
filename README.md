@@ -56,6 +56,9 @@ jobs:
         with:
           notion-token: ${{ secrets.NOTION_TOKEN }}
           notion-db: ${{ secrets.NOTION_DATABASE }}
+
+          # This token is optional, it defaults to the built-in GITHUB_TOKEN.
+          # You can still use any PAT, provided that it has access to your issues.
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
