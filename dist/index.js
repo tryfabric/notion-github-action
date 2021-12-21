@@ -25900,6 +25900,13 @@ var properties;
         };
     }
     properties.multiSelect = multiSelect;
+    function url(url) {
+        return {
+            type: 'url',
+            url,
+        };
+    }
+    properties.url = url;
 })(properties || (properties = {}));
 
 ;// CONCATENATED MODULE: ./src/sync.ts
@@ -26029,7 +26036,7 @@ function createMultiSelectObjects(issue) {
     return { assigneesObject, labelsObject };
 }
 function getPropertiesFromIssue(issue) {
-    const { number, title, state, id, milestone, created_at, updated_at, body, repository_url, user } = issue;
+    const { number, title, state, id, milestone, created_at, updated_at, body, repository_url, user, html_url, } = issue;
     const author = user === null || user === void 0 ? void 0 : user.login;
     const { assigneesObject, labelsObject } = createMultiSelectObjects(issue);
     const urlComponents = repository_url.split('/');
@@ -26050,6 +26057,7 @@ function getPropertiesFromIssue(issue) {
         Created: properties.date(created_at),
         Updated: properties.date(updated_at),
         ID: properties.number(id),
+        Link: properties.url(html_url),
     };
 }
 
@@ -26080,6 +26088,7 @@ function parsePropertiesFromPayload(payload) {
     (_a = payload.issue.labels) === null || _a === void 0 ? void 0 : _a.map(label => label.color);
     const result = {
         Name: properties.title(payload.issue.title),
+        Status: properties.getStatusSelectOption(payload.issue.state),
         Organization: properties.text((_c = (_b = payload.organization) === null || _b === void 0 ? void 0 : _b.login) !== null && _c !== void 0 ? _c : ''),
         Repository: properties.text(payload.repository.name),
         Number: properties.number(payload.issue.number),
@@ -26091,10 +26100,8 @@ function parsePropertiesFromPayload(payload) {
         Created: properties.date(payload.issue.created_at),
         Updated: properties.date(payload.issue.updated_at),
         ID: properties.number(payload.issue.id),
+        Link: properties.url(payload.issue.html_url),
     };
-    if (payload.issue.state) {
-        result['Status'] = properties.getStatusSelectOption(payload.issue.state);
-    }
     return result;
 }
 function handleIssueOpened(options) {
@@ -26214,7 +26221,7 @@ function start() {
             yield run(options);
         }
         catch (e) {
-            core.setFailed(e.message);
+            core.setFailed(e instanceof Error ? e.message : e + '');
         }
     });
 }
