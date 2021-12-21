@@ -1,12 +1,9 @@
 import {Client} from '@notionhq/client/build/src';
-import {
-  DatabasesQueryResponse,
-  InputPropertyValueMap,
-} from '@notionhq/client/build/src/api-endpoints';
+import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
 import {Issue} from '@octokit/webhooks-types/schema';
 import * as core from '@actions/core';
 import {Octokit} from 'octokit';
-import {properties} from './properties';
+import {CustomValueMap, properties} from './properties';
 import {NumberPropertyValue, Page} from '@notionhq/client/build/src/api-types';
 
 type PageIdAndIssueNumber = {
@@ -132,9 +129,20 @@ function createMultiSelectObjects(issue: Issue): {
   return {assigneesObject, labelsObject};
 }
 
-function getPropertiesFromIssue(issue: Issue): InputPropertyValueMap {
-  const {number, title, state, id, milestone, created_at, updated_at, body, repository_url, user} =
-    issue;
+function getPropertiesFromIssue(issue: Issue): CustomValueMap {
+  const {
+    number,
+    title,
+    state,
+    id,
+    milestone,
+    created_at,
+    updated_at,
+    body,
+    repository_url,
+    user,
+    html_url,
+  } = issue;
   const author = user?.login;
   const {assigneesObject, labelsObject} = createMultiSelectObjects(issue);
   const urlComponents = repository_url.split('/');
@@ -156,5 +164,6 @@ function getPropertiesFromIssue(issue: Issue): InputPropertyValueMap {
     Created: properties.date(created_at),
     Updated: properties.date(updated_at),
     ID: properties.number(id),
+    Link: properties.url(html_url),
   };
 }

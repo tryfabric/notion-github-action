@@ -26,7 +26,7 @@ async function start() {
 
     await run(options);
   } catch (e) {
-    core.setFailed(e.message);
+    core.setFailed(e instanceof Error ? e.message : e + '');
   }
 }
 
