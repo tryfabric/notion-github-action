@@ -10,6 +10,7 @@ import type {
   SelectOption,
   MultiSelectPropertyValue,
   MultiSelectOption,
+  URLPropertyValue,
 } from '@notionhq/client/build/src/api-types';
 import {common} from './common';
 
@@ -22,6 +23,7 @@ export namespace CustomTypes {
   export type Date = NoID<DatePropertyValue>;
   export type Select = NoID<SelectPropertyValue>;
   export type MultiSelect = NoID<MultiSelectPropertyValue>;
+  export type URL = NoID<URLPropertyValue>;
 }
 
 export interface CustomValueMap extends InputPropertyValueMap {
@@ -38,6 +40,7 @@ export interface CustomValueMap extends InputPropertyValueMap {
   Created: CustomTypes.Date;
   Updated: CustomTypes.Date;
   ID: CustomTypes.Number;
+  Link: CustomTypes.URL;
 }
 
 export namespace properties {
@@ -112,6 +115,13 @@ export namespace properties {
           name: name,
         } as MultiSelectOption;
       }),
+    };
+  }
+
+  export function url(url: string): CustomTypes.URL {
+    return {
+      type: 'url',
+      url,
     };
   }
 }

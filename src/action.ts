@@ -29,6 +29,7 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
     Created: properties.date(payload.issue.created_at),
     Updated: properties.date(payload.issue.updated_at),
     ID: properties.number(payload.issue.id),
+    Link: properties.url(payload.issue.html_url),
   };
 
   return result;

@@ -130,8 +130,19 @@ function createMultiSelectObjects(issue: Issue): {
 }
 
 function getPropertiesFromIssue(issue: Issue): CustomValueMap {
-  const {number, title, state, id, milestone, created_at, updated_at, body, repository_url, user} =
-    issue;
+  const {
+    number,
+    title,
+    state,
+    id,
+    milestone,
+    created_at,
+    updated_at,
+    body,
+    repository_url,
+    user,
+    html_url,
+  } = issue;
   const author = user?.login;
   const {assigneesObject, labelsObject} = createMultiSelectObjects(issue);
   const urlComponents = repository_url.split('/');
@@ -153,5 +164,6 @@ function getPropertiesFromIssue(issue: Issue): CustomValueMap {
     Created: properties.date(created_at),
     Updated: properties.date(updated_at),
     ID: properties.number(id),
+    Link: properties.url(html_url),
   };
 }
