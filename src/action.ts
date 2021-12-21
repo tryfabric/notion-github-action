@@ -2,8 +2,7 @@ import {Client, LogLevel} from '@notionhq/client/build/src';
 import * as core from '@actions/core';
 import type {IssuesEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions/schema';
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
-import {properties} from './properties';
-import type {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
+import {CustomValueMap, properties} from './properties';
 import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
 import {Octokit} from 'octokit';
 
@@ -11,13 +10,14 @@ function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
 }
 
-function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap {
+function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
   const parsedBody = removeHTML(payload.issue.body);
 
   payload.issue.labels?.map(label => label.color);
 
-  const result: InputPropertyValueMap = {
+  const result: CustomValueMap = {
     Name: properties.title(payload.issue.title),
+    Status: properties.getStatusSelectOption(payload.issue.state!),
     Organization: properties.text(payload.organization?.login ?? ''),
     Repository: properties.text(payload.repository.name),
     Number: properties.number(payload.issue.number),
@@ -30,10 +30,6 @@ function parsePropertiesFromPayload(payload: IssuesEvent): InputPropertyValueMap
     Updated: properties.date(payload.issue.updated_at),
     ID: properties.number(payload.issue.id),
   };
-
-  if (payload.issue.state) {
-    result['Status'] = properties.getStatusSelectOption(payload.issue.state);
-  }
 
   return result;
 }
