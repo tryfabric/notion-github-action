@@ -56,7 +56,6 @@ jobs:
         with:
           notion-token: ${{ secrets.NOTION_TOKEN }}
           notion-db: ${{ secrets.NOTION_DATABASE }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 8. (Optional) If your Github repository has any preexisting issues that you would like to sync to your new Notion Database you can trigger a manual workflow. Make sure your organization's default `GITHUB_TOKEN` has [read and write permissions](https://docs.github.com/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization#setting-the-permissions-of-the-github_token-for-your-organization) then follow [these intructions](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) to run the `Notion Job` workflow.
