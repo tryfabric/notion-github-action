@@ -61,7 +61,9 @@ interface GetProjectDataOptions {
   issueNumber: number;
   possible?: ProjectData;
 }
-async function getProjectData(options: GetProjectDataOptions): Promise<ProjectData | undefined> {
+export async function getProjectData(
+  options: GetProjectDataOptions
+): Promise<ProjectData | undefined> {
   const {octokit, githubRepo, issueNumber, possible} = options;
 
   const projects =
