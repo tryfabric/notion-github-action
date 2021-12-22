@@ -75,8 +75,6 @@ export async function getProjectData(
     ).data || [];
   projects.sort(p => (p.name === possible?.name ? -1 : 1));
 
-  let res: ProjectData | undefined;
-
   for (const project of projects) {
     const columns = (await octokit.rest.projects.listColumns({project_id: project.id})).data || [];
     if (possible?.name === project.name)
@@ -88,14 +86,14 @@ export async function getProjectData(
           cards && cards.find(c => Number(c.content_url?.split('/issues/')[1]) === issueNumber);
 
       if (card)
-        res = {
+        return {
           name: project.name,
           columnName: column.name,
         };
     }
   }
 
-  return res;
+  return undefined;
 }
 
 interface IssueOpenedOptions {
