@@ -41,6 +41,8 @@ export interface CustomValueMap extends InputPropertyValueMap {
   Updated: CustomTypes.Date;
   ID: CustomTypes.Number;
   Link: CustomTypes.URL;
+  Project: CustomTypes.RichText;
+  ProjectColumn: CustomTypes.RichText;
 }
 
 export namespace properties {

@@ -10,10 +10,24 @@ function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
 }
 
-function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
+interface PayloadParsingOptions {
+  payload: IssuesEvent;
+  octokit: Octokit;
+  possibleProject?: ProjectData;
+}
+async function parsePropertiesFromPayload(options: PayloadParsingOptions): Promise<CustomValueMap> {
+  const {payload, octokit, possibleProject} = options;
+
   const parsedBody = removeHTML(payload.issue.body);
 
   payload.issue.labels?.map(label => label.color);
+
+  const projectData = await getProjectData({
+    octokit,
+    githubRepo: payload.repository.full_name,
+    issueNumber: payload.issue.number,
+    possible: possibleProject,
+  });
 
   const result: CustomValueMap = {
     Name: properties.title(payload.issue.title),
@@ -30,9 +44,56 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
     Updated: properties.date(payload.issue.updated_at),
     ID: properties.number(payload.issue.id),
     Link: properties.url(payload.issue.html_url),
+    Project: properties.text(projectData?.name || ''),
+    ProjectColumn: properties.text(projectData?.columnName || ''),
   };
 
   return result;
+}
+
+interface ProjectData {
+  name?: string;
+  columnName?: string;
+}
+interface GetProjectDataOptions {
+  octokit: Octokit;
+  githubRepo: string;
+  issueNumber: number;
+  possible?: ProjectData;
+}
+async function getProjectData(options: GetProjectDataOptions): Promise<ProjectData | undefined> {
+  const {octokit, githubRepo, issueNumber, possible} = options;
+
+  const projects =
+    (
+      await octokit.rest.projects.listForRepo({
+        owner: githubRepo.split('/')[0],
+        repo: githubRepo.split('/')[1],
+      })
+    ).data || [];
+  projects.sort(p => (p.name === possible?.name ? -1 : 1));
+
+  let res: ProjectData | undefined;
+
+  for (const project of projects) {
+    const columns = (await octokit.rest.projects.listColumns({project_id: project.id})).data || [];
+    if (possible?.name === project.name)
+      columns.sort(c => (c.name === possible.columnName ? -1 : 1));
+
+    for (const column of columns) {
+      const cards = (await octokit.rest.projects.listCards({column_id: column.id})).data,
+        card =
+          cards && cards.find(c => Number(c.content_url?.split('/issues/')[1]) === issueNumber);
+
+      if (card)
+        res = {
+          name: project.name,
+          columnName: column.name,
+        };
+    }
+  }
+
+  return res;
 }
 
 interface IssueOpenedOptions {
@@ -41,6 +102,7 @@ interface IssueOpenedOptions {
     databaseId: string;
   };
   payload: IssuesOpenedEvent;
+  octokit: Octokit;
 }
 
 async function handleIssueOpened(options: IssueOpenedOptions) {
@@ -52,7 +114,10 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
     parent: {
       database_id: notion.databaseId,
     },
-    properties: parsePropertiesFromPayload(payload),
+    properties: await parsePropertiesFromPayload({
+      payload,
+      octokit: options.octokit,
+    }),
   });
 }
 
@@ -62,6 +127,7 @@ interface IssueEditedOptions {
     databaseId: string;
   };
   payload: IssuesEvent;
+  octokit: Octokit;
 }
 
 async function handleIssueEdited(options: IssueEditedOptions) {
@@ -85,14 +151,23 @@ async function handleIssueEdited(options: IssueEditedOptions) {
     return;
   }
 
-  const pageId = query.results[0].id;
+  const result = query.results[0],
+    pageId = result.id,
+    possible: ProjectData = {
+      name: (result.properties as CustomValueMap).Project.rich_text[0].plain_text,
+      columnName: (result.properties as CustomValueMap).ProjectColumn.rich_text[0].plain_text,
+    };
 
   core.info(`Query successful: Page ${pageId}`);
   core.info(`Updating page for issue #${payload.issue.number}`);
 
   await notion.client.pages.update({
     page_id: pageId,
-    properties: parsePropertiesFromPayload(payload),
+    properties: await parsePropertiesFromPayload({
+      payload,
+      octokit: options.octokit,
+      possibleProject: possible,
+    }),
   });
 }
 
@@ -104,6 +179,7 @@ interface Options {
   github: {
     payload: WebhookPayload;
     eventName: string;
+    token: string;
   };
 }
 
@@ -116,6 +192,7 @@ export async function run(options: Options) {
     auth: notion.token,
     logLevel: core.isDebug() ? LogLevel.DEBUG : LogLevel.WARN,
   });
+  const octokit = new Octokit({auth: github.token});
 
   if (github.payload.action === 'opened') {
     await handleIssueOpened({
@@ -124,11 +201,11 @@ export async function run(options: Options) {
         databaseId: notion.databaseId,
       },
       payload: github.payload as IssuesOpenedEvent,
+      octokit,
     });
   } else if (github.eventName === 'workflow_dispatch') {
-    const octokit = new Octokit({auth: core.getInput('github-token')});
-    const notion = new Client({auth: core.getInput('notion-token')});
-    const databaseId = core.getInput('notion-db');
+    const notion = new Client({auth: options.notion.token});
+    const {databaseId} = options.notion;
     const issuePageIds = await createIssueMapping(notion, databaseId);
     if (!github.payload.repository?.full_name) {
       throw new Error('Unable to find repository name in github webhook context');
@@ -142,6 +219,7 @@ export async function run(options: Options) {
         databaseId: notion.databaseId,
       },
       payload: github.payload as IssuesEvent,
+      octokit,
     });
   }
 
