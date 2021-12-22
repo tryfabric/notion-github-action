@@ -42,7 +42,7 @@ export interface CustomValueMap extends InputPropertyValueMap {
   ID: CustomTypes.Number;
   Link: CustomTypes.URL;
   Project: CustomTypes.RichText;
-  ProjectColumn: CustomTypes.RichText;
+  'Project Column': CustomTypes.RichText;
 }
 
 export namespace properties {

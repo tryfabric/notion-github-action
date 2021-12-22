@@ -45,7 +45,7 @@ async function parsePropertiesFromPayload(options: PayloadParsingOptions): Promi
     ID: properties.number(payload.issue.id),
     Link: properties.url(payload.issue.html_url),
     Project: properties.text(projectData?.name || ''),
-    ProjectColumn: properties.text(projectData?.columnName || ''),
+    'Project Column': properties.text(projectData?.columnName || ''),
   };
 
   return result;
@@ -155,7 +155,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
     pageId = result.id,
     possible: ProjectData = {
       name: (result.properties as CustomValueMap).Project.rich_text[0].plain_text,
-      columnName: (result.properties as CustomValueMap).ProjectColumn.rich_text[0].plain_text,
+      columnName: (result.properties as CustomValueMap)['Project Column'].rich_text[0].plain_text,
     };
 
   core.info(`Query successful: Page ${pageId}`);

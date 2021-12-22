@@ -174,6 +174,6 @@ async function getPropertiesFromIssue(issue: Issue, octokit: Octokit): Promise<C
     ID: properties.number(id),
     Link: properties.url(html_url),
     Project: properties.text(projectData?.name || ''),
-    ProjectColumn: properties.text(projectData?.columnName || ''),
+    'Project Column': properties.text(projectData?.columnName || ''),
   };
 }
