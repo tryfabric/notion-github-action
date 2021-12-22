@@ -9,7 +9,7 @@ describe('richText', () => {
     url: 'abc',
   });
 
-  it('should have have a propert format', () => {
+  it('should have have a proper format', () => {
     expect(res.type).toBe('text');
     expect(typeof res.annotations).toBe('object');
     expect(res.annotations?.color).toBe('custom');
