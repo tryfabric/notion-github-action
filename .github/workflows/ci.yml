@@ -1,4 +1,4 @@
-name: Lint
+name: CI
 
 on:
   push:
@@ -9,7 +9,8 @@ on:
       - master
 
 jobs:
-  ci:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -18,3 +19,14 @@ jobs:
           node-version: '14'
       - run: npm ci
       - run: npm run lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm ci
+      - run: npm test
