@@ -1,4 +1,4 @@
-name: CI
+name: Test
 
 on:
   push:
@@ -17,8 +17,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
-  test:
-    name: Test
+  jest:
+    name: Jest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -27,3 +27,14 @@ jobs:
           node-version: '14'
       - run: npm ci
       - run: npm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm ci
+      - run: npm run build
