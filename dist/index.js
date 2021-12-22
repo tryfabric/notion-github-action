@@ -26203,8 +26203,8 @@ const NOTION_DB_KEY = 'notion-db';
 function start() {
     return src_awaiter(this, void 0, void 0, function* () {
         try {
-            const notionToken = core.getInput(NOTION_TOKEN_KEY);
-            const notionDb = core.getInput(NOTION_DB_KEY);
+            const notionToken = core.getInput(NOTION_TOKEN_KEY, { required: true });
+            const notionDb = core.getInput(NOTION_DB_KEY, { required: true });
             core.info(`context event: ${github.context.eventName}`);
             core.info(`context action: ${github.context.action}`);
             core.info(`payload action: ${github.context.payload.action}`);
