@@ -14,7 +14,7 @@ import type {
 } from '@notionhq/client/build/src/api-types';
 import {common} from './common';
 
-export namespace CustomTypes {
+namespace CustomTypes {
   type NoID<T> = Omit<T, 'id'>;
 
   export type RichText = NoID<RichTextInputPropertyValue>;

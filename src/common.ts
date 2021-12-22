@@ -1,4 +1,4 @@
-import type {Annotations, RichText} from '@notionhq/client/build/src/api-types';
+import type {Annotations, RichTextTextInput} from '@notionhq/client/build/src/api-types';
 
 // https://developers.notion.com/reference/errors#limits-for-property-values
 export const RICH_TEXT_CONTENT_CHARACTERS_LIMIT = 1000;
@@ -15,7 +15,7 @@ export namespace common {
     url?: string;
   }
 
-  export function richText(content: string, options: RichTextOptions = {}): RichText {
+  export function richText(content: string, options: RichTextOptions = {}): RichTextTextInput {
     const annotations = options.annotations ?? {};
     const truncated = truncateTextContent(content);
 
@@ -39,6 +39,6 @@ export namespace common {
             }
           : undefined,
       },
-    } as RichText;
+    };
   }
 }

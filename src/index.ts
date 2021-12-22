@@ -7,8 +7,8 @@ const NOTION_DB_KEY = 'notion-db';
 
 async function start() {
   try {
-    const notionToken = core.getInput(NOTION_TOKEN_KEY);
-    const notionDb = core.getInput(NOTION_DB_KEY);
+    const notionToken = core.getInput(NOTION_TOKEN_KEY, {required: true});
+    const notionDb = core.getInput(NOTION_DB_KEY, {required: true});
 
     core.info(`context event: ${github.context.eventName}`);
     core.info(`context action: ${github.context.action}`);
