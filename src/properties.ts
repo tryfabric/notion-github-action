@@ -6,7 +6,6 @@ import type {
   RichTextInputPropertyValue,
   SelectPropertyValue,
   Color,
-  RichText,
   SelectOption,
   MultiSelectPropertyValue,
   MultiSelectOption,
@@ -14,7 +13,7 @@ import type {
 } from '@notionhq/client/build/src/api-types';
 import {common} from './common';
 
-namespace CustomTypes {
+export namespace CustomTypes {
   type NoID<T> = Omit<T, 'id'>;
 
   export type RichText = NoID<RichTextInputPropertyValue>;
@@ -51,7 +50,7 @@ export namespace properties {
     };
   }
 
-  export function richText(text: RichText[]): CustomTypes.RichText {
+  export function richText(text: CustomTypes.RichText['rich_text']): CustomTypes.RichText {
     return {
       type: 'rich_text',
       rich_text: text,

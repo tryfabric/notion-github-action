@@ -2,16 +2,19 @@ import {Client, LogLevel} from '@notionhq/client/build/src';
 import * as core from '@actions/core';
 import type {IssuesEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions/schema';
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
-import {CustomValueMap, properties} from './properties';
+import {CustomTypes, CustomValueMap, properties} from './properties';
 import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
 import {Octokit} from 'octokit';
+import {markdownToRichText} from '@tryfabric/martian';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
 }
 
 function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
-  const parsedBody = removeHTML(payload.issue.body);
+  const parsedBody = markdownToRichText(
+    removeHTML(payload.issue.body)
+  ) as CustomTypes.RichText['rich_text'];
 
   payload.issue.labels?.map(label => label.color);
 
@@ -21,7 +24,7 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
     Organization: properties.text(payload.organization?.login ?? ''),
     Repository: properties.text(payload.repository.name),
     Number: properties.number(payload.issue.number),
-    Body: properties.text(parsedBody),
+    Body: properties.richText(parsedBody),
     Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
     Milestone: properties.text(payload.issue.milestone?.title ?? ''),
     Labels: properties.multiSelect(payload.issue.labels?.map(label => label.name) ?? []),
