@@ -1,4 +1,4 @@
-import {RichText, RichTextTextInput} from '@notionhq/client/build/src/api-types';
+import {RichTextItemRequest} from '../src/api-types';
 import {RICH_TEXT_CONTENT_CHARACTERS_LIMIT} from '../src/common';
 import {properties} from '../src/properties';
 
@@ -21,9 +21,9 @@ describe('text', () => {
     expect(res.type).toBe('rich_text');
     expect(res.rich_text).toBeInstanceOf(Array);
     expect(res.rich_text.length).toBe(1);
-    expect((res.rich_text[0] as RichTextTextInput).text.content.length).toBe(
-      RICH_TEXT_CONTENT_CHARACTERS_LIMIT
-    );
+    if ('text' in res.rich_text[0])
+      expect(res.rich_text[0].text.content.length).toBe(RICH_TEXT_CONTENT_CHARACTERS_LIMIT);
+    else fail('res.rich_text[0] did not contain the "text" key');
   });
 });
 
@@ -37,14 +37,13 @@ describe('richText', () => {
       code: false,
       color: 'default',
     } as const;
-    const input: RichText[] = [
+    const input: RichTextItemRequest[] = [
       {
         type: 'text',
         text: {
           content: 'abc',
         },
         annotations,
-        plain_text: 'abc',
       },
       {
         type: 'equation',
@@ -52,7 +51,6 @@ describe('richText', () => {
         equation: {
           expression: 'abc',
         },
-        plain_text: 'abc',
       },
     ];
 
@@ -75,7 +73,8 @@ describe('title', () => {
     expect(res.title).toBeInstanceOf(Array);
     expect(res.title.length).toBe(1);
     expect(res.title[0].type).toBe('text');
-    expect((res.title[0] as RichTextTextInput).text.content).toBe('abc');
+    if ('text' in res.title[0]) expect(res.title[0].text.content).toBe('abc');
+    else fail('res.rich_text[0] did not contain the "text" key');
   });
 });
 
@@ -96,7 +95,7 @@ describe('date', () => {
     expect(typeof res).toBe('object');
     expect(res.type).toBe('date');
     expect(typeof res.date).toBe('object');
-    expect(res.date.start).toBe('abc');
+    expect(res.date?.start).toBe('abc');
   });
 });
 
@@ -108,8 +107,8 @@ describe('getStatusSelectOption', () => {
       expect(typeof res).toBe('object');
       expect(res.type).toBe('select');
       expect(typeof res.select).toBe('object');
-      expect(typeof res.select.name).toBe('string');
-      expect(typeof res.select.color).toBe('string');
+      expect(typeof res.select?.name).toBe('string');
+      expect(typeof res.select?.color).toBe('string');
     });
   }
 });
@@ -121,8 +120,8 @@ describe('select', () => {
     expect(typeof res).toBe('object');
     expect(res.type).toBe('select');
     expect(typeof res.select).toBe('object');
-    expect(res.select.name).toBe('abc');
-    expect(res.select.color).toBe('default');
+    expect(res.select?.name).toBe('abc');
+    expect(res.select?.color).toBe('default');
   });
 });
 
