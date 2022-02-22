@@ -7,16 +7,13 @@ import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
 import {Octokit} from 'octokit';
 import {markdownToRichText} from '@tryfabric/martian';
 import {CustomTypes} from './api-types';
+import {CreatePageParameters} from '@notionhq/client/build/src/api-endpoints';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
 }
 
 function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
-  const parsedBody = markdownToRichText(
-    removeHTML(payload.issue.body)
-  ) as CustomTypes.RichText['rich_text'];
-
   payload.issue.labels?.map(label => label.color);
 
   const result: CustomValueMap = {
@@ -25,7 +22,6 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
     Organization: properties.text(payload.organization?.login ?? ''),
     Repository: properties.text(payload.repository.name),
     Number: properties.number(payload.issue.number),
-    Body: properties.richText(parsedBody),
     Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
     Milestone: properties.text(payload.issue.milestone?.title ?? ''),
     Labels: properties.multiSelect(payload.issue.labels?.map(label => label.name) ?? []),
@@ -37,6 +33,23 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
   };
 
   return result;
+}
+
+function getBodyChildrenBlocks(
+  payload: IssuesEvent
+): Exclude<CreatePageParameters['children'], undefined> {
+  const parsedBody = markdownToRichText(
+    removeHTML(payload.issue.body)
+  ) as CustomTypes.RichText['rich_text'];
+
+  return [
+    {
+      type: 'paragraph',
+      paragraph: {
+        text: parsedBody,
+      },
+    },
+  ];
 }
 
 interface IssueOpenedOptions {
@@ -57,6 +70,7 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
       database_id: notion.databaseId,
     },
     properties: parsePropertiesFromPayload(payload),
+    children: getBodyChildrenBlocks(payload),
   });
 }
 
@@ -98,6 +112,36 @@ async function handleIssueEdited(options: IssueEditedOptions) {
     page_id: pageId,
     properties: parsePropertiesFromPayload(payload),
   });
+
+  const bodyBlocks = getBodyChildrenBlocks(payload);
+
+  const existingList = (
+    await notion.client.blocks.children.list({
+      block_id: pageId,
+    })
+  ).results;
+
+  const overlap = Math.min(bodyBlocks.length, existingList.length);
+
+  await Promise.all(
+    bodyBlocks.slice(0, overlap).map((block, index) =>
+      notion.client.blocks.update({
+        block_id: existingList[index].id,
+        ...block,
+      })
+    )
+  );
+
+  if (bodyBlocks.length > existingList.length) {
+    await notion.client.blocks.children.append({
+      block_id: pageId,
+      children: bodyBlocks.slice(overlap),
+    });
+  } else if (bodyBlocks.length < existingList.length) {
+    await Promise.all(
+      existingList.slice(overlap).map(block => notion.client.blocks.delete({block_id: block.id}))
+    );
+  }
 }
 
 interface Options {
