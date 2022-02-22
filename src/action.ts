@@ -80,20 +80,26 @@ async function handleIssueEdited(options: IssueEditedOptions) {
     page_size: 1,
   });
 
-  if (query.results.length === 0) {
-    core.warning(`Could not find page with github id ${payload.issue.id}`);
-    return;
+  if (query.results.length > 0) {
+    const pageId = query.results[0].id;
+
+    core.info(`Query successful: Page ${pageId}`);
+    core.info(`Updating page for issue #${payload.issue.number}`);
+
+    await notion.client.pages.update({
+      page_id: pageId,
+      properties: parsePropertiesFromPayload(payload),
+    });
+  } else {
+    core.warning(`Could not find page with github id ${payload.issue.id}, creating a new one`);
+
+    await notion.client.pages.create({
+      parent: {
+        database_id: notion.databaseId,
+      },
+      properties: parsePropertiesFromPayload(payload),
+    });
   }
-
-  const pageId = query.results[0].id;
-
-  core.info(`Query successful: Page ${pageId}`);
-  core.info(`Updating page for issue #${payload.issue.number}`);
-
-  await notion.client.pages.update({
-    page_id: pageId,
-    properties: parsePropertiesFromPayload(payload),
-  });
 }
 
 interface Options {
