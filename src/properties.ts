@@ -21,7 +21,7 @@ export namespace properties {
   export function text(text: string): CustomTypes.RichText {
     return {
       type: 'rich_text',
-      rich_text: common.richText(text),
+      rich_text: text ? common.richText(text) : [],
     };
   }
 

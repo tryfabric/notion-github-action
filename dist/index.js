@@ -32400,7 +32400,7 @@ var properties;
     function text(text) {
         return {
             type: 'rich_text',
-            rich_text: common.richText(text),
+            rich_text: text ? common.richText(text) : [],
         };
     }
     properties.text = text;
