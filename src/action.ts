@@ -2,10 +2,11 @@ import {Client, LogLevel} from '@notionhq/client/build/src';
 import * as core from '@actions/core';
 import type {IssuesEvent, IssuesOpenedEvent} from '@octokit/webhooks-definitions/schema';
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
-import {CustomTypes, CustomValueMap, properties} from './properties';
+import {CustomValueMap, properties} from './properties';
 import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
 import {Octokit} from 'octokit';
 import {markdownToRichText} from '@tryfabric/martian';
+import {CustomTypes} from './api-types';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';

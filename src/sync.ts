@@ -1,10 +1,10 @@
 import {Client} from '@notionhq/client/build/src';
-import {DatabasesQueryResponse} from '@notionhq/client/build/src/api-endpoints';
 import {Issue} from '@octokit/webhooks-types/schema';
 import * as core from '@actions/core';
 import {Octokit} from 'octokit';
 import {CustomValueMap, properties} from './properties';
-import {NumberPropertyValue, Page} from '@notionhq/client/build/src/api-types';
+import {QueryDatabaseResponse} from '@notionhq/client/build/src/api-endpoints';
+import {CustomTypes} from './api-types';
 
 type PageIdAndIssueNumber = {
   pageId: string;
@@ -44,29 +44,38 @@ async function getIssuesAlreadyInNotion(
   databaseId: string
 ): Promise<PageIdAndIssueNumber[]> {
   core.info('Checking for issues already in the database...');
-  const pages = [];
+  const pages: QueryDatabaseResponse['results'] = [];
   let cursor = undefined;
   let next_cursor: string | null = 'true';
   while (next_cursor) {
-    const response: DatabasesQueryResponse = await notion.databases.query({
+    const response: QueryDatabaseResponse = await notion.databases.query({
       database_id: databaseId,
       start_cursor: cursor,
     });
     next_cursor = response.next_cursor;
-    const results: Page[] = response.results;
+    const results = response.results;
     pages.push(...results);
     if (!next_cursor) {
       break;
     }
     cursor = next_cursor;
   }
-  return pages.map(page => {
-    const num = <NumberPropertyValue>page.properties['Number'];
-    return {
-      pageId: page.id,
-      issueNumber: num.number,
-    };
+
+  const res: PageIdAndIssueNumber[] = [];
+
+  pages.forEach(page => {
+    if ('properties' in page) {
+      let num: number | null = null;
+      num = (page.properties['Number'] as CustomTypes.Number).number as number;
+      if (typeof num !== 'undefined')
+        res.push({
+          pageId: page.id,
+          issueNumber: num,
+        });
+    }
   });
+
+  return res;
 }
 
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues

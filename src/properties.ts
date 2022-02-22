@@ -1,31 +1,7 @@
-import {InputPropertyValueMap} from '@notionhq/client/build/src/api-endpoints';
-import type {
-  DatePropertyValue,
-  NumberPropertyValue,
-  TitleInputPropertyValue,
-  RichTextInputPropertyValue,
-  SelectPropertyValue,
-  Color,
-  SelectOption,
-  MultiSelectPropertyValue,
-  MultiSelectOption,
-  URLPropertyValue,
-} from '@notionhq/client/build/src/api-types';
+import {CustomTypes, SelectColor} from './api-types';
 import {common} from './common';
 
-export namespace CustomTypes {
-  type NoID<T> = Omit<T, 'id'>;
-
-  export type RichText = NoID<RichTextInputPropertyValue>;
-  export type Title = NoID<TitleInputPropertyValue>;
-  export type Number = NoID<NumberPropertyValue>;
-  export type Date = NoID<DatePropertyValue>;
-  export type Select = NoID<SelectPropertyValue>;
-  export type MultiSelect = NoID<MultiSelectPropertyValue>;
-  export type URL = NoID<URLPropertyValue>;
-}
-
-export interface CustomValueMap extends InputPropertyValueMap {
+export type CustomValueMap = {
   Name: CustomTypes.Title;
   Status: CustomTypes.Select;
   Organization: CustomTypes.RichText;
@@ -40,13 +16,13 @@ export interface CustomValueMap extends InputPropertyValueMap {
   Updated: CustomTypes.Date;
   ID: CustomTypes.Number;
   Link: CustomTypes.URL;
-}
+};
 
 export namespace properties {
   export function text(text: string): CustomTypes.RichText {
     return {
       type: 'rich_text',
-      rich_text: [common.richText(text)],
+      rich_text: common.richText(text),
     };
   }
 
@@ -96,13 +72,13 @@ export namespace properties {
     }
   }
 
-  export function select(name: string, color: Color = 'default'): CustomTypes.Select {
+  export function select(name: string, color: SelectColor = 'default'): CustomTypes.Select {
     return {
       type: 'select',
       select: {
         name: name,
         color: color,
-      } as SelectOption,
+      },
     };
   }
 
@@ -112,7 +88,7 @@ export namespace properties {
       multi_select: names.map(name => {
         return {
           name: name,
-        } as MultiSelectOption;
+        };
       }),
     };
   }
