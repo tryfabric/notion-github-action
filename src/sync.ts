@@ -147,7 +147,6 @@ function getPropertiesFromIssue(issue: Issue): CustomValueMap {
     milestone,
     created_at,
     updated_at,
-    body,
     repository_url,
     user,
     html_url,
@@ -162,7 +161,6 @@ function getPropertiesFromIssue(issue: Issue): CustomValueMap {
   return {
     Name: properties.title(title),
     Status: properties.getStatusSelectOption(state!),
-    Body: properties.text(body ? body : ''),
     Organization: properties.text(org),
     Repository: properties.text(repo),
     Number: properties.number(number),
