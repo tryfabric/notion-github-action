@@ -7,6 +7,7 @@ export type CustomValueMap = {
   Organization: CustomTypes.RichText;
   Repository: CustomTypes.RichText;
   Number: CustomTypes.Number;
+  Body: CustomTypes.RichText;
   Assignees: CustomTypes.MultiSelect;
   Milestone: CustomTypes.RichText;
   Labels: CustomTypes.MultiSelect;

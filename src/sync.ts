@@ -5,6 +5,7 @@ import {Octokit} from 'octokit';
 import {CustomValueMap, properties} from './properties';
 import {QueryDatabaseResponse} from '@notionhq/client/build/src/api-endpoints';
 import {CustomTypes} from './api-types';
+import {parseBodyRichText} from './action';
 
 type PageIdAndIssueNumber = {
   pageId: string;
@@ -163,6 +164,7 @@ function getPropertiesFromIssue(issue: Issue): CustomValueMap {
     Status: properties.getStatusSelectOption(state!),
     Organization: properties.text(org),
     Repository: properties.text(repo),
+    Body: properties.richText(parseBodyRichText(issue.body || '')),
     Number: properties.number(number),
     Assignees: properties.multiSelect(assigneesObject),
     Milestone: properties.text(milestone ? milestone.title : ''),

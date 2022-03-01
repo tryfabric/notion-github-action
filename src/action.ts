@@ -22,6 +22,7 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
     Organization: properties.text(payload.organization?.login ?? ''),
     Repository: properties.text(payload.repository.name),
     Number: properties.number(payload.issue.number),
+    Body: properties.richText(parseBodyRichText(payload.issue.body)),
     Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
     Milestone: properties.text(payload.issue.milestone?.title ?? ''),
     Labels: properties.multiSelect(payload.issue.labels?.map(label => label.name) ?? []),
@@ -35,18 +36,17 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
   return result;
 }
 
-function getBodyChildrenBlocks(
-  payload: IssuesEvent
-): Exclude<CreatePageParameters['children'], undefined> {
-  const parsedBody = markdownToRichText(
-    removeHTML(payload.issue.body)
-  ) as CustomTypes.RichText['rich_text'];
+export function parseBodyRichText(body: string) {
+  return markdownToRichText(removeHTML(body)) as CustomTypes.RichText['rich_text'];
+}
 
+function getBodyChildrenBlocks(body: string): Exclude<CreatePageParameters['children'], undefined> {
+  // We're currently using only one paragraph block, but this could be extended to multiple kinds of blocks.
   return [
     {
       type: 'paragraph',
       paragraph: {
-        text: parsedBody,
+        text: parseBodyRichText(body),
       },
     },
   ];
@@ -70,7 +70,7 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
       database_id: notion.databaseId,
     },
     properties: parsePropertiesFromPayload(payload),
-    children: getBodyChildrenBlocks(payload),
+    children: getBodyChildrenBlocks(payload.issue.body),
   });
 }
 
@@ -98,7 +98,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
     page_size: 1,
   });
 
-  const bodyBlocks = getBodyChildrenBlocks(payload);
+  const bodyBlocks = getBodyChildrenBlocks(payload.issue.body);
 
   if (query.results.length > 0) {
     const pageId = query.results[0].id;

@@ -32499,6 +32499,7 @@ var __asyncValues = (undefined && undefined.__asyncValues) || function (o) {
 };
 
 
+
 function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
@@ -32625,6 +32626,7 @@ function getPropertiesFromIssue(issue) {
         Status: properties.getStatusSelectOption(state),
         Organization: properties.text(org),
         Repository: properties.text(repo),
+        Body: properties.richText(parseBodyRichText(issue.body || '')),
         Number: properties.number(number),
         Assignees: properties.multiSelect(assigneesObject),
         Milestone: properties.text(milestone ? milestone.title : ''),
@@ -32670,6 +32672,7 @@ function parsePropertiesFromPayload(payload) {
         Organization: properties.text((_c = (_b = payload.organization) === null || _b === void 0 ? void 0 : _b.login) !== null && _c !== void 0 ? _c : ''),
         Repository: properties.text(payload.repository.name),
         Number: properties.number(payload.issue.number),
+        Body: properties.richText(parseBodyRichText(payload.issue.body)),
         Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
         Milestone: properties.text((_e = (_d = payload.issue.milestone) === null || _d === void 0 ? void 0 : _d.title) !== null && _e !== void 0 ? _e : ''),
         Labels: properties.multiSelect((_g = (_f = payload.issue.labels) === null || _f === void 0 ? void 0 : _f.map(label => label.name)) !== null && _g !== void 0 ? _g : []),
@@ -32681,13 +32684,16 @@ function parsePropertiesFromPayload(payload) {
     };
     return result;
 }
-function getBodyChildrenBlocks(payload) {
-    const parsedBody = (0,build_src.markdownToRichText)(removeHTML(payload.issue.body));
+function parseBodyRichText(body) {
+    return (0,build_src.markdownToRichText)(removeHTML(body));
+}
+function getBodyChildrenBlocks(body) {
+    // We're currently using only one paragraph block, but this could be extended to multiple kinds of blocks.
     return [
         {
             type: 'paragraph',
             paragraph: {
-                text: parsedBody,
+                text: parseBodyRichText(body),
             },
         },
     ];
@@ -32701,7 +32707,7 @@ function handleIssueOpened(options) {
                 database_id: notion.databaseId,
             },
             properties: parsePropertiesFromPayload(payload),
-            children: getBodyChildrenBlocks(payload),
+            children: getBodyChildrenBlocks(payload.issue.body),
         });
     });
 }
@@ -32719,7 +32725,7 @@ function handleIssueEdited(options) {
             },
             page_size: 1,
         });
-        const bodyBlocks = getBodyChildrenBlocks(payload);
+        const bodyBlocks = getBodyChildrenBlocks(payload.issue.body);
         if (query.results.length > 0) {
             const pageId = query.results[0].id;
             core.info(`Query successful: Page ${pageId}`);
