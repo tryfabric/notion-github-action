@@ -32719,31 +32719,41 @@ function handleIssueEdited(options) {
             },
             page_size: 1,
         });
-        if (query.results.length === 0) {
-            core.warning(`Could not find page with github id ${payload.issue.id}`);
-            return;
-        }
-        const pageId = query.results[0].id;
-        core.info(`Query successful: Page ${pageId}`);
-        core.info(`Updating page for issue #${payload.issue.number}`);
-        yield notion.client.pages.update({
-            page_id: pageId,
-            properties: parsePropertiesFromPayload(payload),
-        });
         const bodyBlocks = getBodyChildrenBlocks(payload);
-        const existingList = (yield notion.client.blocks.children.list({
-            block_id: pageId,
-        })).results;
-        const overlap = Math.min(bodyBlocks.length, existingList.length);
-        yield Promise.all(bodyBlocks.slice(0, overlap).map((block, index) => notion.client.blocks.update(Object.assign({ block_id: existingList[index].id }, block))));
-        if (bodyBlocks.length > existingList.length) {
-            yield notion.client.blocks.children.append({
-                block_id: pageId,
-                children: bodyBlocks.slice(overlap),
+        if (query.results.length > 0) {
+            const pageId = query.results[0].id;
+            core.info(`Query successful: Page ${pageId}`);
+            core.info(`Updating page for issue #${payload.issue.number}`);
+            yield notion.client.pages.update({
+                page_id: pageId,
+                properties: parsePropertiesFromPayload(payload),
             });
+            const existingBlocks = (yield notion.client.blocks.children.list({
+                block_id: pageId,
+            })).results;
+            const overlap = Math.min(bodyBlocks.length, existingBlocks.length);
+            yield Promise.all(bodyBlocks.slice(0, overlap).map((block, index) => notion.client.blocks.update(Object.assign({ block_id: existingBlocks[index].id }, block))));
+            if (bodyBlocks.length > existingBlocks.length) {
+                yield notion.client.blocks.children.append({
+                    block_id: pageId,
+                    children: bodyBlocks.slice(overlap),
+                });
+            }
+            else if (bodyBlocks.length < existingBlocks.length) {
+                yield Promise.all(existingBlocks
+                    .slice(overlap)
+                    .map(block => notion.client.blocks.delete({ block_id: block.id })));
+            }
         }
-        else if (bodyBlocks.length < existingList.length) {
-            yield Promise.all(existingList.slice(overlap).map(block => notion.client.blocks.delete({ block_id: block.id })));
+        else {
+            core.warning(`Could not find page with github id ${payload.issue.id}, creating a new one`);
+            yield notion.client.pages.create({
+                parent: {
+                    database_id: notion.databaseId,
+                },
+                properties: parsePropertiesFromPayload(payload),
+                children: bodyBlocks,
+            });
         }
     });
 }
