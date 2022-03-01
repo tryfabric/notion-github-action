@@ -13,8 +13,9 @@
   "dependencies": {
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
-    "@notionhq/client": "^0.1.9",
+    "@notionhq/client": "^0.4.13",
     "@octokit/webhooks-definitions": "^3.67.3",
+    "@tryfabric/martian": "^1.1.1",
     "octokit": "^1.1.0"
   },
   "devDependencies": {

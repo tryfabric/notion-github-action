@@ -32614,7 +32614,7 @@ function createMultiSelectObjects(issue) {
     return { assigneesObject, labelsObject };
 }
 function getPropertiesFromIssue(issue) {
-    const { number, title, state, id, milestone, created_at, updated_at, repository_url, user, html_url, } = issue;
+    const { number, title, state, id, milestone, created_at, updated_at, body, repository_url, user, html_url, } = issue;
     const author = user === null || user === void 0 ? void 0 : user.login;
     const { assigneesObject, labelsObject } = createMultiSelectObjects(issue);
     const urlComponents = repository_url.split('/');
@@ -32626,7 +32626,7 @@ function getPropertiesFromIssue(issue) {
         Status: properties.getStatusSelectOption(state),
         Organization: properties.text(org),
         Repository: properties.text(repo),
-        Body: properties.richText(parseBodyRichText(issue.body || '')),
+        Body: properties.richText(parseBodyRichText(body || '')),
         Number: properties.number(number),
         Assignees: properties.multiSelect(assigneesObject),
         Milestone: properties.text(milestone ? milestone.title : ''),
