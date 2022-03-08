@@ -5,14 +5,15 @@ import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {CustomValueMap, properties} from './properties';
 import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
 import {Octokit} from 'octokit';
+import {markdownToRichText} from '@tryfabric/martian';
+import {CustomTypes} from './api-types';
+import {CreatePageParameters} from '@notionhq/client/build/src/api-endpoints';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
 }
 
 function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
-  const parsedBody = removeHTML(payload.issue.body);
-
   payload.issue.labels?.map(label => label.color);
 
   const result: CustomValueMap = {
@@ -21,7 +22,7 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
     Organization: properties.text(payload.organization?.login ?? ''),
     Repository: properties.text(payload.repository.name),
     Number: properties.number(payload.issue.number),
-    Body: properties.text(parsedBody),
+    Body: properties.richText(parseBodyRichText(payload.issue.body)),
     Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
     Milestone: properties.text(payload.issue.milestone?.title ?? ''),
     Labels: properties.multiSelect(payload.issue.labels?.map(label => label.name) ?? []),
@@ -33,6 +34,22 @@ function parsePropertiesFromPayload(payload: IssuesEvent): CustomValueMap {
   };
 
   return result;
+}
+
+export function parseBodyRichText(body: string) {
+  return markdownToRichText(removeHTML(body)) as CustomTypes.RichText['rich_text'];
+}
+
+function getBodyChildrenBlocks(body: string): Exclude<CreatePageParameters['children'], undefined> {
+  // We're currently using only one paragraph block, but this could be extended to multiple kinds of blocks.
+  return [
+    {
+      type: 'paragraph',
+      paragraph: {
+        text: parseBodyRichText(body),
+      },
+    },
+  ];
 }
 
 interface IssueOpenedOptions {
@@ -53,6 +70,7 @@ async function handleIssueOpened(options: IssueOpenedOptions) {
       database_id: notion.databaseId,
     },
     properties: parsePropertiesFromPayload(payload),
+    children: getBodyChildrenBlocks(payload.issue.body),
   });
 }
 
@@ -80,6 +98,8 @@ async function handleIssueEdited(options: IssueEditedOptions) {
     page_size: 1,
   });
 
+  const bodyBlocks = getBodyChildrenBlocks(payload.issue.body);
+
   if (query.results.length > 0) {
     const pageId = query.results[0].id;
 
@@ -90,6 +110,36 @@ async function handleIssueEdited(options: IssueEditedOptions) {
       page_id: pageId,
       properties: parsePropertiesFromPayload(payload),
     });
+
+    const existingBlocks = (
+      await notion.client.blocks.children.list({
+        block_id: pageId,
+      })
+    ).results;
+
+    const overlap = Math.min(bodyBlocks.length, existingBlocks.length);
+
+    await Promise.all(
+      bodyBlocks.slice(0, overlap).map((block, index) =>
+        notion.client.blocks.update({
+          block_id: existingBlocks[index].id,
+          ...block,
+        })
+      )
+    );
+
+    if (bodyBlocks.length > existingBlocks.length) {
+      await notion.client.blocks.children.append({
+        block_id: pageId,
+        children: bodyBlocks.slice(overlap),
+      });
+    } else if (bodyBlocks.length < existingBlocks.length) {
+      await Promise.all(
+        existingBlocks
+          .slice(overlap)
+          .map(block => notion.client.blocks.delete({block_id: block.id}))
+      );
+    }
   } else {
     core.warning(`Could not find page with github id ${payload.issue.id}, creating a new one`);
 
@@ -98,6 +148,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
         database_id: notion.databaseId,
       },
       properties: parsePropertiesFromPayload(payload),
+      children: bodyBlocks,
     });
   }
 }
