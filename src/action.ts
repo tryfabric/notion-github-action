@@ -30,6 +30,8 @@ async function parsePropertiesFromPayload(options: PayloadParsingOptions): Promi
     possible: possibleProject,
   });
 
+  core.debug(`Current project data: ${JSON.stringify(projectData, null, 2)}`);
+
   const result: CustomValueMap = {
     Name: properties.title(payload.issue.title),
     Status: properties.getStatusSelectOption(payload.issue.state!),
@@ -75,6 +77,8 @@ export async function getProjectData(
       })
     ).data || [];
   projects.sort(p => (p.name === possible?.name ? -1 : 1));
+
+  core.debug(`Found ${projects.length} projects.`);
 
   for (const project of projects) {
     const columns = (await octokit.rest.projects.listColumns({project_id: project.id})).data || [];

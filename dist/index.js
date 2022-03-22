@@ -32686,6 +32686,7 @@ function parsePropertiesFromPayload(options) {
             issueNumber: payload.issue.number,
             possible: possibleProject,
         });
+        core.debug(`Current project data: ${JSON.stringify(projectData, null, 2)}`);
         const result = {
             Name: properties.title(payload.issue.title),
             Status: properties.getStatusSelectOption(payload.issue.state),
@@ -32715,6 +32716,7 @@ function getProjectData(options) {
             repo: githubRepo.split('/')[1],
         })).data || [];
         projects.sort(p => (p.name === (possible === null || possible === void 0 ? void 0 : possible.name) ? -1 : 1));
+        core.debug(`Found ${projects.length} projects.`);
         for (const project of projects) {
             const columns = (yield octokit.rest.projects.listColumns({ project_id: project.id })).data || [];
             if ((possible === null || possible === void 0 ? void 0 : possible.name) === project.name)
