@@ -16,6 +16,8 @@ export type CustomValueMap = {
   Updated: CustomTypes.Date;
   ID: CustomTypes.Number;
   Link: CustomTypes.URL;
+  Project: CustomTypes.RichText;
+  'Project Column': CustomTypes.RichText;
 };
 
 export namespace properties {

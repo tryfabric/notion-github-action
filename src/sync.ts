@@ -3,6 +3,7 @@ import {Issue} from '@octokit/webhooks-types/schema';
 import * as core from '@actions/core';
 import {Octokit} from 'octokit';
 import {CustomValueMap, properties} from './properties';
+import {getProjectData} from './action';
 import {QueryDatabaseResponse} from '@notionhq/client/build/src/api-endpoints';
 import {CustomTypes} from './api-types';
 import {parseBodyRichText} from './action';
@@ -36,7 +37,7 @@ export async function syncNotionDBWithGitHub(
 ) {
   const issues = await getGitHubIssues(octokit, githubRepo);
   const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues);
-  await createPages(notion, databaseId, pagesToCreate);
+  await createPages(notion, databaseId, pagesToCreate, octokit);
 }
 
 // Notion SDK for JS: https://developers.notion.com/reference/post-database-query
@@ -113,14 +114,15 @@ function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: Issue[]
 async function createPages(
   notion: Client,
   databaseId: string,
-  pagesToCreate: Issue[]
+  pagesToCreate: Issue[],
+  octokit: Octokit
 ): Promise<void> {
   core.info('Adding Github Issues to Notion...');
   await Promise.all(
-    pagesToCreate.map(issue =>
+    pagesToCreate.map(async issue =>
       notion.pages.create({
         parent: {database_id: databaseId},
-        properties: getPropertiesFromIssue(issue),
+        properties: await getPropertiesFromIssue(issue, octokit),
       })
     )
   );
@@ -139,7 +141,7 @@ function createMultiSelectObjects(issue: Issue): {
   return {assigneesObject, labelsObject};
 }
 
-function getPropertiesFromIssue(issue: Issue): CustomValueMap {
+async function getPropertiesFromIssue(issue: Issue, octokit: Octokit): Promise<CustomValueMap> {
   const {
     number,
     title,
@@ -159,6 +161,12 @@ function getPropertiesFromIssue(issue: Issue): CustomValueMap {
   const org = urlComponents[urlComponents.length - 2];
   const repo = urlComponents[urlComponents.length - 1];
 
+  const projectData = await getProjectData({
+    octokit,
+    githubRepo: `${org}/${repo}`,
+    issueNumber: issue.number,
+  });
+
   // These properties are specific to the template DB referenced in the README.
   return {
     Name: properties.title(title),
@@ -175,5 +183,7 @@ function getPropertiesFromIssue(issue: Issue): CustomValueMap {
     Updated: properties.date(updated_at),
     ID: properties.number(id),
     Link: properties.url(html_url),
+    Project: properties.text(projectData?.name || ''),
+    'Project Column': properties.text(projectData?.columnName || ''),
   };
 }
