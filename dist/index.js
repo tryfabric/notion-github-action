@@ -32762,6 +32762,7 @@ function handleIssueOpened(options) {
     });
 }
 function handleIssueEdited(options) {
+    var _a, _b;
     return action_awaiter(this, void 0, void 0, function* () {
         const { notion, payload, octokit } = options;
         core.info(`Querying database for page with github id ${payload.issue.id}`);
@@ -32812,11 +32813,13 @@ function handleIssueEdited(options) {
             });
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = query.results[0], pageId = result.id, possible = {
-            name: result.properties.Project.rich_text[0]
-                .plain_text,
-            columnName: result.properties['Project Column'].rich_text[0].plain_text,
-        };
+        const result = query.results[0], pageId = result.id, possible = result
+            ? {
+                name: (_a = result.properties.Project.rich_text[0]) === null || _a === void 0 ? void 0 : _a.plain_text,
+                columnName: (_b = result.properties['Project Column']
+                    .rich_text[0]) === null || _b === void 0 ? void 0 : _b.plain_text,
+            }
+            : undefined;
         core.info(`Query successful: Page ${pageId}`);
         core.info(`Updating page for issue #${payload.issue.number}`);
         yield notion.client.pages.update({

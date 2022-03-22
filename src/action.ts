@@ -221,13 +221,16 @@ async function handleIssueEdited(options: IssueEditedOptions) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = query.results[0] as any,
     pageId = result.id,
-    possible: ProjectData = {
-      name: ((result.properties as CustomValueMap).Project.rich_text[0] as RichTextItemResponse)
-        .plain_text,
-      columnName: (
-        (result.properties as CustomValueMap)['Project Column'].rich_text[0] as RichTextItemResponse
-      ).plain_text,
-    };
+    possible: ProjectData | undefined = result
+      ? {
+          name: ((result.properties as CustomValueMap).Project.rich_text[0] as RichTextItemResponse)
+            ?.plain_text,
+          columnName: (
+            (result.properties as CustomValueMap)['Project Column']
+              .rich_text[0] as RichTextItemResponse
+          )?.plain_text,
+        }
+      : undefined;
 
   core.info(`Query successful: Page ${pageId}`);
   core.info(`Updating page for issue #${payload.issue.number}`);
