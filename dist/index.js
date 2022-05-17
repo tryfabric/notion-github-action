@@ -32602,7 +32602,6 @@ function createPages(notion, databaseId, pagesToCreate, octokit) {
             return notion.pages.create({
                 parent: { database_id: databaseId },
                 properties: yield getPropertiesFromIssue(issue, octokit),
-                children: getBodyChildrenBlocks(issue.body || ''),
             });
         })));
     });
