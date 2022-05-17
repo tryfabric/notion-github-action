@@ -109,7 +109,9 @@ export function parseBodyRichText(body: string) {
   }
 }
 
-function getBodyChildrenBlocks(body: string): Exclude<CreatePageParameters['children'], undefined> {
+export function getBodyChildrenBlocks(
+  body: string
+): Exclude<CreatePageParameters['children'], undefined> {
   // We're currently using only one paragraph block, but this could be extended to multiple kinds of blocks.
   return [
     {
