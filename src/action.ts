@@ -102,7 +102,11 @@ export async function getProjectData(
 }
 
 export function parseBodyRichText(body: string) {
-  return markdownToRichText(removeHTML(body)) as CustomTypes.RichText['rich_text'];
+  try {
+    return markdownToRichText(removeHTML(body)) as CustomTypes.RichText['rich_text'];
+  } catch {
+    return [];
+  }
 }
 
 function getBodyChildrenBlocks(body: string): Exclude<CreatePageParameters['children'], undefined> {
