@@ -5,7 +5,7 @@ import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {CustomValueMap, properties} from './properties';
 import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
 import {Octokit} from 'octokit';
-import {markdownToRichText} from '@tryfabric/martian';
+import {markdownToRichText, markdownToBlocks} from '@tryfabric/martian';
 import {CustomTypes, RichTextItemResponse} from './api-types';
 import {CreatePageParameters} from '@notionhq/client/build/src/api-endpoints';
 
@@ -112,15 +112,7 @@ export function parseBodyRichText(body: string) {
 export function getBodyChildrenBlocks(
   body: string
 ): Exclude<CreatePageParameters['children'], undefined> {
-  // We're currently using only one paragraph block, but this could be extended to multiple kinds of blocks.
-  return [
-    {
-      type: 'paragraph',
-      paragraph: {
-        text: parseBodyRichText(body),
-      },
-    },
-  ];
+  return markdownToBlocks(body);
 }
 
 interface IssueOpenedOptions {
