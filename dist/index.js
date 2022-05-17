@@ -5,7 +5,15 @@
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"@notionhq/client","version":"0.4.13","description":"A simple and easy to use client for the Notion API","engines":{"node":">=12"},"homepage":"https://developers.notion.com/docs/getting-started","bugs":{"url":"https://github.com/makenotion/notion-sdk-js/issues"},"repository":{"type":"git","url":"https://github.com/makenotion/notion-sdk-js/"},"keywords":["notion","notionapi","rest","notion-api"],"main":"./build/src","scripts":{"prepare":"npm run build","prepublishOnly":"npm run checkLoggedIn && npm run lint && npm run test","build":"tsc","prettier":"prettier --write .","lint":"prettier --check . && eslint . --ext .ts && cspell \'**/*\' ","test":"ava","check-links":"git ls-files | grep md$ | xargs -n 1 markdown-link-check","prebuild":"npm run clean","clean":"rm -rf ./build","checkLoggedIn":"./scripts/verifyLoggedIn.sh"},"author":"","license":"MIT","files":["build/package.json","build/src/**"],"dependencies":{"@types/node-fetch":"^2.5.10","node-fetch":"^2.6.1"},"devDependencies":{"@ava/typescript":"^2.0.0","@typescript-eslint/eslint-plugin":"^4.22.0","@typescript-eslint/parser":"^4.22.0","ava":"^3.15.0","cspell":"^5.4.1","eslint":"^7.24.0","markdown-link-check":"^3.8.7","prettier":"^2.3.0","typescript":"^4.2.4"}}');
+module.exports = JSON.parse('{"name":"@notionhq/client","version":"1.0.4","description":"A simple and easy to use client for the Notion API","engines":{"node":">=12"},"homepage":"https://developers.notion.com/docs/getting-started","bugs":{"url":"https://github.com/makenotion/notion-sdk-js/issues"},"repository":{"type":"git","url":"https://github.com/makenotion/notion-sdk-js/"},"keywords":["notion","notionapi","rest","notion-api"],"main":"./build/src","types":"./build/src/index.d.ts","scripts":{"prepare":"npm run build","prepublishOnly":"npm run checkLoggedIn && npm run lint && npm run test","build":"tsc","prettier":"prettier --write .","lint":"prettier --check . && eslint . --ext .ts && cspell \'**/*\' ","test":"ava","check-links":"git ls-files | grep md$ | xargs -n 1 markdown-link-check","prebuild":"npm run clean","clean":"rm -rf ./build","checkLoggedIn":"./scripts/verifyLoggedIn.sh"},"author":"","license":"MIT","files":["build/package.json","build/src/**"],"dependencies":{"@types/node-fetch":"^2.5.10","node-fetch":"^2.6.1"},"devDependencies":{"@ava/typescript":"^2.0.0","@typescript-eslint/eslint-plugin":"^4.22.0","@typescript-eslint/parser":"^4.22.0","ava":"^3.15.0","cspell":"^5.4.1","eslint":"^7.24.0","markdown-link-check":"^3.8.7","prettier":"^2.3.0","typescript":"^4.2.4"}}');
+
+/***/ }),
+
+/***/ 1796:
+/***/ ((module) => {
+
+"use strict";
+module.exports = JSON.parse('{"abap":"abap","sh":"shell","shell-script":"shell","bash":"shell","zsh":"shell","text":"vb.net","c_cpp":"c++","clojure":"clojure","coffee":"coffeescript","coffee-script":"coffeescript","cpp":"c++","csharp":"c#","cake":"c#","cakescript":"c#","css":"css","dart":"dart","diff":"diff","udiff":"diff","dockerfile":"docker","elixir":"elixir","elm":"elm","erlang":"erlang","fsharp":"f#","cucumber":"gherkin","glsl":"glsl","golang":"go","groovy":"groovy","haskell":"haskell","html":"html","xhtml":"html","java":"java/c/c++/c#","javascript":"javascript","js":"javascript","node":"javascript","json":"json","julia":"julia","tex":"latex","latex":"latex","less":"less","lisp":"webassembly","livescript":"livescript","live-script":"livescript","ls":"livescript","lua":"lua","makefile":"makefile","bsdmake":"makefile","make":"makefile","mf":"makefile","markdown":"markdown","pandoc":"markdown","matlab":"matlab","octave":"matlab","nix":"nix","nixos":"nix","objectivec":"objective-c","obj-c":"objective-c","objc":"objective-c","ocaml":"ocaml","pascal":"pascal","delphi":"pascal","objectpascal":"pascal","perl":"perl","cperl":"perl","php":"php","inc":"php","powershell":"powershell","posh":"powershell","pwsh":"powershell","prolog":"prolog","protobuf":"protobuf","Protocol Buffers":"protobuf","python":"python","python3":"python","rusthon":"python","r":"r","R":"r","Rscript":"r","splus":"r","rust":"rust","ruby":"ruby","jruby":"ruby","macruby":"ruby","rake":"ruby","rb":"ruby","rbx":"ruby","rs":"rust","sass":"sass","scala":"scala","scheme":"scheme","scss":"scss","sql":"sql","typescript":"typescript","ts":"typescript","visual basic":"vb.net","vbnet":"vb.net","vb .net":"vb.net","vb.net":"vb.net","verilog":"verilog","vhdl":"vhdl","wast":"webassembly","wasm":"webassembly","xml":"xml","rss":"xml","xsd":"xml","wsdl":"xml","yaml":"yaml","yml":"yaml"}');
 
 /***/ }),
 
@@ -1684,7 +1692,7 @@ class Client {
 }
 exports.default = Client;
 _Client_auth = new WeakMap(), _Client_logLevel = new WeakMap(), _Client_logger = new WeakMap(), _Client_prefixUrl = new WeakMap(), _Client_timeoutMs = new WeakMap(), _Client_notionVersion = new WeakMap(), _Client_fetch = new WeakMap(), _Client_agent = new WeakMap(), _Client_userAgent = new WeakMap();
-Client.defaultNotionVersion = "2021-08-16";
+Client.defaultNotionVersion = "2022-02-22";
 //# sourceMappingURL=Client.js.map
 
 /***/ }),
@@ -1823,7 +1831,7 @@ exports.updateDatabase = {
     method: "patch",
     pathParams: ["database_id"],
     queryParams: [],
-    bodyParams: ["title", "icon", "cover", "properties"],
+    bodyParams: ["title", "icon", "cover", "properties", "archived"],
     path: (p) => `databases/${p.database_id}`,
 };
 exports.queryDatabase = {
@@ -8400,11 +8408,12 @@ const remark_gfm_1 = __importDefault(__nccwpck_require__(5772));
  *
  * Supports GitHub-flavoured Markdown.
  *
- * @param body any Markdown or GFM content
+ * @param body Any Markdown or GFM content
+ * @param options Any additional option
  */
-function markdownToBlocks(body, allowUnsupportedObjectType = false) {
+function markdownToBlocks(body, options) {
     const root = (0, unified_1.default)().use(remark_parse_1.default).use(remark_gfm_1.default).parse(body);
-    return (0, internal_1.parseBlocks)(root, allowUnsupportedObjectType);
+    return (0, internal_1.parseBlocks)(root, options);
 }
 exports.markdownToBlocks = markdownToBlocks;
 /**
@@ -8412,10 +8421,11 @@ exports.markdownToBlocks = markdownToBlocks;
  * Only supports plain text, italics, bold, strikethrough, inline code, and hyperlinks.
  *
  * @param text any inline Markdown or GFM content
+ * @param options Any additional option
  */
-function markdownToRichText(text) {
+function markdownToRichText(text, options) {
     const root = (0, unified_1.default)().use(remark_parse_1.default).use(remark_gfm_1.default).parse(text);
-    return (0, internal_1.parseRichText)(root);
+    return (0, internal_1.parseRichText)(root, options);
 }
 exports.markdownToRichText = markdownToRichText;
 //# sourceMappingURL=index.js.map
@@ -8428,24 +8438,24 @@ exports.markdownToRichText = markdownToRichText;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.tableCell = exports.tableRow = exports.table = exports.toDo = exports.numberedListItem = exports.bulletedListItem = exports.headingThree = exports.headingTwo = exports.headingOne = exports.table_of_contents = exports.image = exports.blockquote = exports.code = exports.paragraph = void 0;
+exports.tableRow = exports.table = exports.toDo = exports.numberedListItem = exports.bulletedListItem = exports.headingThree = exports.headingTwo = exports.headingOne = exports.table_of_contents = exports.image = exports.blockquote = exports.code = exports.paragraph = void 0;
 function paragraph(text) {
     return {
         object: 'block',
         type: 'paragraph',
         paragraph: {
-            text: text,
+            rich_text: text,
         },
     };
 }
 exports.paragraph = paragraph;
-function code(text) {
+function code(text, lang = 'plain text') {
     return {
         object: 'block',
         type: 'code',
         code: {
-            text: text,
-            language: 'javascript',
+            rich_text: text,
+            language: lang,
         },
     };
 }
@@ -8455,7 +8465,7 @@ function blockquote(text) {
         object: 'block',
         type: 'quote',
         quote: {
-            text: text,
+            rich_text: text,
         },
     };
 }
@@ -8486,7 +8496,7 @@ function headingOne(text) {
         object: 'block',
         type: 'heading_1',
         heading_1: {
-            text: text,
+            rich_text: text,
         },
     };
 }
@@ -8496,7 +8506,7 @@ function headingTwo(text) {
         object: 'block',
         type: 'heading_2',
         heading_2: {
-            text: text,
+            rich_text: text,
         },
     };
 }
@@ -8506,7 +8516,7 @@ function headingThree(text) {
         object: 'block',
         type: 'heading_3',
         heading_3: {
-            text: text,
+            rich_text: text,
         },
     };
 }
@@ -8516,7 +8526,7 @@ function bulletedListItem(text, children = []) {
         object: 'block',
         type: 'bulleted_list_item',
         bulleted_list_item: {
-            text: text,
+            rich_text: text,
             children: children.length ? children : undefined,
         },
     };
@@ -8527,7 +8537,7 @@ function numberedListItem(text, children = []) {
         object: 'block',
         type: 'numbered_list_item',
         numbered_list_item: {
-            text: text,
+            rich_text: text,
             children: children.length ? children : undefined,
         },
     };
@@ -8538,43 +8548,35 @@ function toDo(checked, text, children = []) {
         object: 'block',
         type: 'to_do',
         to_do: {
-            text: text,
+            rich_text: text,
             checked: checked,
             children: children.length ? children : undefined,
         },
     };
 }
 exports.toDo = toDo;
-function table(children = []) {
+function table(children, tableWidth) {
     return {
-        object: 'unsupported',
+        object: 'block',
         type: 'table',
         table: {
-            children: children.length ? children : undefined,
+            table_width: tableWidth,
+            has_row_header: true,
+            children: (children === null || children === void 0 ? void 0 : children.length) ? children : [],
         },
     };
 }
 exports.table = table;
-function tableRow(children = []) {
+function tableRow(cells = []) {
     return {
-        object: 'unsupported',
+        object: 'block',
         type: 'table_row',
         table_row: {
-            children: children.length ? children : undefined,
+            cells: cells.length ? cells : [],
         },
     };
 }
 exports.tableRow = tableRow;
-function tableCell(children = []) {
-    return {
-        object: 'unsupported',
-        type: 'table_cell',
-        table_cell: {
-            children: children.length ? children : undefined,
-        },
-    };
-}
-exports.tableCell = tableCell;
 //# sourceMappingURL=blocks.js.map
 
 /***/ }),
@@ -8585,7 +8587,20 @@ exports.tableCell = tableCell;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.richText = void 0;
+exports.isSupportedCodeLang = exports.SUPPORTED_CODE_BLOCK_LANGUAGES = exports.richText = exports.LIMITS = void 0;
+/**
+ * The limits that the Notion API uses for property values.
+ * @see https://developers.notion.com/reference/request-limits#limits-for-property-values
+ */
+exports.LIMITS = {
+    PAYLOAD_BLOCKS: 1000,
+    RICH_TEXT_ARRAYS: 100,
+    RICH_TEXT: {
+        TEXT_CONTENT: 2000,
+        LINK_URL: 1000,
+        EQUATION_EXPRESSION: 1000,
+    },
+};
 function richText(content, options = {}) {
     var _a;
     const annotations = (_a = options.annotations) !== null && _a !== void 0 ? _a : {};
@@ -8612,6 +8627,84 @@ function richText(content, options = {}) {
     };
 }
 exports.richText = richText;
+exports.SUPPORTED_CODE_BLOCK_LANGUAGES = [
+    'abap',
+    'arduino',
+    'bash',
+    'basic',
+    'c',
+    'clojure',
+    'coffeescript',
+    'c++',
+    'c#',
+    'css',
+    'dart',
+    'diff',
+    'docker',
+    'elixir',
+    'elm',
+    'erlang',
+    'flow',
+    'fortran',
+    'f#',
+    'gherkin',
+    'glsl',
+    'go',
+    'graphql',
+    'groovy',
+    'haskell',
+    'html',
+    'java',
+    'javascript',
+    'json',
+    'julia',
+    'kotlin',
+    'latex',
+    'less',
+    'lisp',
+    'livescript',
+    'lua',
+    'makefile',
+    'markdown',
+    'markup',
+    'matlab',
+    'mermaid',
+    'nix',
+    'objective-c',
+    'ocaml',
+    'pascal',
+    'perl',
+    'php',
+    'plain text',
+    'powershell',
+    'prolog',
+    'protobuf',
+    'python',
+    'r',
+    'reason',
+    'ruby',
+    'rust',
+    'sass',
+    'scala',
+    'scheme',
+    'scss',
+    'shell',
+    'sql',
+    'swift',
+    'typescript',
+    'vb.net',
+    'verilog',
+    'vhdl',
+    'visual basic',
+    'webassembly',
+    'xml',
+    'yaml',
+    'java/c/c++/c#',
+];
+function isSupportedCodeLang(lang) {
+    return exports.SUPPORTED_CODE_BLOCK_LANGUAGES.includes(lang);
+}
+exports.isSupportedCodeLang = isSupportedCodeLang;
 //# sourceMappingURL=common.js.map
 
 /***/ }),
@@ -8631,9 +8724,20 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseCodeLanguage = void 0;
+const languageMap_json_1 = __importDefault(__nccwpck_require__(1796));
 __exportStar(__nccwpck_require__(951), exports);
 __exportStar(__nccwpck_require__(3679), exports);
+function parseCodeLanguage(lang) {
+    return lang
+        ? languageMap_json_1.default[lang.toLowerCase()]
+        : undefined;
+}
+exports.parseCodeLanguage = parseCodeLanguage;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
@@ -8662,13 +8766,25 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseRichText = exports.parseBlocks = void 0;
 const notion = __importStar(__nccwpck_require__(7849));
+const path_1 = __importDefault(__nccwpck_require__(5622));
 const url_1 = __nccwpck_require__(8835);
+const notion_1 = __nccwpck_require__(7849);
 function ensureLength(text, copy) {
     const chunks = text.match(/[^]{1,2000}/g) || [];
     return chunks.flatMap((item) => notion.richText(item, copy));
+}
+function ensureCodeBlockLanguage(lang) {
+    if (lang) {
+        lang = lang.toLowerCase();
+        return (0, notion_1.isSupportedCodeLang)(lang) ? lang : notion.parseCodeLanguage(lang);
+    }
+    return undefined;
 }
 function parseInline(element, options) {
     var _a;
@@ -8700,21 +8816,44 @@ function parseInline(element, options) {
             return [];
     }
 }
-function parseParagraph(element) {
-    // If a paragraph containts an image element as its first element
-    // Lets assume it is an image, and parse it as only that (discard remaining content)
-    const isImage = element.children[0].type === 'image';
-    if (isImage) {
-        const image = element.children[0];
-        try {
-            new url_1.URL(image.url);
+function parseImage(image, options) {
+    var _a;
+    // https://developers.notion.com/reference/block#image-blocks
+    const allowedTypes = [
+        '.png',
+        '.jpg',
+        '.jpeg',
+        '.gif',
+        '.tif',
+        '.tiff',
+        '.bmp',
+        '.svg',
+        '.heic',
+    ];
+    function dealWithError() {
+        return notion.paragraph([notion.richText(image.url)]);
+    }
+    try {
+        if ((_a = options.strictImageUrls) !== null && _a !== void 0 ? _a : true) {
+            const parsedUrl = new url_1.URL(image.url);
+            const fileType = path_1.default.extname(parsedUrl.pathname);
+            if (allowedTypes.includes(fileType)) {
+                return notion.image(image.url);
+            }
+            else {
+                return dealWithError();
+            }
+        }
+        else {
             return notion.image(image.url);
         }
-        catch (error) {
-            console.log(`${error.input} is not a valid url, I will process this as text for you to fix later`);
-        }
     }
-    // Paragraphs can also be legacy 'TOC' from some markdown
+    catch (error) {
+        return dealWithError();
+    }
+}
+function parseParagraph(element, options) {
+    // Paragraphs can also be legacy 'TOC' from some markdown, so we check first
     const mightBeToc = element.children.length > 2 &&
         element.children[0].type === 'text' &&
         element.children[0].value === '[[' &&
@@ -8723,29 +8862,48 @@ function parseParagraph(element) {
         const emphasisItem = element.children[1];
         const emphasisTextItem = emphasisItem.children[0];
         if (emphasisTextItem.value === 'TOC') {
-            return notion.table_of_contents();
+            return [notion.table_of_contents()];
         }
     }
-    const text = element.children.flatMap(child => parseInline(child));
-    return notion.paragraph(text);
+    // Notion doesn't deal with inline images, so we need to parse them all out
+    // of the paragraph into individual blocks
+    const images = [];
+    const paragraphs = [];
+    element.children.forEach(item => {
+        if (item.type === 'image') {
+            images.push(parseImage(item, options));
+        }
+        else {
+            const richText = parseInline(item);
+            if (richText.length) {
+                paragraphs.push(richText);
+            }
+        }
+    });
+    if (paragraphs.length) {
+        return [notion.paragraph(paragraphs.flat()), ...images];
+    }
+    else {
+        return images;
+    }
 }
-function parseBlockquote(element) {
+function parseBlockquote(element, options) {
     // Quotes can only contain RichText[], but come through as Block[]
     // This code collects and flattens the common ones
-    const blocks = element.children.flatMap(child => parseNode(child));
+    const blocks = element.children.flatMap(child => parseNode(child, options));
     const paragraphs = blocks.flatMap(child => child);
     const richtext = paragraphs.flatMap(child => {
-        if (child.paragraph) {
-            return child.paragraph.text;
+        if (child.type === 'paragraph') {
+            return child.paragraph.rich_text;
         }
-        if (child.heading_1) {
-            return child.heading_1.text;
+        if (child.type === 'heading_1') {
+            return child.heading_1.rich_text;
         }
-        if (child.heading_2) {
-            return child.heading_2.text;
+        if (child.type === 'heading_2') {
+            return child.heading_2.rich_text;
         }
-        if (child.heading_3) {
-            return child.heading_3.text;
+        if (child.type === 'heading_3') {
+            return child.heading_3.rich_text;
         }
         return [];
     });
@@ -8764,9 +8922,10 @@ function parseHeading(element) {
 }
 function parseCode(element) {
     const text = ensureLength(element.value);
-    return notion.code(text);
+    const lang = ensureCodeBlockLanguage(element.lang);
+    return notion.code(text, lang);
 }
-function parseList(element) {
+function parseList(element, options) {
     return element.children.flatMap(item => {
         const paragraph = item.children.shift();
         if (paragraph === undefined || paragraph.type !== 'paragraph') {
@@ -8774,7 +8933,7 @@ function parseList(element) {
         }
         const text = paragraph.children.flatMap(child => parseInline(child));
         // Now process any of the children
-        const parsedChildren = item.children.flatMap(child => parseNode(child));
+        const parsedChildren = item.children.flatMap(child => parseNode(child, options));
         if (element.start !== null && element.start !== undefined) {
             return [notion.numberedListItem(text, parsedChildren)];
         }
@@ -8787,31 +8946,35 @@ function parseList(element) {
     });
 }
 function parseTableCell(node) {
-    const text = node.children.flatMap(child => parseInline(child));
-    return [notion.tableCell(text)];
+    return [node.children.flatMap(child => parseInline(child))];
 }
 function parseTableRow(node) {
     const tableCells = node.children.flatMap(child => parseTableCell(child));
     return [notion.tableRow(tableCells)];
 }
 function parseTable(node) {
+    var _a;
+    // The width of the table is the amount of cells in the first row, as all rows must have the same number of cells
+    const tableWidth = ((_a = node.children) === null || _a === void 0 ? void 0 : _a.length)
+        ? node.children[0].children.length
+        : 0;
     const tableRows = node.children.flatMap(child => parseTableRow(child));
-    return [notion.table(tableRows)];
+    return [notion.table(tableRows, tableWidth)];
 }
-function parseNode(node, unsupported = false) {
+function parseNode(node, options) {
     switch (node.type) {
         case 'heading':
             return [parseHeading(node)];
         case 'paragraph':
-            return [parseParagraph(node)];
+            return parseParagraph(node, options);
         case 'code':
             return [parseCode(node)];
         case 'blockquote':
-            return [parseBlockquote(node)];
+            return [parseBlockquote(node, options)];
         case 'list':
-            return parseList(node);
+            return parseList(node, options);
         case 'table':
-            if (unsupported) {
+            if (options.allowUnsupported) {
                 return parseTable(node);
             }
             else {
@@ -8821,11 +8984,17 @@ function parseNode(node, unsupported = false) {
             return [];
     }
 }
-function parseBlocks(root, unsupported = false) {
-    return root.children.flatMap(item => parseNode(item, unsupported));
+function parseBlocks(root, options) {
+    var _a, _b, _c, _d;
+    const parsed = root.children.flatMap(item => parseNode(item, options || {}));
+    const truncate = !!((_b = (_a = options === null || options === void 0 ? void 0 : options.notionLimits) === null || _a === void 0 ? void 0 : _a.truncate) !== null && _b !== void 0 ? _b : true), limitCallback = (_d = (_c = options === null || options === void 0 ? void 0 : options.notionLimits) === null || _c === void 0 ? void 0 : _c.onError) !== null && _d !== void 0 ? _d : (() => { });
+    if (parsed.length > notion_1.LIMITS.PAYLOAD_BLOCKS)
+        limitCallback(new Error(`Resulting blocks array exceeds Notion limit (${notion_1.LIMITS.PAYLOAD_BLOCKS})`));
+    return truncate ? parsed.slice(0, notion_1.LIMITS.PAYLOAD_BLOCKS) : parsed;
 }
 exports.parseBlocks = parseBlocks;
-function parseRichText(root) {
+function parseRichText(root, options) {
+    var _a, _b, _c, _d;
     if (root.children[0].type !== 'paragraph') {
         throw new Error(`Unsupported markdown element: ${JSON.stringify(root)}`);
     }
@@ -8835,7 +9004,26 @@ function parseRichText(root) {
             paragraph.children.forEach(child => richTexts.push(...parseInline(child)));
         }
     });
-    return richTexts;
+    const truncate = !!((_b = (_a = options === null || options === void 0 ? void 0 : options.notionLimits) === null || _a === void 0 ? void 0 : _a.truncate) !== null && _b !== void 0 ? _b : true), limitCallback = (_d = (_c = options === null || options === void 0 ? void 0 : options.notionLimits) === null || _c === void 0 ? void 0 : _c.onError) !== null && _d !== void 0 ? _d : (() => { });
+    if (richTexts.length > notion_1.LIMITS.RICH_TEXT_ARRAYS)
+        limitCallback(new Error(`Resulting richTexts array exceeds Notion limit (${notion_1.LIMITS.RICH_TEXT_ARRAYS})`));
+    return (truncate ? richTexts.slice(0, notion_1.LIMITS.RICH_TEXT_ARRAYS) : richTexts).map(rt => {
+        var _a;
+        if (rt.type !== 'text')
+            return rt;
+        if (rt.text.content.length > notion_1.LIMITS.RICH_TEXT.TEXT_CONTENT) {
+            limitCallback(new Error(`Resulting text content exceeds Notion limit (${notion_1.LIMITS.RICH_TEXT.TEXT_CONTENT})`));
+            if (truncate)
+                rt.text.content =
+                    rt.text.content.slice(0, notion_1.LIMITS.RICH_TEXT.TEXT_CONTENT - 3) + '...';
+        }
+        if (((_a = rt.text.link) === null || _a === void 0 ? void 0 : _a.url) &&
+            rt.text.link.url.length > notion_1.LIMITS.RICH_TEXT.LINK_URL)
+            // There's no point in truncating URLs
+            limitCallback(new Error(`Resulting text URL exceeds Notion limit (${notion_1.LIMITS.RICH_TEXT.LINK_URL})`));
+        // Notion equations are not supported by this library, since they don't exist in Markdown
+        return rt;
+    });
 }
 exports.parseRichText = parseRichText;
 //# sourceMappingURL=internal.js.map
@@ -32602,6 +32790,7 @@ function createPages(notion, databaseId, pagesToCreate, octokit) {
             return notion.pages.create({
                 parent: { database_id: databaseId },
                 properties: yield getPropertiesFromIssue(issue, octokit),
+                children: getBodyChildrenBlocks(issue.body || ''),
             });
         })));
     });
@@ -32742,15 +32931,7 @@ function parseBodyRichText(body) {
     }
 }
 function getBodyChildrenBlocks(body) {
-    // We're currently using only one paragraph block, but this could be extended to multiple kinds of blocks.
-    return [
-        {
-            type: 'paragraph',
-            paragraph: {
-                text: parseBodyRichText(body),
-            },
-        },
-    ];
+    return (0,build_src.markdownToBlocks)(body);
 }
 function handleIssueOpened(options) {
     return action_awaiter(this, void 0, void 0, function* () {
