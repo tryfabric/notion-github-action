@@ -32602,6 +32602,7 @@ function createPages(notion, databaseId, pagesToCreate, octokit) {
             return notion.pages.create({
                 parent: { database_id: databaseId },
                 properties: yield getPropertiesFromIssue(issue, octokit),
+                children: getBodyChildrenBlocks(issue.body || ''),
             });
         })));
     });
@@ -32734,7 +32735,12 @@ function getProjectData(options) {
     });
 }
 function parseBodyRichText(body) {
-    return (0,build_src.markdownToRichText)(removeHTML(body));
+    try {
+        return (0,build_src.markdownToRichText)(removeHTML(body));
+    }
+    catch (_a) {
+        return [];
+    }
 }
 function getBodyChildrenBlocks(body) {
     // We're currently using only one paragraph block, but this could be extended to multiple kinds of blocks.
