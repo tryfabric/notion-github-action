@@ -47,8 +47,8 @@ async function parsePropertiesFromPayload(options: PayloadParsingOptions): Promi
     Updated: properties.date(payload.issue.updated_at),
     ID: properties.number(payload.issue.id),
     Link: properties.url(payload.issue.html_url),
-    Project: properties.text(projectData?.name || ''),
-    'Project Column': properties.text(projectData?.columnName || ''),
+    Project: properties.text(projectData?.name ?? ''),
+    'Project Column': properties.text(projectData?.columnName ?? ''),
   };
 
   return result;

@@ -32505,8 +32505,8 @@ function createIssueMapping(notion, databaseId) {
     return __awaiter(this, void 0, void 0, function* () {
         const issuePageIds = new Map();
         const issuesAlreadyInNotion = yield getIssuesAlreadyInNotion(notion, databaseId);
-        for (const { pageId, issueNumber } of issuesAlreadyInNotion) {
-            issuePageIds.set(issueNumber, pageId);
+        for (const { pageId, issueID } of issuesAlreadyInNotion) {
+            issuePageIds.set(issueID, pageId);
         }
         return issuePageIds;
     });
@@ -32542,11 +32542,11 @@ function getIssuesAlreadyInNotion(notion, databaseId) {
         pages.forEach(page => {
             if ('properties' in page) {
                 let num = null;
-                num = page.properties['Number'].number;
+                num = page.properties['ID'].number;
                 if (typeof num !== 'undefined')
                     res.push({
                         pageId: page.id,
-                        issueNumber: num,
+                        issueID: num,
                     });
             }
         });
@@ -32588,8 +32588,9 @@ function getGitHubIssues(octokit, githubRepo) {
 function getIssuesNotInNotion(issuePageIds, issues) {
     const pagesToCreate = [];
     for (const issue of issues) {
-        if (!issuePageIds.has(issue.number)) {
+        if (!issuePageIds.has(issue.id)) {
             pagesToCreate.push(issue);
+            core.info(`Found an issue to add ${issue.number}, ${issue.id}`);
         }
     }
     return pagesToCreate;
@@ -32676,7 +32677,7 @@ function removeHTML(text) {
     return (_a = text === null || text === void 0 ? void 0 : text.replace(/<.*>.*<\/.*>/g, '')) !== null && _a !== void 0 ? _a : '';
 }
 function parsePropertiesFromPayload(options) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     return action_awaiter(this, void 0, void 0, function* () {
         const { payload, octokit, possibleProject } = options;
         (_a = payload.issue.labels) === null || _a === void 0 ? void 0 : _a.map(label => label.color);
@@ -32702,8 +32703,8 @@ function parsePropertiesFromPayload(options) {
             Updated: properties.date(payload.issue.updated_at),
             ID: properties.number(payload.issue.id),
             Link: properties.url(payload.issue.html_url),
-            Project: properties.text((projectData === null || projectData === void 0 ? void 0 : projectData.name) || ''),
-            'Project Column': properties.text((projectData === null || projectData === void 0 ? void 0 : projectData.columnName) || ''),
+            Project: properties.text((_h = projectData === null || projectData === void 0 ? void 0 : projectData.name) !== null && _h !== void 0 ? _h : ''),
+            'Project Column': properties.text((_j = projectData === null || projectData === void 0 ? void 0 : projectData.columnName) !== null && _j !== void 0 ? _j : ''),
         };
         return result;
     });

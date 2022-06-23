@@ -8,9 +8,9 @@ import {QueryDatabaseResponse} from '@notionhq/client/build/src/api-endpoints';
 import {CustomTypes} from './api-types';
 import {parseBodyRichText} from './action';
 
-type PageIdAndIssueNumber = {
+type PageIdAndIssueID = {
   pageId: string;
-  issueNumber: number;
+  issueID: number;
 };
 
 export async function createIssueMapping(
@@ -20,10 +20,10 @@ export async function createIssueMapping(
   const issuePageIds = new Map<number, string>();
   const issuesAlreadyInNotion: {
     pageId: string;
-    issueNumber: number;
+    issueID: number;
   }[] = await getIssuesAlreadyInNotion(notion, databaseId);
-  for (const {pageId, issueNumber} of issuesAlreadyInNotion) {
-    issuePageIds.set(issueNumber, pageId);
+  for (const {pageId, issueID} of issuesAlreadyInNotion) {
+    issuePageIds.set(issueID, pageId);
   }
   return issuePageIds;
 }
@@ -44,7 +44,7 @@ export async function syncNotionDBWithGitHub(
 async function getIssuesAlreadyInNotion(
   notion: Client,
   databaseId: string
-): Promise<PageIdAndIssueNumber[]> {
+): Promise<PageIdAndIssueID[]> {
   core.info('Checking for issues already in the database...');
   const pages: QueryDatabaseResponse['results'] = [];
   let cursor = undefined;
@@ -63,16 +63,16 @@ async function getIssuesAlreadyInNotion(
     cursor = next_cursor;
   }
 
-  const res: PageIdAndIssueNumber[] = [];
+  const res: PageIdAndIssueID[] = [];
 
   pages.forEach(page => {
     if ('properties' in page) {
       let num: number | null = null;
-      num = (page.properties['Number'] as CustomTypes.Number).number as number;
+      num = (page.properties['ID'] as CustomTypes.Number).number as number;
       if (typeof num !== 'undefined')
         res.push({
           pageId: page.id,
-          issueNumber: num,
+          issueID: num,
         });
     }
   });
@@ -103,8 +103,9 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<Is
 function getIssuesNotInNotion(issuePageIds: Map<number, string>, issues: Issue[]): Issue[] {
   const pagesToCreate: Issue[] = [];
   for (const issue of issues) {
-    if (!issuePageIds.has(issue.number)) {
+    if (!issuePageIds.has(issue.id)) {
       pagesToCreate.push(issue);
+      core.info(`Found an issue to add ${issue.number}, ${issue.id}`);
     }
   }
   return pagesToCreate;
