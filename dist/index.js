@@ -38164,7 +38164,7 @@ function handleIssueEdited(options) {
         }
         else {
             core.warning(`Could not find page with github id ${payload.issue.id}, creating a new one`);
-            notion.client.pages
+            yield notion.client.pages
                 .create({
                 parent: {
                     database_id: notion.databaseId,
@@ -38186,11 +38186,12 @@ function handleIssueEdited(options) {
                 });
             })
                 .then(q => {
+                core.info('Got query result: ' + JSON.stringify(q));
                 query = q;
             });
-            core.warning('Test that control reached here');
+            core.info('Test that control reached here');
         }
-        core.warning('Test that control reached here 2');
+        core.info('Test that control reached here 2');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = query.results[0], pageId = result.id, possible = result
             ? {

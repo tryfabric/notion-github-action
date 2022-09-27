@@ -217,7 +217,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
   } else {
     core.warning(`Could not find page with github id ${payload.issue.id}, creating a new one`);
 
-    notion.client.pages
+    await notion.client.pages
       .create({
         parent: {
           database_id: notion.databaseId,
