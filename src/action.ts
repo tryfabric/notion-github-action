@@ -161,7 +161,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
 
   core.info(`Querying database for page with github id ${payload.issue.id}`);
 
-  const query = await notion.client.databases.query({
+  let query = await notion.client.databases.query({
     database_id: notion.databaseId,
     filter: {
       property: 'ID',
@@ -227,7 +227,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
       })
       .then(() => {
         core.info('Re query for the page that was just created');
-        query = await notion.client.databases.query({
+        return notion.client.databases.query({
           database_id: notion.databaseId,
           filter: {
             property: 'ID',
@@ -237,6 +237,9 @@ async function handleIssueEdited(options: IssueEditedOptions) {
           },
           page_size: 1,
         });
+      })
+      .then(q => {
+        query = q;
       });
     core.warning('Test that control reached here');
   }
