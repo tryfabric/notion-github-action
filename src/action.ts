@@ -226,7 +226,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
         children: bodyBlocks,
       })
       .then(() => {
-        core.info(`Re query for the page that was just created`);
+        core.info('Re query for the page that was just created');
         query = await notion.client.databases.query({
           database_id: notion.databaseId,
           filter: {
