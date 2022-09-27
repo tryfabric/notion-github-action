@@ -23,14 +23,12 @@ async function parsePropertiesFromPayload(options: PayloadParsingOptions): Promi
 
   payload.issue.labels?.map(label => label.color);
 
-  core.info('Before getProjectData');
   const projectData = await getProjectData({
     octokit,
     githubRepo: payload.repository.full_name,
     issueNumber: payload.issue.number,
     possible: possibleProject,
   });
-  core.info('After getProjectData');
 
   core.debug(`Current project data: ${JSON.stringify(projectData, null, 2)}`);
 
@@ -240,7 +238,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
           page_size: 1,
         });
       });
-    core.info('Test that control reached here');
+    core.warning('Test that control reached here');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
