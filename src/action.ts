@@ -238,6 +238,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
           page_size: 1,
         });
       });
+    core.info('Test that control reached here');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
