@@ -239,13 +239,10 @@ async function handleIssueEdited(options: IssueEditedOptions) {
         });
       })
       .then(q => {
-        core.info('Got query result: ' + JSON.stringify(q));
         query = q;
       });
-    core.info('Test that control reached here');
   }
 
-  core.info('Test that control reached here 2');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = query.results[0] as any,
     pageId = result.id,
