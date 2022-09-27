@@ -224,7 +224,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
       properties: await parsePropertiesFromPayload({payload, octokit}),
       children: bodyBlocks,
     }).then(() => {
-      // re query for the page that was just created
+      core.info(`Re query for the page that was just created`);
       query = await notion.client.databases.query({
         database_id: notion.databaseId,
         filter: {
