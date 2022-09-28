@@ -1,6 +1,6 @@
 import {Client, LogLevel} from '@notionhq/client/build/src';
 import * as core from '@actions/core';
-import type {IssuesEvent} from '@octokit/webhooks-definitions/schema';
+import type {IssuesEvent, Issue} from '@octokit/webhooks-definitions/schema';
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
 import {CustomValueMap, properties} from './properties';
 import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
@@ -18,7 +18,7 @@ interface PayloadParsingOptions {
   octokit: Octokit;
   possibleProject?: ProjectData;
 }
-async function parsePropertiesFromPayload(options: PayloadParsingOptions): Promise<CustomValueMap> {
+async function fetchProperties(options: PayloadParsingOptions): Promise<CustomValueMap> {
   const {payload, octokit, possibleProject} = options;
 
   payload.issue.labels?.map(label => label.color);
@@ -32,21 +32,33 @@ async function parsePropertiesFromPayload(options: PayloadParsingOptions): Promi
 
   core.debug(`Current project data: ${JSON.stringify(projectData, null, 2)}`);
 
+  const gitHubRepo = getRepoFullNameFromPayload(payload);
+  const issueResp = await octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}', {
+    owner: getOwnerFromRepoFullName(gitHubRepo),
+    repo: getRepoNameFromRepoFullName(gitHubRepo),
+    issue_number: payload.issue.number,
+  });
+  if (issueResp.status !== 200) {
+    throw new Error(`Failed to fetch issue data: ${issueResp.status}`);
+  }
+
+  const issue = issueResp.data as Issue;
+
   const result: CustomValueMap = {
-    Name: properties.title(payload.issue.title),
-    Status: properties.getStatusSelectOption(payload.issue.state!),
+    Name: properties.title(issue.title),
+    Status: properties.getStatusSelectOption(issue.state!),
     Organization: properties.text(payload.organization?.login ?? ''),
     Repository: properties.text(payload.repository.name),
-    Number: properties.number(payload.issue.number),
-    Body: properties.richText(parseBodyRichText(payload.issue.body)),
-    Assignees: properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
-    Milestone: properties.text(payload.issue.milestone?.title ?? ''),
-    Labels: properties.multiSelect(payload.issue.labels?.map(label => label.name) ?? []),
-    Author: properties.text(payload.issue.user.login),
-    Created: properties.date(payload.issue.created_at),
-    Updated: properties.date(payload.issue.updated_at),
-    ID: properties.number(payload.issue.id),
-    Link: properties.url(payload.issue.html_url),
+    Number: properties.number(issue.number),
+    Body: properties.richText(parseBodyRichText(issue.body)),
+    Assignees: properties.multiSelect(issue.assignees.map(assignee => assignee.login)),
+    Milestone: properties.text(issue.milestone?.title ?? ''),
+    Labels: properties.multiSelect(issue.labels?.map(label => label.name) ?? []),
+    Author: properties.text(issue.user.login),
+    Created: properties.date(issue.created_at),
+    Updated: properties.date(issue.updated_at),
+    ID: properties.number(issue.id),
+    Link: properties.url(issue.html_url),
     Project: properties.text(projectData?.name || ''),
     'Project Column': properties.text(projectData?.columnName || ''),
   };
@@ -72,8 +84,8 @@ export async function getProjectData(
   const projects =
     (
       await octokit.rest.projects.listForRepo({
-        owner: githubRepo.split('/')[0],
-        repo: githubRepo.split('/')[1],
+        owner: getOwnerFromRepoFullName(githubRepo),
+        repo: getRepoNameFromRepoFullName(githubRepo),
       })
     ).data || [];
   projects.sort(p => (p.name === possible?.name ? -1 : 1));
@@ -121,6 +133,18 @@ function getBodyChildrenBlocks(body: string): Exclude<CreatePageParameters['chil
   ];
 }
 
+function getRepoFullNameFromPayload(payload: IssuesEvent) {
+  return payload.repository.full_name;
+}
+
+function getOwnerFromRepoFullName(gitHubRepo: string) {
+  return gitHubRepo.split('/')[0];
+}
+
+function getRepoNameFromRepoFullName(gitHubRepo: string) {
+  return gitHubRepo.split('/')[1];
+}
+
 interface IssueEditedOptions {
   notion: {
     client: Client;
@@ -156,7 +180,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
 
     await notion.client.pages.update({
       page_id: pageId,
-      properties: await parsePropertiesFromPayload({payload, octokit}),
+      properties: await fetchProperties({payload, octokit}),
     });
 
     const existingBlocks = (
@@ -196,7 +220,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
         parent: {
           database_id: notion.databaseId,
         },
-        properties: await parsePropertiesFromPayload({payload, octokit}),
+        properties: await fetchProperties({payload, octokit}),
         children: bodyBlocks,
       })
       .then(() => {
@@ -236,7 +260,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
 
   await notion.client.pages.update({
     page_id: pageId,
-    properties: await parsePropertiesFromPayload({
+    properties: await fetchProperties({
       payload,
       octokit: options.octokit,
       possibleProject: possible,

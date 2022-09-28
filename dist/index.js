@@ -38026,7 +38026,7 @@ function removeHTML(text) {
     var _a;
     return (_a = text === null || text === void 0 ? void 0 : text.replace(/<.*>.*<\/.*>/g, '')) !== null && _a !== void 0 ? _a : '';
 }
-function parsePropertiesFromPayload(options) {
+function fetchProperties(options) {
     var _a, _b, _c, _d, _e, _f, _g;
     return __awaiter(this, void 0, void 0, function* () {
         const { payload, octokit, possibleProject } = options;
@@ -38038,21 +38038,31 @@ function parsePropertiesFromPayload(options) {
             possible: possibleProject,
         });
         core.debug(`Current project data: ${JSON.stringify(projectData, null, 2)}`);
+        const gitHubRepo = getRepoFullNameFromPayload(payload);
+        const issueResp = yield octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}', {
+            owner: getOwnerFromRepoFullName(gitHubRepo),
+            repo: getRepoNameFromRepoFullName(gitHubRepo),
+            issue_number: payload.issue.number,
+        });
+        if (issueResp.status !== 200) {
+            throw new Error(`Failed to fetch issue data: ${issueResp.status}`);
+        }
+        const issue = issueResp.data;
         const result = {
-            Name: properties_1.properties.title(payload.issue.title),
-            Status: properties_1.properties.getStatusSelectOption(payload.issue.state),
+            Name: properties_1.properties.title(issue.title),
+            Status: properties_1.properties.getStatusSelectOption(issue.state),
             Organization: properties_1.properties.text((_c = (_b = payload.organization) === null || _b === void 0 ? void 0 : _b.login) !== null && _c !== void 0 ? _c : ''),
             Repository: properties_1.properties.text(payload.repository.name),
-            Number: properties_1.properties.number(payload.issue.number),
-            Body: properties_1.properties.richText(parseBodyRichText(payload.issue.body)),
-            Assignees: properties_1.properties.multiSelect(payload.issue.assignees.map(assignee => assignee.login)),
-            Milestone: properties_1.properties.text((_e = (_d = payload.issue.milestone) === null || _d === void 0 ? void 0 : _d.title) !== null && _e !== void 0 ? _e : ''),
-            Labels: properties_1.properties.multiSelect((_g = (_f = payload.issue.labels) === null || _f === void 0 ? void 0 : _f.map(label => label.name)) !== null && _g !== void 0 ? _g : []),
-            Author: properties_1.properties.text(payload.issue.user.login),
-            Created: properties_1.properties.date(payload.issue.created_at),
-            Updated: properties_1.properties.date(payload.issue.updated_at),
-            ID: properties_1.properties.number(payload.issue.id),
-            Link: properties_1.properties.url(payload.issue.html_url),
+            Number: properties_1.properties.number(issue.number),
+            Body: properties_1.properties.richText(parseBodyRichText(issue.body)),
+            Assignees: properties_1.properties.multiSelect(issue.assignees.map(assignee => assignee.login)),
+            Milestone: properties_1.properties.text((_e = (_d = issue.milestone) === null || _d === void 0 ? void 0 : _d.title) !== null && _e !== void 0 ? _e : ''),
+            Labels: properties_1.properties.multiSelect((_g = (_f = issue.labels) === null || _f === void 0 ? void 0 : _f.map(label => label.name)) !== null && _g !== void 0 ? _g : []),
+            Author: properties_1.properties.text(issue.user.login),
+            Created: properties_1.properties.date(issue.created_at),
+            Updated: properties_1.properties.date(issue.updated_at),
+            ID: properties_1.properties.number(issue.id),
+            Link: properties_1.properties.url(issue.html_url),
             Project: properties_1.properties.text((projectData === null || projectData === void 0 ? void 0 : projectData.name) || ''),
             'Project Column': properties_1.properties.text((projectData === null || projectData === void 0 ? void 0 : projectData.columnName) || ''),
         };
@@ -38063,8 +38073,8 @@ function getProjectData(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { octokit, githubRepo, issueNumber, possible } = options;
         const projects = (yield octokit.rest.projects.listForRepo({
-            owner: githubRepo.split('/')[0],
-            repo: githubRepo.split('/')[1],
+            owner: getOwnerFromRepoFullName(githubRepo),
+            repo: getRepoNameFromRepoFullName(githubRepo),
         })).data || [];
         projects.sort(p => (p.name === (possible === null || possible === void 0 ? void 0 : possible.name) ? -1 : 1));
         core.debug(`Found ${projects.length} projects.`);
@@ -38105,6 +38115,15 @@ function getBodyChildrenBlocks(body) {
         },
     ];
 }
+function getRepoFullNameFromPayload(payload) {
+    return payload.repository.full_name;
+}
+function getOwnerFromRepoFullName(gitHubRepo) {
+    return gitHubRepo.split('/')[0];
+}
+function getRepoNameFromRepoFullName(gitHubRepo) {
+    return gitHubRepo.split('/')[1];
+}
 function handleIssueEdited(options) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -38127,7 +38146,7 @@ function handleIssueEdited(options) {
             core.info(`Updating page for issue #${payload.issue.number}`);
             yield notion.client.pages.update({
                 page_id: pageId,
-                properties: yield parsePropertiesFromPayload({ payload, octokit }),
+                properties: yield fetchProperties({ payload, octokit }),
             });
             const existingBlocks = (yield notion.client.blocks.children.list({
                 block_id: pageId,
@@ -38153,7 +38172,7 @@ function handleIssueEdited(options) {
                 parent: {
                     database_id: notion.databaseId,
                 },
-                properties: yield parsePropertiesFromPayload({ payload, octokit }),
+                properties: yield fetchProperties({ payload, octokit }),
                 children: bodyBlocks,
             })
                 .then(() => {
@@ -38185,7 +38204,7 @@ function handleIssueEdited(options) {
         core.info(`Updating page for issue #${payload.issue.number}`);
         yield notion.client.pages.update({
             page_id: pageId,
-            properties: yield parsePropertiesFromPayload({
+            properties: yield fetchProperties({
                 payload,
                 octokit: options.octokit,
                 possibleProject: possible,
