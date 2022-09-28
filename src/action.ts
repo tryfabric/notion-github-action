@@ -161,7 +161,7 @@ async function handleIssueEdited(options: IssueEditedOptions) {
 
   core.info(`Querying database for page with github id ${payload.issue.id}`);
 
-  const query = await notion.client.databases.query({
+  let query = await notion.client.databases.query({
     database_id: notion.databaseId,
     filter: {
       property: 'ID',
@@ -217,13 +217,30 @@ async function handleIssueEdited(options: IssueEditedOptions) {
   } else {
     core.warning(`Could not find page with github id ${payload.issue.id}, creating a new one`);
 
-    await notion.client.pages.create({
-      parent: {
-        database_id: notion.databaseId,
-      },
-      properties: await parsePropertiesFromPayload({payload, octokit}),
-      children: bodyBlocks,
-    });
+    await notion.client.pages
+      .create({
+        parent: {
+          database_id: notion.databaseId,
+        },
+        properties: await parsePropertiesFromPayload({payload, octokit}),
+        children: bodyBlocks,
+      })
+      .then(() => {
+        core.info('Re query for the page that was just created');
+        return notion.client.databases.query({
+          database_id: notion.databaseId,
+          filter: {
+            property: 'ID',
+            number: {
+              equals: payload.issue.id,
+            },
+          },
+          page_size: 1,
+        });
+      })
+      .then(q => {
+        query = q;
+      });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
