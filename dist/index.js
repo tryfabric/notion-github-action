@@ -38105,22 +38105,6 @@ function getBodyChildrenBlocks(body) {
         },
     ];
 }
-function handleIssueOpened(options) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { notion, payload } = options;
-        core.info(`Creating page for issue #${payload.issue.number}`);
-        yield notion.client.pages.create({
-            parent: {
-                database_id: notion.databaseId,
-            },
-            properties: yield parsePropertiesFromPayload({
-                payload,
-                octokit: options.octokit,
-            }),
-            children: getBodyChildrenBlocks(payload.issue.body),
-        });
-    });
-}
 function handleIssueEdited(options) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -38219,17 +38203,7 @@ function run(options) {
             logLevel: core.isDebug() ? src_1.LogLevel.DEBUG : src_1.LogLevel.WARN,
         });
         const octokit = new octokit_1.Octokit({ auth: github.token });
-        if (github.payload.action === 'opened') {
-            yield handleIssueOpened({
-                notion: {
-                    client: notionClient,
-                    databaseId: notion.databaseId,
-                },
-                payload: github.payload,
-                octokit,
-            });
-        }
-        else if (github.eventName === 'workflow_dispatch') {
+        if (github.eventName === 'workflow_dispatch') {
             const notion = new src_1.Client({ auth: options.notion.token });
             const { databaseId } = options.notion;
             const issuePageIds = yield (0, sync_1.createIssueMapping)(notion, databaseId);
