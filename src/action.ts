@@ -1,13 +1,13 @@
-import {Client, LogLevel} from '@notionhq/client/build/src';
 import * as core from '@actions/core';
-import type {IssuesEvent, Issue} from '@octokit/webhooks-definitions/schema';
 import type {WebhookPayload} from '@actions/github/lib/interfaces';
+import {Client, LogLevel} from '@notionhq/client/build/src';
+import {CreatePageParameters} from '@notionhq/client/build/src/api-endpoints';
+import type {Issue, IssuesEvent} from '@octokit/webhooks-definitions/schema';
+import {markdownToRichText} from '@tryfabric/martian';
+import {Octokit} from 'octokit';
+import {CustomTypes, RichTextItemResponse} from './api-types';
 import {CustomValueMap, properties} from './properties';
 import {createIssueMapping, syncNotionDBWithGitHub} from './sync';
-import {Octokit} from 'octokit';
-import {markdownToRichText} from '@tryfabric/martian';
-import {CustomTypes, RichTextItemResponse} from './api-types';
-import {CreatePageParameters} from '@notionhq/client/build/src/api-endpoints';
 
 function removeHTML(text?: string): string {
   return text?.replace(/<.*>.*<\/.*>/g, '') ?? '';
@@ -156,6 +156,8 @@ interface IssueEditedOptions {
 
 async function handleIssueEdited(options: IssueEditedOptions) {
   const {notion, payload, octokit} = options;
+  // Skip pull requests
+  if (payload.issue.html_url.includes('/pull/')) return;
 
   core.info(`Querying database for page with github id ${payload.issue.id}`);
 

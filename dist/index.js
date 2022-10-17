@@ -11518,7 +11518,7 @@ exports.retry = retry;
 
 /***/ }),
 
-/***/ 9968:
+/***/ 5658:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -15017,7 +15017,7 @@ module.exports = function btoa(str) {
 
 /***/ }),
 
-/***/ 9239:
+/***/ 6942:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -17914,7 +17914,7 @@ module.exports = function (jwtString, secretOrPublicKey, options, callback) {
 /***/ 6010:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-var bufferEqual = __nccwpck_require__(9239);
+var bufferEqual = __nccwpck_require__(6942);
 var Buffer = (__nccwpck_require__(1867).Buffer);
 var crypto = __nccwpck_require__(6113);
 var formatEcdsa = __nccwpck_require__(1728);
@@ -21926,7 +21926,7 @@ module.exports = __nccwpck_require__(6869)
 var ccount = __nccwpck_require__(1291)
 var findAndReplace = __nccwpck_require__(6855)
 var unicodePunctuation = __nccwpck_require__(9372)
-var unicodeWhitespace = __nccwpck_require__(6314)
+var unicodeWhitespace = __nccwpck_require__(9968)
 
 exports.transforms = [transformGfmAutolinkLiterals]
 exports.enter = {
@@ -23304,7 +23304,7 @@ var asciiAlphanumeric = __nccwpck_require__(598)
 var asciiControl = __nccwpck_require__(1336)
 var markdownLineEnding = __nccwpck_require__(7506)
 var unicodePunctuation = __nccwpck_require__(9372)
-var unicodeWhitespace = __nccwpck_require__(6314)
+var unicodeWhitespace = __nccwpck_require__(9968)
 
 var www = {tokenize: tokenizeWww, partial: true}
 var domain = {tokenize: tokenizeDomain, partial: true}
@@ -25284,7 +25284,7 @@ module.exports = unicodePunctuation
 
 /***/ }),
 
-/***/ 6314:
+/***/ 9968:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -30049,7 +30049,7 @@ module.exports = chunkedSplice
 
 var markdownLineEndingOrSpace = __nccwpck_require__(9180)
 var unicodePunctuation = __nccwpck_require__(9372)
-var unicodeWhitespace = __nccwpck_require__(6314)
+var unicodeWhitespace = __nccwpck_require__(9968)
 
 // Classify whether a character is unicode whitespace, unicode punctuation, or
 // anything else.
@@ -34832,7 +34832,7 @@ var core = __nccwpck_require__(6762);
 var pluginPaginateRest = __nccwpck_require__(4193);
 var pluginRestEndpointMethods = __nccwpck_require__(3044);
 var pluginRetry = __nccwpck_require__(6298);
-var pluginThrottling = __nccwpck_require__(9968);
+var pluginThrottling = __nccwpck_require__(5658);
 var app = __nccwpck_require__(4389);
 var oauthApp = __nccwpck_require__(3493);
 
@@ -37236,7 +37236,7 @@ module.exports = __nccwpck_require__(77)
 "use strict";
 
 
-var p = __nccwpck_require__(9110)
+var p = __nccwpck_require__(9239)
 var proc = __nccwpck_require__(6070)
 var buffer = __nccwpck_require__(5625)
 
@@ -37465,7 +37465,7 @@ function info() {
 
 /***/ }),
 
-/***/ 9110:
+/***/ 9239:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -38016,12 +38016,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = exports.parseBodyRichText = exports.getProjectData = void 0;
-const src_1 = __nccwpck_require__(324);
 const core = __importStar(__nccwpck_require__(2186));
+const src_1 = __nccwpck_require__(324);
+const martian_1 = __nccwpck_require__(6615);
+const octokit_1 = __nccwpck_require__(7467);
 const properties_1 = __nccwpck_require__(1434);
 const sync_1 = __nccwpck_require__(9248);
-const octokit_1 = __nccwpck_require__(7467);
-const martian_1 = __nccwpck_require__(6615);
 function removeHTML(text) {
     var _a;
     return (_a = text === null || text === void 0 ? void 0 : text.replace(/<.*>.*<\/.*>/g, '')) !== null && _a !== void 0 ? _a : '';
@@ -38128,6 +38128,9 @@ function handleIssueEdited(options) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const { notion, payload, octokit } = options;
+        // Skip pull requests
+        if (payload.issue.html_url.includes('/pull/'))
+            return;
         core.info(`Querying database for page with github id ${payload.issue.id}`);
         let query = yield notion.client.databases.query({
             database_id: notion.databaseId,
