@@ -10,13 +10,15 @@ const INPUTS = {
 
 async function start() {
   try {
+    core.warning('*****Test warning*****');
     const notionToken = core.getInput(INPUTS.NOTION_TOKEN, {required: true});
     const notionDb = core.getInput(INPUTS.NOTION_DB, {required: true});
     const githubToken = core.getInput(INPUTS.GITHUB_TOKEN, {required: true});
 
     core.info(`context event: ${github.context.eventName}`);
     core.info(`context action: ${github.context.action}`);
-    core.info(`payload action: ${github.context.payload.action}`);
+    core.info('testing1234');
+    core.info(`payload action: ${github.context.payload}`);
     const options = {
       notion: {
         token: notionToken,
@@ -28,7 +30,7 @@ async function start() {
         token: githubToken,
       },
     };
-    core.info('testing1234');
+
     core.info(JSON.stringify(options));
     await run(options);
   } catch (e) {
