@@ -14,13 +14,15 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v2
         with:
+          fetch-depth: 0
+          ref: main
           # Custom token to allow commits trigger other workflows.
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v2.1.5
         with:
-          node-version: 12
+          node-version: 16
 
       - name: Cache node modules
         uses: actions/cache@v2
@@ -44,7 +46,7 @@ jobs:
       - name: Commit dist
         uses: EndBug/add-and-commit@v7
         with:
-          add: "dist"
+          add: 'dist'
           author_name: github-actions[bot]
           author_email: github-actions[bot]@users.noreply.github.com
-          message: "[auto] Update compiled version"
+          message: '[auto] Update compiled version'
