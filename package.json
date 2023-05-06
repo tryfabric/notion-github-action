@@ -1,6 +1,6 @@
 {
   "name": "@instantish/notion-github-action",
-  "version": "1.2.10",
+  "version": "1.2.11",
   "private": true,
   "description": "A GitHub Action that syncs issues to a Notion database. Multi-repository friendly.",
   "main": "dist/index.js",
