@@ -28,7 +28,8 @@ async function start() {
         token: githubToken,
       },
     };
-    console.log('testing1234');
+    core.info('testing1234');
+    core.info(JSON.stringify(options));
     await run(options);
   } catch (e) {
     core.setFailed(e instanceof Error ? e.message : e + '');
