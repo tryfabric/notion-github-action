@@ -36,6 +36,7 @@ export async function syncNotionDBWithGitHub(
   githubRepo: string
 ) {
   const issues = await getGitHubIssues(octokit, githubRepo);
+  core.info(ok im here');
   const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues);
   await createPages(notion, databaseId, pagesToCreate, octokit);
 }
