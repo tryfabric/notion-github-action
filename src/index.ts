@@ -9,6 +9,8 @@ const INPUTS = {
 };
 
 async function start() {
+  core.info('this is a test');
+  console.log('this is also a test');
   try {
     const notionToken = core.getInput(INPUTS.NOTION_TOKEN, {required: true});
     const notionDb = core.getInput(INPUTS.NOTION_DB, {required: true});
@@ -16,7 +18,8 @@ async function start() {
 
     core.info(`context event: ${github.context.eventName}`);
     core.info(`context action: ${github.context.action}`);
-    core.info(`payload action: ${github.context.payload.action}`);
+    core.info('testing1234');
+    core.info(`payload action: ${github.context.payload}`);
     const options = {
       notion: {
         token: notionToken,
@@ -29,7 +32,10 @@ async function start() {
       },
     };
 
+    core.info(JSON.stringify(options));
     await run(options);
+    console.log('testing');
+    core.info('testing');
   } catch (e) {
     core.setFailed(e instanceof Error ? e.message : e + '');
   }

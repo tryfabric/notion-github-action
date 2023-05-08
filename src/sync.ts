@@ -94,6 +94,7 @@ async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<Is
     for (const issue of data) {
       if (!issue.pull_request) {
         issues.push(<Issue>issue);
+        console.log(issue);
       }
     }
   }
