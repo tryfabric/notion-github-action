@@ -9,6 +9,8 @@ const INPUTS = {
 };
 
 async function start() {
+  core.info('this is a test');
+  console.log('this is also a test');
   try {
     const notionToken = core.getInput(INPUTS.NOTION_TOKEN, {required: true});
     const notionDb = core.getInput(INPUTS.NOTION_DB, {required: true});
