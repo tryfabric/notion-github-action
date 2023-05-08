@@ -36,7 +36,6 @@ export async function syncNotionDBWithGitHub(
   githubRepo: string
 ) {
   const issues = await getGitHubIssues(octokit, githubRepo);
-  core.info(ok im here');
   const pagesToCreate = getIssuesNotInNotion(issuePageIds, issues);
   await createPages(notion, databaseId, pagesToCreate, octokit);
 }
@@ -84,6 +83,7 @@ async function getIssuesAlreadyInNotion(
 // https://docs.github.com/en/rest/reference/issues#list-repository-issues
 async function getGitHubIssues(octokit: Octokit, githubRepo: string): Promise<Issue[]> {
   core.info('Finding Github Issues...');
+  core.info(ok im here');
   const issues: Issue[] = [];
   const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
     owner: githubRepo.split('/')[0],
