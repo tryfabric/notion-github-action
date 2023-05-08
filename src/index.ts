@@ -11,7 +11,6 @@ const INPUTS = {
 
 async function start() {
   try {
-    core.warning('*****Test sdfsdfsdfsdfsdf*****');
     const notionToken = core.getInput(INPUTS.NOTION_TOKEN, {required: true});
     const notionDb = core.getInput(INPUTS.NOTION_DB, {required: true});
     const githubToken = core.getInput(INPUTS.GITHUB_TOKEN, {required: true});
