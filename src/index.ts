@@ -10,7 +10,6 @@ const INPUTS = {
 
 
 async function start() {
-console.log("vbutasdf")
   try {
     core.warning('*****Test sdfsdfsdfsdfsdf*****');
     const notionToken = core.getInput(INPUTS.NOTION_TOKEN, {required: true});
