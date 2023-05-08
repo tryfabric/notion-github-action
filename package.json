@@ -1,5 +1,5 @@
 {
-  "name": "@instantish/notion-github-action",
+  "name": "@klamrio/notion-github-action",
   "version": "1.2.15",
   "private": true,
   "description": "A GitHub Action that syncs issues to a Notion database. Multi-repository friendly.",
@@ -41,10 +41,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instantish/notion-github-action.git"
+    "url": "git+https://github.com/klamrio/notion-github-action.git"
   },
   "bugs": {
-    "url": "https://github.com/instantish/notion-github-action/issues"
+    "url": "https://github.com/klamrio/notion-github-action/issues"
   },
-  "homepage": "https://github.com/instantish/notion-github-action#readme"
+  "homepage": "https://github.com/klamrio/notion-github-action#readme"
 }
