@@ -13,10 +13,10 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
-    "@notionhq/client": "^0.4.13",
+    "@notionhq/client": "^2.2.5",
     "@octokit/webhooks-definitions": "^3.67.3",
-    "@tryfabric/martian": "^1.1.1",
-    "octokit": "^1.1.0"
+    "@tryfabric/martian": "^1.2.4",
+    "octokit": "^2.0.14"
   },
   "devDependencies": {
     "@types/jest": "^27.0.3",
