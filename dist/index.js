@@ -33908,6 +33908,7 @@ function getGitHubIssues(octokit, githubRepo) {
                 for (const issue of data) {
                     if (!issue.pull_request) {
                         issues.push(issue);
+                        console.log(issue);
                     }
                 }
             }
