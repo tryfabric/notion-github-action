@@ -1,6 +1,6 @@
 {
   "name": "@klamrio/notion-github-action",
-  "version": "1.2.19",
+  "version": "1.2.20",
   "private": true,
   "description": "A GitHub Action that syncs issues to a Notion database. Multi-repository friendly.",
   "main": "dist/index.js",
