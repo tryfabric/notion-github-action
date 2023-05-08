@@ -115,7 +115,7 @@ function getBodyChildrenBlocks(body: string): Exclude<CreatePageParameters['chil
     {
       type: 'paragraph',
       paragraph: {
-        text: parseBodyRichText(body),
+        rich_text: parseBodyRichText(body),
       },
     },
   ];
