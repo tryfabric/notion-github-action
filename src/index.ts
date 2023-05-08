@@ -8,7 +8,6 @@ const INPUTS = {
   GITHUB_TOKEN: 'github-token',
 };
 
-
 async function start() {
   try {
     const notionToken = core.getInput(INPUTS.NOTION_TOKEN, {required: true});
@@ -32,7 +31,7 @@ async function start() {
     };
 
     core.info(JSON.stringify(options));
-    await run(options);*/
+    await run(options);
     console.log('testing');
     core.info('testing');
   } catch (e) {
